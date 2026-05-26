@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from django.views.generic import TemplateView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from openai import OpenAI
 
 class ChatbotView(APIView):
@@ -73,7 +73,7 @@ class SecurityAdvisorView(APIView):
     باستخدام نموذج GPT-4 المتقدم.
     """
     # Requires staff privileges to access the security advisor
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_staff and not request.user.is_superuser:

@@ -17,8 +17,9 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     // Simulate slight network delay for dramatic UI spinner entrance
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     setTimeout(() => {
-      fetch('http://localhost:8000/api/programs/student-summary/')
+      fetch(`${apiUrl}/api/programs/student-summary/`)
         .then(res => res.json())
         .then((json) => {
           setData(json);

@@ -8,6 +8,7 @@ from openai import OpenAI
 
 class ChatbotView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         user_message = request.data.get('message')

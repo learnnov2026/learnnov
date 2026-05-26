@@ -100,6 +100,7 @@ class ApplicationReviewView(generics.UpdateAPIView):
 
 class StudentSummaryView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def get(self, request):
         user = request.user

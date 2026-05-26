@@ -1,0 +1,607 @@
+File,Line,Text
+B:\LEARNNOV PLATFORM\openedx-platform-master\extract_todo.py,3,pattern = re.compile(r'TODO|FIXME')
+B:\LEARNNOV PLATFORM\openedx-platform-master\webpack.common.config.js,602,"'edx-ui-toolkit': 'edx-ui-toolkit/src/', // @TODO: some paths in toolkit are not valid relative paths"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\urls.py,210,# TODO: Remove deprecated signin url when traffic proves it is no longer in use
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\urls.py,216,# TODO: Remove deprecated signup url when traffic proves it is no longer in use
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\asset_storage_handlers.py,679,"# TODO: this method needs improvement. These view decorators should be at the top in an actual view method,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\helpers.py,286,"# FIXME: The DefinitionLocator technically only accepts an ObjectId (or a str representing an ObjectId), but"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\helpers.py,333,# FIXME: This code shouldn't have any special cases for specific block types like video
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\helpers.py,440,# FIXME: This code shouldn't have any special cases for specific block types like video
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\models.py,468,# TODO: is there a way to run `subq_container` or `subq_components` depending on the container type?
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tasks.py,697,# TODO: Is this really ok?  Seems dangerous for a live course
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\video_storage_handlers.py,166,# TODO: Add a related unit tests when the VAL update is part of platform
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\api\views\course_import.py,106,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\api\views\course_quality.py,83,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\api\views\course_validation.py,81,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\config\waffle.py,20,"# TODO: After removing this flag, add a migration to remove waffle flag in a follow-up deployment."
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\management\commands\export_olx.py,102,"# TODO: Once we support courses with unicode characters, we will need to revisit this."
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\rest_api\v0\views\authoring_videos.py,87,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\rest_api\v0\views\authoring_videos.py,104,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\rest_api\v2\views\downstreams.py,361,# TODO: Delete this `try` after avoid copy/paster unpublished items.
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\rest_api\v2\views\tests\test_downstream_sync_integration.py,109,# TODO: is there really no REST API to get the children of an XBlock in Studio?
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\tests.py,4,TODO: Rewrite several of these assertions so that they check the output of the REST or Python
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_contentstore.py,3,# TODO: Rewrite several of these assertions so that they check the output of the REST or Python
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_contentstore.py,1805,"# TODO: create the same test as `test_metadata_not_persistence`,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_course_settings.py,4,# TODO: Remove each `override_waffle_flag(toggles.LEGACY_STUDIO_*)` by Ulmo. For each occurance:
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_crud.py,117,# TODO reenable when split_draft supports getting specific versions
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_crud.py,124,# But can retrieve by guid -- same TODO as above
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\tests\test_permissions.py,77,TODO: Replace the call to the legacy course_team_handler with a call to the course team REST API.
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\component.py,318,"# TODO: Once mixins are defined per-application, rather than per-runtime,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\course.py,442,# TODO remove this condition when templates purged from db
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\course.py,527,# TODO remove this condition when templates purged from db
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\course.py,555,# TODO remove this condition when templates purged from db
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\course.py,811,# TODO remove this condition when templates purged from db
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\course.py,1126,# # TODO get rid of defining wiki slug in this org/course/run specific way and reconcile
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\preview.py,114,# TODO: aside_type != 'acid_aside' check should be removed once AcidBlock is only installed during tests
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\views\tests\test_block.py,2566,TODO: move tests that can go over to common after the mixed modulestore work is done.  # pylint: disable=fixme
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\xblock_storage_handlers\create_xblock.py,55,"# TODO need to fix components that are sending definition_data as strings, instead of as dicts"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\xblock_storage_handlers\view_handlers.py,289,# TODO: pass fields to get_block_info and only return those
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\xblock_storage_handlers\view_handlers.py,473,"# TODO Allow any scope.content fields not just ""data"" (exactly like the get below this)"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\contentstore\xblock_storage_handlers\view_handlers.py,715,"# TODO: Can we generate a unique but friendly block_id, perhaps using upstream block_id"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\modulestore_migrator\tasks.py,640,source_data.migration.save()  # @@TODO keep or nah?
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\modulestore_migrator\tasks.py,662,# TODO: add an intermediate status such as 'partially satisfactory'
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\modulestore_migrator\api\read_api.py,276,"TODO: For now, the repeat_handling_strategy is not taken into account. This can be taken into"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\modulestore_migrator\rest_api\v1\views.py,121,"# TODO: This should check some sort of ""allowed to cancel/migrations"" permission"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\djangoapps\xblock_config\apps.py,24,# TODO: Remove this code when Runtimes are no longer created by modulestores
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\envs\common.py,13,Longer TODO:
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\envs\production.py,290,"# TODO: Once we have successfully upgraded to ES7, switch this back to ELASTIC_SEARCH_CONFIG."
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\envs\production.py,382,"# TODO: This should not be in the core platform. If it has to stay for now, though, then we should move these"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\envs\production.py,390,"# TODO: We believe that this could be more simply defined as CMS_ROOT_URL. We are not making the change now,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\lib\xblock\upstream_sync_block.py,181,# TODO: resolve this so there's no special-case happening for video block.
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\lib\xblock\upstream_sync_container.py,44,lib_api.require_permission_for_library_key(  # TODO: should permissions be checked at this low level?
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\cms\js\xblock\cms.runtime.v1.js,97,// TODO: remove 'Open Assessment' specific default title
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\models\settings\course_details.js,120,// TODO check if key points to a real video using google's youtube api
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\models\settings\course_details.js,146,// TODO remove all whitespace w/in string
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\models\settings\course_grader.js,29,// FIXME somehow this.collection is unbound sometimes. I can't track down when
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\models\settings\course_grader.js,43,"// FIXME b/c saves don't update the models if validation fails, we should"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\spec\video\translations_editor_spec.js,8,// TODO: fix BLD-1100 Disabled due to intermittent failure on master and in PR builds
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\spec\views\pages\group_configurations_spec.js,57,"// TODO fix this, see TNL-1475"
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\paged_container.js,260,return gettext('Date added'); // TODO add support for sorting
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\validation.js,49,// TODO: (pfogg) should this text fade in/out on change?
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\xblock_string_field_editor.js,111,// TODO: generalize this as not all xblock fields want to disallow empty strings...
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\pages\container_subviews.js,395,// TODO We can use this function for the initial request of tags
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\settings\advanced.js,18,// TODO enable/disable save based on validation (currently enabled whenever there are changes)
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\settings\advanced.js,99,// TODO: validation error
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\settings\grading.js,323,// TODO shouldn't we disable the button
+B:\LEARNNOV PLATFORM\openedx-platform-master\cms\static\js\views\video\translations_editor.js,123,// @TODO: Use backbone render patterns.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\course_modes\views.py,215,# REV-2415 TODO: remove [Track Selection Check] logs introduced by REV-2355 for error handling check
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\course_modes\tests\test_views.py,185,"# TODO: Fix it so that response.templates works w/ mako templates, and then assert"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\entitlements\rest_api\v1\views.py,319,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\helpers.py,480,TODO: replace with a method that lives in the certificates app and combines this logic with
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\helpers.py,701,"# TODO: Rearrange so that if part of the process fails, the whole process fails."
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\helpers.py,712,# TODO duplicate email is already handled by form.errors above as a ValidationError.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\course_enrollment.py,637,# TODO: DENG-804: remove the properties duplication in the event traits.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\course_enrollment.py,1731,# TODO: Django 1.8 introduces a DurationField
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\user.py,223,# TODO: Revert to this after username capitalization issues detailed in
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\user.py,437,# CRITICAL TODO/SECURITY
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\user.py,847,"# TODO: Should be renamed to generic UserGroup, and possibly"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\models\user.py,876,# MINOR TODO: Switch to crypto-secure key
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\dashboard.py,516,TODO: This is lms specific and does not belong in common code.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\dashboard.py,682,# TODO: Delete this code and the relevant HTML code after testing LEARNER-3072 is complete
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\dashboard.py,851,# TODO START: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\dashboard.py,853,# TODO START: clean up as part of REVEM-199 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\dashboard.py,855,# TODO: clean when experiment(Merchandise 2U LOBs - Dashboard) would be stop. [VAN-1097]
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\management.py,357,TODO: This is lms specific and does not belong in common code.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\student\views\management.py,597,# TODO: Use custom attribute to determine if there are any `activate_account` calls for cms in Production.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\third_party_auth\saml.py,314,# we need some overrides. TODO: Fill in necessary mappings
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\third_party_auth\tasks.py,88,# TODO: Can use OneLogin_Saml2_Utils to validate signed XML if anyone is using that
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\third_party_auth\api\permissions.py,51,# TODO: Remove ApiKeyHeaderPermission. Check deprecated_api_key_header custom attribute for active usage.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\third_party_auth\api\views.py,203,"# TODO: When removing deprecated UserView, rename this view to UserView."
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\track\middleware.py,79,# TODO: Confirm no large file uploads
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\track\transformers.py,29,# TODO: The current implementation of the prefix registry requires
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\track\backends\logger.py,44,"# TODO: remove trucation of the serialized event, either at a"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\track\backends\mongodb.py,84,# TODO: The creation of indexes can be moved to a Django
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\track\views\__init__.py,101,# TODO: VAN-1052: This event is added to track the KPIs for A/B experiment.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\util\milestones_helpers.py,24,# TODO this should be moved to edx/edx-milestones
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\djangoapps\util\tests\test_db.py,132,TODO: Find a general way of handling the case where if we're trying to
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\common\js\components\views\list.js,16,// TODO: at some point we will want 'add' and 'remove'
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\common\js\discussion\views\discussion_thread_list_view.js,176,TODO fix this entire chain of events
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\common\js\discussion\views\discussion_thread_list_view.js,488,TODO: This might be better done by setting discussion.current_page=0 and
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\src\jquery_extend_patch.js,6,TODO: Remove this file and all its uses after upgrading to version >= 3.4.0
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\draggabilly.js,1516,// TODO re-enable img.ondragstart when unbinding
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\draggabilly.js,1539,// TODO replace this with a IE8 test
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\draggabilly.js,1870,// TODO fix quick & dirty check for 3D support
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\jquery.tablednd.js,167,// TODO worry about what happens when there are multiple TBODIES
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.dataview.js,506,// TODO:  lazy totals calculation
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.dataview.js,508,// TODO:  try moving iterating over groups into compiled accumulator
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.dataview.js,1060,// TODO:  add more built-in aggregators
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.dataview.js,1061,// TODO:  merge common aggregators in one to prevent needles iterating
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.grid.js,445,// TODO:  this is static.  need to handle page mutation.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.grid.js,1433,// TODO:  merge them together in the setter
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.grid.js,1775,// TODO:  shorten this loop (index? heuristics? binary search?)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.groupitemmetadataprovider.js,91,// TODO:  add -/+ handling
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\slick.remotemodel.js,66,// TODO:  look-ahead
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\codemirror.js,7675,"throw new Error(""inputStyle can not (yet) be changed in a running editor"") // FIXME"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\codemirror.js,9191,"// FIXME this is all really shaky. might handle the few cases it needs to handle, but likely to cause problems"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\python.js,108,// TODO - Can you have imaginary longs?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\addons\formatting.js,14,// FIXME semicolons inside of for
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\addons\javascript.js,1,// TODO actually recognize syntax of TypeScript constructs
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\CodeMirror\addons\python.js,115,// TODO - Can you have imaginary longs?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,161,// TODO: use runtimeStyle and coordsize
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,168,// TODO: use runtimeStyle and coordsize
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,615,// TODO: Branch current matrix so that save/restore has no effect
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,940,// TODO: Following is broken for curves due to
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,1004,// TODO: Gradients transformed with the transformation matrix.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,1087,// TODO: Figure out the correct size to fit the scale.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,1283,// TODO: Fix the min and max params.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,1331,// TODO: Implement
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\excanvas.js,1335,// TODO: Implement
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.axislabels.js,286,"// FIXME: not sure why, but placing this exactly at the top causes"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.js,450,"// FIXME: if we're getting to close to something else,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.js,2137,// FIXME: consider another form of shadow when filling is turned on
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.js,2304,// FIXME: inline moveTo is buggy with excanvas
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.js,2340,// FIXME: figure out a way to add shadows (for instance along the right edge)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.pie.js,508,// TODO: add extra shadow inside hole (with a mask) if the pie is tilted.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.pie.js,567,// TODO: perhaps do some mathmatical trickery here with the Y-coordinate to compensate for pie tilt?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.selection.js,77,// FIXME: The drag handling implemented here should be
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\flot\jquery.flot.threshold.js,91,// FIXME: there are probably some edge cases left in bars
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\jQuery-File-Upload\js\vendor\jquery.ui.widget.js,115,// TODO: remove support for widgetEventPrefix
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\jQuery-File-Upload\js\vendor\jquery.ui.widget.js,280,// TODO remove dual storage
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\l10n.js,69,// TODO: support multiple and external JSON dictionaries
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\l10n.js,185,var reSplit = /^([^=\s]*)\s*=\s*(.+)$/; // TODO: escape EOLs with '\'
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\l10n.js,337,// TODO: clear all non predefined macros.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\l10n.js,759,// TODO: support other properties (l20n still doesn't...)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\l10n.js,881,// translate element (TODO: security checks?)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,2275,// TODO Refactor RenderPageRequest to separate rendering
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,3928,// TODO set rendering intent?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,3932,// TODO set flatness?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,4611,// TODO According to the spec we're also suppose to ignore any operators
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,4720,// TODO non-isolated groups - according to Rik at adobe non-isolated
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,4734,info('TODO: Support non-isolated groups.');
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,4737,// TODO knockout - supposedly possible with the clever use of compositing
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5143,// TODO Marked content.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5146,// TODO Marked content.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5149,// TODO Marked content.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5153,// TODO Marked content.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5156,// TODO Marked content.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5162,// TODO ignore undefined operators (should we do that anyway?)
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,5165,// TODO stop ignoring undefined operators
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,6116,// TODO other browsers
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,6251,// TODO: This could maybe be made faster by avoiding the btoa of the full
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,6380,// TODO(mack): This dupes some of the logic in CanvasGraphics.setFont()
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.js,6403,"// TODO(mack): Remove this, it's not really that helpful."
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,2388,// TODO(mack): Make use of PDFJS.Util.inherit() when it becomes available
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,2711,// TODO: add async getInheritedPageProp and remove this.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,4410,* TODO: implement all the Dict functions and make this more efficent.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,4534,"* TODO: support the 'URL' file system (with caching if !/V), portable"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,4925,// TODO(mack): currently only supporting rgb; need support different
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,4941,// TODO: implement proper support for annotations with line dash patterns.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,5074,// TODO(mack): Implement FreeText annotations
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,5326,// TODO: pdf spec mentions urls can be relative to a Base
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,5342,// TODO: pdf reference says that GoToR
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,6570,// TODO it may be worth while to cache the color map. While running
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,10791,// TODO(mack): Not needed?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,10921,// TODO implement these operators.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,11023,// TODO move promises into translate font
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,11041,// TODO fontCapability.reject?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,11102,// TODO shall we fail here?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,11751,// TODO: Loading the built in encoding in the font would allow the
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,12138,// TODO Fill the width array depending on which of the base font this is
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,12606,// TODO(mduan): pass array of knownCommands rather than OP_MAP
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,12687,// TODO figure out how to type-check vararg functions
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,13833,// TODO are /dstName used?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,16712,// TODO: Try to map ligatures to the correct spot.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,16914,"// TODO verify all OS/2 tables fields, but currently we validate only those"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,16978,// TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,17251,// TODO(mack): refactor this cmap subtable reading logic out
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,18135,// TODO: Note that this is a hack which should be removed as soon as
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,18160,// TODO: the encoding needs to be updated with mac os table.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,18274,// TODO: Check the charstring widths to determine this.
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,19688,// TODO: Insert the string and correctly map it.  Previously it was
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,21396,"x = 0; y = 0; // TODO ""they are points"" ?"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,26403,// TODO cache rendered images?
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,31860,"// TODO: per poppler, some images may have 'junk' before that"
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,33589,"// TODO add some streaming manager, e.g. for unknown length files."
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,34742,// TODO APP1 - Exif
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,35161,// TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,35167,// TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\pdf.worker.js,37818,// TODO 7.4.3.1.7 Symbol ID Huffman table decoding
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\viewer.js,3107,// TODO: This could probably be simplified by drawing the text layer in
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\viewer.js,3359,// TODO(mack): use data attributes to store these
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\viewer.js,4745,// TODO move more preferences and other async stuff here
+B:\LEARNNOV PLATFORM\openedx-platform-master\common\static\js\vendor\pdfjs\viewer.js,4890,"// TODO(mack): This function signature should really be pdfViewOpen(url, args)"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\urls.py,101,# TODO: Move lms specific student views out of common code
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\urls.py,377,# TODO: These views need to be updated before they work
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\urls.py,417,"# TODO arjun remove when custom tabs in place, see courseware/courses.py"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\badges\events\course_complete.py,34,# TODO: Remove this condition and make this return as default when platform is upgraded to 3.2
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\bulk_email\forms.py,37,"# TODO: add more validation here, including the set of known tags"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\ccx\tests\test_field_override_performance.py,237,# TODO: decrease query count as part of REVO-28
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\certificates\views\webview.py,413,"# TODO Need to add support for multiple organizations, Currently we are interested in the first one."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\api\v0\tests\test_views.py,79,# TODO Verify this is the best method to create CourseMode objects.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\api\v0\tests\test_views.py,80,# TODO Find/create constants for the modes.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\api\v0\tests\test_views.py,121,"# TODO Test inactive courses, and those not open for enrollment."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\tests\test_signals.py,91,TODO (jsa): ideally we would assert that the signal receiver got wired
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\tests\test_signals.py,213,TODO associated with XCOM-371 in the signals module in the commerce
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\commerce\tests\test_utils.py,79,# TODO: replace override_switch with override_waffle_switch when the
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\block_render.py,119,"# TODO: course_id and course_key are used interchangeably in this file, which is wrong."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\courses.py,877,# TODO: Fix this such that these are pulled in as extra course-specific tabs.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\courses.py,1057,# TODO: convert this method to use the Course Blocks API
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\field_overrides.py,168,# TODO: we might not actually want to return here.  Might be better
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_access.py,410,# TODO: override DISABLE_START_DATES and test the start date branch of the method
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_block_render.py,231,# TODO: this test relies on the specific setup of the toy course.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_courses.py,290,# TODO: this test relies on the specific setup of the toy course.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_views.py,478,# TODO add a test for invalid location
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_views.py,479,# TODO add a test for no data *
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_views.py,1289,# TODO: decrease query count as part of REVO-28
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\tests\test_view_authentication.py,106,"# TODO (vshnayder): If this is not the behavior we want, will need"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\views\views.py,276,"TODO (vshnayder): This is not used. When we have a new plan for groups, adjust appropriately."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\courseware\views\views.py,281,# TODO: Rewrite in Django
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_api\blocks\transformers\blocks_api.py,74,# TODO support olx_data by calling export_to_xml(?)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_api\blocks\transformers\milestones.py,112,"# TODO: As part of a cleanup effort, this transformer should be split into"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_api\blocks\transformers\navigation.py,2,TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_blocks\transformers\access_denied_filter.py,4,# TODO: Remove this file after REVE-52 lands and old-mobile-app traffic falls to < 5% of mobile traffic
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_home_api\outline\views.py,699,# TODO: VAN-1052: This event is added to track the KPIs for A/B experiment.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_wiki\editors.py,40,# TODO use the help_text field of edit form instead of rendering a template
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_wiki\middleware.py,26,"TODO: removing the ""root wiki"" would obviate the need for this middleware; it could be replaced"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\course_wiki\plugins\markdownedx\mdx_video.py,2,# TODO: Is this file still used? If so it should be refactored and tests added.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\views.py,314,"'discussion_data': threads,   # TODO: Standardize on 'discussion_data' vs 'threads'"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\views.py,611,"# TODO: LEARNER-3854: If we actually implement Learner Analytics code, this"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\views.py,739,"#TODO remove non-AJAX support, it does not appear to be used and does not appear to work."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\utils.py,83,# TODO should we be checking if d1 and d2 have the same keys with different values?
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\utils.py,458,# TODO.  BUG! : course location is not unique across multiple course runs!
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\utils.py,621,# TODO: RENAME
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\utils.py,658,# TODO: RENAME
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\utils.py,762,@TODO: not all response pre-processing steps are currently integrated into
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\base\views.py,860,"# TODO(smarnach): Determine the value of the vote that is undone.  Currently, you can"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\django_comment_client\base\views.py,1112,# TODO authorization
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\serializers.py,672,# TODO: The comments service doesn't populate the endorsement
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\utils.py,154,# TODO: cache course_staff_user_ids if we need to improve perf
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\utils.py,168,# TODO: cache ta_users_ids if we need to improve perf
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\utils.py,183,# TODO: cache moderator_user_ids if we need to improve perf
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\views.py,125,course_key = CourseKey.from_string(course_id)  # TODO: which class is right?
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\views.py,1574,TODO: Add support for MySQLBackend as well
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\tests\test_api_v2.py,2051,# TODO: Refactor test logic to avoid complex conditionals and in-test logic.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\rest_api\tests\test_serializers_v2.py,289,# TODO: The comments service doesn't populate the endorsement field on
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\static\discussion\js\discussion_board_factory.js,34,// TODO: eliminate usage of global variables when possible
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\static\discussion\js\spec\discussion_board_factory_spec.js,13,// TODO: re-enable when this doesn't interact badly with other history tests
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\static\discussion\js\views\discussion_search_view.js,13,* TODO: Much of the actual search functionality still takes place in discussion_thread_list_view.js
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\discussion\static\discussion\js\views\discussion_user_profile_view.js,43,"// @TODO: On the profile page, thread read state for the viewing user is not accessible via API."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,32,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,57,# TODO END: clean up as part of REVEM-199 (End)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,59,# TODO: Clean up as part of REV-1205 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,73,# TODO END: Clean up as part of REV-1205 (End)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,133,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,257,# TODO: clean up as part of REVEM-199 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,267,# TODO: clean up as part of REVO-28 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,276,# TODO: clean up as part of REVO-28 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,300,# TODO: clean up as part of REVO-28 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,302,# TODO: clean up as part of REVO-28 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,323,# TODO: clean up as part of REVO-28 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,325,# TODO: clean up as part of REVO-28 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,326,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,328,# TODO: clean up as part of REVEM-199 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,385,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,387,# TODO: clean up as part of REVEM-199 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,422,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,424,# TODO: clean up as part of REVEM-199 (END)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,428,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\experiments\utils.py,480,# TODO: clean up as part of REVEM-199 (START)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\api.py,19,# TODO move Gradebook to be an external feature outside of core Grades
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\api.py,30,# TODO exposing functionality from Grades handlers seems fishy.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\course_grade.py,198,# TODO(TNL-5291) Remove usages of this deprecated property.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\course_grade.py,289,# TODO update this code to be more functional and readable.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\events.py,115,# TODO (AN-6134): remove this context manager
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\events.py,144,# TODO (AN-6134): remove this context manager
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\events.py,171,# TODO (AN-6134): remove this context manager
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\models.py,463,# TODO: do we NEED to pop these?
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\scores.py,219,# TODO TNL-5982 remove defensive code for scorables without max_score
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\tasks.py,100,TODO: Roll this back into compute_grades_for_course once all workers have
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\config\waffle.py,36,"# TODO: After removing this flag, add a migration to remove waffle flag in a follow-up deployment."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\config\waffle.py,48,"# TODO: After removing this flag, add a migration to remove waffle flag in a follow-up deployment."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\config\waffle.py,62,"# TODO: After removing this flag, add a migration to remove waffle flag in a follow-up deployment."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\rest_api\v1\gradebook_views.py,47,# TODO these imports break abstraction of the core Grades layer. This code needs
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\rest_api\v1\gradebook_views.py,125,TODO: https://openedx.atlassian.net/browse/EDUCATOR-3755
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\rest_api\v1\gradebook_views.py,480,"# TODO: https://openedx.atlassian.net/browse/EDUCATOR-3559 -- Some fields should be renamed, others removed:"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\rest_api\v1\gradebook_views.py,659,"# TODO: In django 3.0+, we can directly filter on this 'exists' rather than annotating"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\grades\signals\handlers.py,212,else:  # TODO: remove as part of TNL-5982
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\enrollment.py,354,"# TODO: Should the LMS know about sub_api and call this reset, or should it generically call it on all of its"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\enrollment.py,480,# TODO: Use request.build_absolute_uri rather than '{proto}://{site}{path}'.format
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\tests\test_api.py,539,# TODO: make these work
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\tests\test_api.py,577,# TODO: make these work
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\views\api.py,1580,# TODO: Refactor the student profile report code to remove the list of columns
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\views\api.py,3690,"# TODO: Update this to return a proper API response (e.g., {""enabled"": true})"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\views\api_v2.py,591,# TODO: This filtering should ideally live in edx-when get_overrides_for_block/get_overrides_for_course.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor\views\api_v2.py,976,# TODO: Refactor the student profile report code to remove the list of columns
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor_task\tasks_helper\grades.py,493,TODO -- Remove as a part of PROD-1287
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\instructor_task\tasks_helper\module_state.py,131,# TODO: Here is a call site where we could pass in a loaded course.  I
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lms_xblock\apps.py,23,# TODO: Remove this code when Runtimes are no longer created by modulestores
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lms_xblock\runtime.py,123,# TODO: aside_type != 'acid_aside' check should be removed once AcidBlock is only installed during tests
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lti_provider\outcomes.py,36,# TODO: There may be a way to recover from this error; if we know
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lti_provider\users.py,127,"# TODO: We could populate user information from the LTI launch here,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lti_provider\views.py,220,TODO: This method depends on the current refactoring work on the
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\lti_provider\tests\test_views.py,298,# TODO fix this access discrepancy to the same underlying data.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\mailing\management\commands\mailchimp_sync_announcements.py,55,"## TODO (Feanil) This grabs all inactive students and MUST be changed (or, could exclude inactive users in get_data)"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\mailing\management\commands\mailchimp_sync_course.py,160,"# TODO: Since `students` is a QuerySet, can we chain a filter here that would be more"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\mailing\management\commands\mailchimp_sync_course.py,257,# TODO: Why is this under the for loop? It does nothing with the loop
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\program_enrollments\constants.py,12,TODO: Define the semantics of each of these (EDUCATOR-4958)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\program_enrollments\constants.py,33,TODO: Consider whether we need these (EDUCATOR-4958)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\program_enrollments\rest_api\v1\views.py,890,# TODO: Should this be case-insensitive?
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\program_enrollments\rest_api\v1\tests\test_views.py,2185,"TODO: When the old, non-paginated ProgramCourseEnrollmentOverview endpoint"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\support\views\enrollments.py,68,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\support\views\manage_user.py,45,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\support\views\program_enrollments.py,38,# TODO: ARCH-91
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\toggles.py,22,# TODO: this should be moved to edx/edx-ora2
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\toggles.py,37,"# TODO: this behaviour differs from edx-ora2, where the WaffleSwitch overrides the setting."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\views.py,1469,# This should use `calc_max_team_size` instead of `default_max_team_size` (TODO MST-32).
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\static\teams\js\collections\base.js,40,// TODO: These changes has been added to backbone.paginator
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\static\teams\js\spec\views\topic_card_spec.js,37,// TODO test actual navigation once implemented
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\static\teams\js\spec\views\topic_teams_spec.js,160,// TODO: make this ready for prime time
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\static\teams\js\views\manage.js,76,// Implement a teams:update event (TODO MST-44)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\static\teams\js\views\team_card.js,124,// TODO: show last activity detail view
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2089,"TODO: Only the oragnization_protected users (student_masters, student_masters_not_on_team)"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2115,TODO: student_enrolled shouldn't see any teams as he is outside the bubble.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2146,"TODO: No data is returned that shouldn't be, but the 403 that the users get tells them that a team"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2735,"TODO: student_enrolled should not be able to tell that masters_only team exists, he should"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2763,TODO: The only 403 that should remain is student_on_team_1_private_set_1. The other users should not be
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2826,implemented (TODO MST-31).
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\teams\tests\test_views.py,2857,"# Eventually, we will test contents (TODO MST-31)."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\models.py,323,# TODO: This field is deprecated.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\views.py,1077,# TODO: These logs must be removed once the investigation in COSMO-184 is complete.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\views.py,1117,# TODO: These logs must be removed once the investigation in COSMO-184 is complete.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\views.py,1126,# TODO: These logs must be removed once the investigation in COSMO-184 is complete.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\management\commands\tests\test_backfill_sso_verifications_for_old_account_links.py,51,# TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\tests\test_views.py,631,# TODO: replace override_switch with override_waffle_switch when the
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\tests\test_views.py,1130,# TODO jsa - is this the intended behavior?
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\djangoapps\verify_student\tests\__init__.py,28,TODO: Remove when immediate_on_commit function is actually implemented
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\common.py,915,# TODO (vshnayder): Will probably need to change as we get real access control in.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\common.py,3289,"# TODO: We believe these were part of the DEPR'd sysadmin dashboard, and can likely be removed."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,136,# TODO: This was for backwards compatibility back when installed django-cookie-samesite (not since 2022).
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,311,"# TODO: Would it be safe to just set this default in common.py, even if ENABLE_THIRD_PARTY_AUTH is False?"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,317,# TODO: This logic is somewhat insane. We're not sure if it's intentional or not. We've left it
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,348,"# TODO: Once we have successfully upgraded to ES7, switch this back to ELASTIC_SEARCH_CONFIG."
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,409,# TODO: Declare `EXTRA_MIDDLEWARE_CLASSES = []` in lms/envs/common.py so that we can simplify this
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\envs\production.py,519,"# TODO: This should not be in the core platform. If it has to stay for now, though, then we should move these"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\calculator.js,67,TODO: Investigate why doing this without the timeout causes it to jump
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\customwmd.js,3,// TODO: Examine all of the xss-lint exceptions (https://openedx.atlassian.net/browse/PLAT-2084)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\jquery.ajaxfileupload.js,58,"// TODO introduce global settings, allowing the client to modify them for all requests, not only timeout"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\jquery.treeview.js,19,"// TODO rewrite as a widget, removing all the extra plugins"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\jquery.treeview.js,67,// TODO use event delegation
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\jquery.treeview.js,211,// TODO update the open/closed classes
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\mathjax_delay_renderer.js,3,// TODO: Examine all of the xss-lint exceptions (https://openedx.atlassian.net/browse/PLAT-2084)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\pending_tasks.js,57,"// TODO: allow the refresh interval to be set.  (And if it is disabled,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\pending_tasks.js,84,// TODO: add error handler.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\modules\tab.js,3,// TODO: Examine all of the xss-lint exceptions (https://openedx.atlassian.net/browse/PLAT-2084)
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\spec\discovery\discovery_factory_spec.js,137,// TODO: determine why the search API is invoked twice
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\spec\verify_student\make_payment_step_view_ab_testing_spec.js,85,// TODO put fixture responses in the right place
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\spec\verify_student\make_payment_step_view_spec.js,82,// TODO put fixture responses in the right place
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\js\student_account\views\FormView.js,174,// TODO: Remove this code once firefox bug is resolved.
+B:\LEARNNOV PLATFORM\openedx-platform-master\lms\static\lms\js\spec\main.js,9,// TODO: how can we share the vast majority of this config that is in common with CMS?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\apidocs.py,13,"#terms_of_service=""https://www.google.com/policies/terms/"",         # TODO: Do we have these?"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\apidocs.py,15,"#license=openapi.License(name=""BSD License""),                       # TODO: What does this mean?"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\process_warnings.py,91,"# TODO(jinder): currently this is hard-coded in, maybe create a constants file with info"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\catalog\models.py,22,# TODO Replace all usages of this field with a call to get_internal_api_url().
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\catalog\management\commands\cache_programs.py,256,"TODO: when course discovery can handle it, use that instead. That will allow us to put all course runs"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\block_structure\tasks.py,21,# TODO: TNL-5799 is ongoing; narrow these lists down until the general exception is no longer needed
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,920,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,927,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,934,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,941,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,948,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,955,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,962,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,969,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,976,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,983,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\course_overviews\models.py,990,TODO: move this to the model.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\learning_sequences\data.py,21,TODO: Validate all datetimes to be UTC.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\learning_sequences\views.py,158,"TODO: Swagger docs of API. For an exemplar to imitate, see:"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\learning_sequences\api\processors\enrollment_track_partition_groups.py,49,# TODO: fix type annotation: https://github.com/openedx/tcril-engineering/issues/313
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\search\api.py,996,"TODO: add support for indexing a container's components, like upsert_library_collection_index_doc does."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\search\documents.py,237,# TODO: Implement this for library items too. Libraries didn't support hierarchy at the time
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\search\handlers.py,258,"# TODO: just patch the ""breadcrumbs"" field? It's the same on every one."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\search\handlers.py,259,# TODO: check if the library display_name has actually changed before updating all items?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content\search\handlers.py,386,"# TODO: post-Teak, move all the celery tasks directly inline into this handlers? Because now the"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\contentserver\views.py,49,"# TODO: Soon as we have a reasonable way to serialize/deserialize AssetKeys, we need"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,127,# TODO: should this be a CONTAINER_CHILD_PUBLISHED event instead of CONTAINER_PUBLISHED ?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,230,"# TODO: we should be able to rewrite this to use the ""side effects"" functionality of the publishing API."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,237,"# TODO: do we also need to send CONTENT_OBJECT_ASSOCIATIONS_CHANGED for this component, or is"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,366,FIXME: this is related to legacy modulestore libraries and shouldn't be part of the
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,391,FIXME: this is related to legacy modulestore libraries and shouldn't be part of the
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,431,FIXME: this is related to legacy modulestore libraries and shouldn't be part of the
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tasks.py,474,FIXME: this is related to legacy modulestore libraries and shouldn't be part of the
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,111,"TODO: Full text search needs to be implemented as a custom lookup for MySQL,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,349,# more details. TODO: Change the param name once we change the serializer.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,418,# without one at the moment. TODO: fix this at the model level.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,481,# TODO: more of this logic should be pushed down to openedx_content
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,844,TODO: Should this be in the general XBlock API rather than the libraries API?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\blocks.py,1032,TODO: We should probably shift this to openedx.core.djangoapps.xblock.api
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\containers.py,511,TODO: We intend to replace this implementation with a more efficient one that makes fewer
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\container_metadata.py,124,TODO: We intend to replace this implementation with a more efficient one that makes fewer
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,174,access_level: str | None = AccessLevel.NO_ACCESS  # TODO: make this a proper enum?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,312,# TODO: Do we really need these fields for the library listing view?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,384,"# TODO: I'm doing this one to match already-existing behavior, but this is"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,695,# TODO: Move the LearningPackage delete() operation to an API call
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,696,# TODO: We should eventually detach the LearningPackage and delete it
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,738,# TODO: For now we are using `settings.LIBRARY_ENABLED_BLOCKS` without filtering
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\api\libraries.py,745,# TODO: unify the contentstore helper with the xblock.api version of
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\rest_api\blocks.py,197,# TODO: This check was written when V2 Libraries were backed by the Blockstore micro-service.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\rest_api\serializers.py,192,"# block to. TODO: Remove this, because we don't support it."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\rest_api\serializers.py,197,# TODO: Rename to ``block_id`` or ``slug``. The openedx_content XBlock runtime
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_containers.py,878,# TODO -- remove this when containers publish their children:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_containers.py,888,# /TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_containers.py,954,# TODO -- remove this when containers publish their children:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_containers.py,964,# /TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_content_libraries.py,197,"TODO: This test will technically pass, but it's not really meaningful"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_content_libraries.py,577,TODO: The asset permissions part of this test have been commented out
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_embed_block.py,228,"# TODO: if we are ever able to run these tests in the LMS, test that the LMS only allows accessing the published"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_events.py,393,# TODO: should this be a CONTAINER_CHILD_PUBLISHED event?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_libraries\tests\test_events.py,458,# TODO: should this be a CONTAINER_CHILD_PUBLISHED event?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_staging\views.py,85,FIXME: This API needs to be deprecated and replaced by dedicated APIs
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_tagging\tests\test_api.py,361,with self.assertNumQueries(30):  # TODO why so high?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\content_tagging\tests\test_api.py,381,with self.assertNumQueries(31):  # TODO why so high?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\courseware_api\views.py,760,TODO
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\course_date_signals\handlers.py,75,"# TODO: This is pretty gross, and should maybe be configurable in the future,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\credit\exceptions.py,8,# TODO: Cleanup this mess! ECOM-2908
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\credit\api\eligibility.py,23,# TODO: Cleanup this mess! ECOM-2908
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\credit\api\provider.py,32,# TODO: Cleanup this mess! ECOM-2908
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\discussions\apps.py,17,# TODO: Remove the LMS path once its usage has been removed from frontend-app-course-authoring.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\discussions\models.py,312,TODO: Load this from entry points?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\models.py,92,"# TODO the name of this method is a little bit confusing,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\comment_client\comment.py,136,TODO: Add support for MySQL backend as well
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\comment_client\comment.py,149,TODO: Add support for MySQL backend as well
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\comment_client\thread.py,146,# TODO: This is currently overriding Model._retrieve only to add parameters
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\comment_client\thread.py,223,TODO: Add support for MySQL backend as well
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\django_comment_common\comment_client\thread.py,236,TODO: Add support for MySQL backend as well
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\enrollments\views.py,213,# TODO Implement proper permissions
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\heartbeat\default_checks.py,39,#@TODO Do we want to parse the output for split and mongo detail and return it?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\models\course_details.py,359,"# TODO should this use a mako template? Of course, my hope is"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\notifications\tests\test_filters.py,294,# TODO: Cleanup this test class
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\oauth_dispatch\jwt.py,26,TODO (ARCH-204) Note the returned JWT does not have an underlying access
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\oauth_dispatch\jwt.py,76,# TODO: Remove this broad except if proven this doesn't happen.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\oauth_dispatch\jwt.py,182,# TODO (ARCH-204) Consider getting rid of the 'aud' claim since we don't use it.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\oauth_dispatch\models.py,129,TODO: BOM-1270: This model and table will be removed post-Juniper
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\programs\utils.py,69,# TODO: Don't have business logic of course-certificate==record-available here in LMS.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\programs\utils.py,651,TODO:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\safe_sessions\middleware.py,726,"# TODO move to test code, maybe rename"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\schedules\content_highlights.py,133,# TODO remove the LMS dependency https://github.com/openedx/edx-platform/issues/37659
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\schedules\models.py,20,# Removing this field from the database is a TODO for https://openedx.atlassian.net/browse/AA-574.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\schedules\resolvers.py,87,"# TODO: in the next refactor of this task, pass in current_datetime instead of reproducing it here"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\schedules\utils.py,14,# TODO: consider using a LoggerAdapter instead of this mixin:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\signals\signals.py,13,# TODO: runtime coupling between apps will be reduced if this event is changed to carry a username
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\partition_schemes.py,87,# TODO: had a discussion in arch council about making randomization more
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\partition_schemes.py,107,# TODO: Use the XBlock publish api instead
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\accounts\image_helpers.py,154,"TODO The result of this function should be memoized, but not in tests."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\accounts\utils.py,215,# TODO: Unlink social accounts & change password on each IDA.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\accounts\views.py,1371,TODO: Determine if logs of username are a PII issue.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\course_tag\api.py,106,# TODO: There is a risk of IntegrityErrors being thrown here given
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\management\commands\retire_user.py,154,# TODO: Unlink social accounts & change password on each IDA.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_api\tests\test_views.py,384,"# TODO: If the given id does not match a user, then the filter is a no-op"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\cookies.py,45,# TODO (ARCH-245): Remove the following deprecated cookies.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\toggles.py,13,# TODO: Replace function with SettingToggle when it is available.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\urls.py,8,# TODO move contents of urls_common here once CMS no longer has its own login
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\logout.py,39,"TODO: remove GET as an allowed method, and update all callers to use POST."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\password_reset.py,157,# TODO: This overrides `platform_name` from `get_base_template_context` to make the tests passes
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\register.py,41,# TODO Have the discussions code subscribe to the REGISTER_USER signal instead.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\register.py,286,"# TODO: there is no error checking here to see that the user actually logged in successfully,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\register.py,415,# TODO: DENG-805: remove the properties duplication in the event traits.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\register.py,660,# TODO Verify whether this check is needed here - it may be duplicated in user_api.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\user_authn\views\registration_form.py,155,# TODO: Resolve repetition
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\video_config\services.py,61,TODO: This service could be improved in a few ways:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\video_config\transcripts_utils.py,1012,# TODO: There should be a openedx_content API call for this:
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\video_config\__init__.py,1,# TODO Move this Application to video codebase when Video XModule becomes an XBlock. Reference: TNL-6867.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\api.py,107,# TODO: load field overrides from the context
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\api.py,234,# TODO: we should probably make a method on ComponentVersion that returns
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\rest_api\views.py,97,# Check if a specific version has been requested. TODO: move this to a URL path param like the other views?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\openedx_content_runtime.py,242,"TODO: When we want to copy a whole Section at a time, doing these"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\openedx_content_runtime.py,326,TODO: This is the third place where we're implementing this. Figure out
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\runtime.py,89,"TODO: This should probably be merged with OpenedXContentRuntime, its one and"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\runtime.py,234,# TODO: we shouldn't be using an LMS API here.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\runtime.py,279,# TODO: Do these declarations actually help with anything? Maybe this check should
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,84,"# TODO: Refactor capa to access this directly, don't bother the runtime. Then remove it from here."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,95,"# TODO: Refactor capa to access this directly, don't bother the runtime. Then remove it from here."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,106,# TODO: load the python code from openedx_content. Ensure it's not publicly accessible.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,124,# TODO: implement?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,170,# TODO: implement this to serve any static assets that self._active_block has.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,194,"# TODO: Refactor capa to use the user ID or anonymous ID as the seed, don't bother the runtime."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\djangoapps\xblock\runtime\shims.py,238,"# TODO: Refactor capa to access this directly, don't bother the runtime. Then remove it from here."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\teams_config.py,133,"(TODO MST-12... currently, a learner may join one team per course)."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\teams_config.py,176,"Return value of None should be regarded as ""no maximum size"" (TODO MST-33)."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\teams_config.py,328,"Instead, instructors manage membership (TODO MST-9)."
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\teams_config.py,332,of the teams (TODO MST-10).
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\api\permissions.py,52,# TODO We can optimize this later on when we know which of these methods is used more often.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\celery\task_utils.py,37,# TODO: define the default middleware_classes in settings.py
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\xblock_serializer\api.py,30,TODO: We should deprecate this in favor of a new openedx_content implementation.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\xblock_utils\__init__.py,117,# TODO: This special case will be removed when we update the SCSS under
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\xblock_utils\__init__.py,277,"# TODO: make this more general, eg use an XModule attribute instead"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\core\lib\xblock_utils\__init__.py,311,"# TODO (ichuang): use _has_access_block.can_load in lms.courseware.access,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\envs\common.py,2020,"# TODO: For each of these, either"
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\envs\common.py,2596,# TODO - Change these states to be the LMS-only email opt-out - PLAT-2189
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\envs\common.py,2721,# FIXME: Should we be doing this truncation?
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\envs\test.py,50,# Need wiki for courseware views to work. TODO (vshnayder): shouldn't need it.
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\features\course_experience\tests\views\test_course_updates.py,52,# TODO: decrease query count as part of REVO-28
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\features\discounts\applicability.py,147,# TODO: Add additional conditions to return False here
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\features\enterprise_support\api.py,511,# FIXME: Implement an Enterprise API endpoint where we can get the EC
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\features\enterprise_support\signals.py,109,# TODO: Replace ecommerce_api_client with get_ecommerce_api_client after completing ENT-6112
+B:\LEARNNOV PLATFORM\openedx-platform-master\openedx\features\enterprise_support\utils.py,271,# TODO circular dependency between enterprise_support.api and enterprise_support.utils
+B:\LEARNNOV PLATFORM\openedx-platform-master\scripts\copy-node-modules.sh,67,# TODO: https://github.com/openedx/edx-platform/issues/31768
+B:\LEARNNOV PLATFORM\openedx-platform-master\scripts\xsslint\xsslint\linters.py,738,# TODO: Add configuration for files and paths
+B:\LEARNNOV PLATFORM\openedx-platform-master\scripts\xsslint\xsslint\linters.py,918,"# TODO: When safe-by-default is turned on at the platform level, will we:"
+B:\LEARNNOV PLATFORM\openedx-platform-master\scripts\xsslint\xsslint\linters.py,944,# TODO: This is an imperfect guess concerning the Mako template
+B:\LEARNNOV PLATFORM\openedx-platform-master\scripts\xsslint\xsslint\reporting.py,161,# TODO: this should work at end of any line of the violation
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\capa_block.py,531,# TODO (cpennington): Delete this method once all fall 2012 course are being
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\capa_block.py,696,# TODO set anonymous_student_id to the anonymous ID of the user which answered each problem
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\capa_block.py,1123,"# TODO: Use regex, e.g. 'dynamath' is suffix at end of answer_id"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\conditional_block.py,172,# TODO: it is not clear why we are replacing the run here (which actually is a no-op
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\course_block.py,690,# TODO get rid of this as soon as possible or potentially build in a robust
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\course_block.py,701,# TODO: This is a quick kludge to allow CS50 (and other courses) to
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\course_block.py,713,"# TODO: same as above, intended to let internal CS50 hide the progress tab"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\course_metadata_utils.py,97,# TODO: This will throw if start_date is None... consider changing this behavior?
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\html_block.py,170,# VS[compat] TODO (cpennington): Delete this method once all fall 2012 course
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\html_block.py,261,"# TODO (cpennington): If the file doesn't exist at the right path,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\html_block.py,285,# TODO (ichuang): remove this after migration
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\html_block.py,311,# TODO (vshnayder): make export put things in the right places.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,40,# TODO: Whittle down list of mixins if possible.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,105,NOTE/TODO:
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,263,"self.selected = selected  # TODO: this doesn't save from the LMS ""Progress"" page."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,303,"# TODO: This shouldn't be happening, but at least as of July 2020, it was happening on edx.org for"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,338,"# TODO: It's not clear whether or why we need to add this JS bundle, but we're leaving it in for the Libraries"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,503,# TODO: Need to implement these fields. Will probably need to make `UpstreamMixin` available in the
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\item_bank_block.py,531,TODO: Ensure that this is the prefix we want to stick with
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\library_content_block.py,375,# TODO: change this to action_runtime_event='...' once the unit page supports that feature.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\library_content_block.py,389,# TODO: change this to action_runtime_event='...' once the unit page supports that feature.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\library_root_xblock.py,73,# TODO sort children
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\library_tools.py,104,# TODO: This task is synchronous until we can figure out race conditions with import.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\mongo_utils.py,38,# AED 2020-03-02 TODO: Remove this when 'auth_source' will no longer exist in kwargs
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\poll_block.py,100,"# FIXME: fix this, when xblock will support mutable types."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\poll_block.py,121,"# FIXME: fix this, when xblock will support mutable types."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\poll_block.py,155,# FIXME: hack for resolving caching `default={}` during definition
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\poll_block.py,162,"# FIXME: fix this, when xblock support mutable types."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\seq_block.py,278,# TODO: Cache progress or children array?
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\services.py,96,# TODO: ConfigurationService and its usage will be removed as a part of EDUCATOR-121
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\services.py,159,TODO: Only the old LTI XBlock uses it in 2 places for LTI 2.0 integration. As the LTI XBlock is deprecated in
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tabs.py,225,# TODO: don't import openedx capabilities from common
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tabs.py,374,"# TODO: Ideally, we'd like for this list of tabs to be dynamically"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tabs.py,516,# TODO: don't import openedx capabilities from common
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\templates.py,28,# TODO use memcache to memoize w/ expiration
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\template_block.py,87,# TODO (vshnayder): better exception type
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\vertical_block.py,231,# TODO: Cache progress or children array?
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\vertical_block.py,282,# TODO: Remove this when studio better supports editing of pure XBlocks.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\word_cloud_block.py,220,"# FIXME: we must use raw JSON, not a post data (multipart/form-data)"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\word_cloud_block.py,226,"# FIXME: fix this, when xblock will support mutable types."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\x_module.py,494,TODO: Move this method directly to the ConditionalBlock.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\assets\word_cloud\webpack.config.js,45,"'edx-ui-toolkit': 'edx-ui-toolkit/src/', // @TODO: some paths in toolkit are not valid relative paths"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\assets\word_cloud\src\js\d3.layout.cloud.js,135,// TODO only check for collisions within current bounds.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\assets\word_cloud\src\js\d3.layout.cloud.js,398,// TODO reuse arrays?
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\capa\safe_exec\remote_exec.py,5,TODO: Remove this file in a future release using the standard DEPR process.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\contentstore\content.py,145,# TODO - re-address this once LMS-11198 is tackled.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\contentstore\content.py,305,url = '/' + url  # TODO - re-address this once LMS-11198 is tackled.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\contentstore\mongo.py,247,"# TODO: On 6/19/14, I had to put a try/except around this"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\contentstore\mongo.py,536,# TODO: uncomment this line once this index in prod is cleaned up. See OPS-2863 for tracking clean up.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\spec\video\video_control_spec.js,276,// TODO: Fix!
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\spec\video\video_control_spec.js,336,// TODO: Fix!
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\spec\video\video_focus_grabber_spec.js,85,"// TODO: Most likely, focusGrabber will be disabled in the future. This"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\src\javascript_loader.js,32,// TODO: Verify the execution order of multiple placeholders
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\src\javascript_loader.js,67,"// TODO: Check if the script already exists in DOM. If so, (1) copy it"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\src\annotatable\display.js,3,// TODO: Examine all of the xss-lint exceptions (https://openedx.atlassian.net/browse/PLAT-2084)
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\src\capa\display.js,770,// TODO this needs modification to deal with javascript responses; perhaps we
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\js\src\capa\display.js,802,// TODO remove the above once everything is extracted into its own
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\django.py,359,"# TODO: This import prevents a circular import issue, but is"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml.py,243,# TODO (vshnayder): We may want to enable this once course repos are cleaned up.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml.py,261,"# TODO (vshnayder): if the tag is a pointer tag, this will"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml.py,332,# TODO (vshnayder): we are somewhat architecturally confused in the loading code:
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml.py,422,see https://openedx.atlassian.net/browse/MA-417 as a pending TODO.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml_importer.py,921,# TODO: Move this code once the following condition is met.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\xml_importer.py,959,# TODO save library default settings to course's OLX and then load them here if available:
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\__init__.py,1196,# TODO move the inheritance_cache_subsystem to classes which use it
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\__init__.py,1211,"# TODO (vshnayder): post-launch, make errors properties of items"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\mongo\base.py,212,# TODO: make module_data a proper class that can handle this itself.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\mongo\base.py,458,# TODO (cpennington): Enable non-filesystem filestores
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\mongo\base.py,709,"# TODO Once TNL-5092 is implemented, we can remove the following line"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\mongo\base.py,810,if not (  # TODO kill this
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\id_manager.py,13,# TODO: Migrate split_mongo to use this class for all key mapping/creation.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\runtime.py,131,"# TODO Once TNL-5092 is implemented, we can expose the course version"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split.py,142,"# TODO: This needs to track which branches have actually been modified/versioned,"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split.py,848,# TODO should this raise an exception if branch was provided?
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split.py,1059,TODO: better way of identifying library index entry vs. course index entry.
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split.py,1416,# TODO figure out a way to make this info accessible from the course block
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split.py,1463,# TODO implement
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\split_mongo\split_draft.py,379,"# TODO Instead, the for_branch implementation should be fixed in the Opaque Keys library."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\tests\test_mixed_modulestore.py,24,# TODO remove this import and the configuration -- xmodule should not depend on django!
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\tests\test_split_modulestore.py,1873,# FIXME LMS-11376
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\modulestore\tests\test_split_modulestore.py,1879,# FIXME LMS-11376
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tests\test_capa_block.py,147,"# TODO: probably better to actually set the internal state properly, but..."
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tests\test_import.py,482,"TODO (vshnayder): once we have a CMS, this shouldn't"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\tests\test_library_content.py,778,TODO(https://github.com/openedx/edx-platform/issues/37837):
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\util\sandboxing.py,32,"# TODO: This should be a database configuration, where we can mark individual courses as being"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\util\sandboxing.py,36,"# as per the TODO, so please consider carefully before adding more values to COURSES_WITH_UNSAFE_CODE"
+B:\LEARNNOV PLATFORM\openedx-platform-master\xmodule\video_block\video_xfields.py,29,"# TODO: This should be moved to Scope.content, but this will"

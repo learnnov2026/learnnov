@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tutor-learnnov"
+version = "1.0.0"
+description = "Tutor plugin for LearnNov — Arabic eLearning Platform"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["tutor>=17.0.0"]
+
+[project.entry-points."tutor.plugin.v1"]
+learnnov = "tutorlearnnov.plugin"
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNov — منصة التعليم الإلكتروني العربية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-light: #14b8a6;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            opacity: 0.9;
+        }
+        .btn {
+            background-color: white;
+            color: var(--primary);
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .card-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+        }
+        .card-content {
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        .footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>مرحباً بك في <span style="color: var(--primary-light)">LearnNov</span></h1>
+        <p>المنصة العربية الرائدة للتعليم الأكاديمي والمهني. استكشف البرامج المعتمدة من أفضل الجامعات في المنطقة.</p>
+        <a href="/admin/" class="btn">دخول لوحة الإدارة</a>
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">البرامج المميزة</h2>
+        <div class="grid">
+            {% for program in featured_programs %}
+            <div class="card">
+                <div class="card-img" style="background-image: url('{% if program.cover_image %}{{ program.cover_image.url }}{% else %}https://images.unsplash.com/photo-1523050853063-bd8012fec046{% endif %}')"></div>
+                <div class="card-content">
+                    <h3 class="card-title">{{ program.title }}</h3>
+                    <p>{{ program.provider.name }}</p>
+                    <p style="font-weight: bold; color: var(--primary);">{{ program.tuition_fee }} {{ program.currency }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1/-1;">لا توجد برامج مميزة حالياً.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 LearnNov — جميع الحقوق محفوظة.</p>
+    </footer>
+</body>
+</html>

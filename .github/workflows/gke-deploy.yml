@@ -1,0 +1,58 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: learnnov-cluster
+  GKE_ZONE: me-central1-a
+  REGION: me-central1
+  REPOSITORY: learnnov
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies & Run Bandit
+        run: |
+          pip install bandit
+          bandit -r learnnov-cloud/apps
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Setup GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Django Docker Image
+        run: |-
+          IMAGE_LATEST="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/learnnov-cloud:latest"
+          docker build -t "$IMAGE_LATEST" -f Dockerfile.prod .
+          docker push "$IMAGE_LATEST"
+
+      - name: Deploy to GKE
+        run: |-
+          # Using deploy-gke.ps1 or standard kubectl
+          pwsh -File ./deploy-gke.ps1

@@ -1,0 +1,178 @@
+# =============================================================================
+# نشر تطبيق جانغو (Django Deployment) لمنصة ليرن نوف
+# يتضمن حاوية التطبيق الرئيسية وحاوية Cloud SQL Auth Proxy الجانبية
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnnov-django
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    # وصف النشر
+    description: "نشر تطبيق جانغو الرئيسي لمنصة ليرن نوف"
+spec:
+  # عدد النسخ المتماثلة - يضمن توفر عالي
+  replicas: 2
+  # استراتيجية التحديث التدريجي لتجنب انقطاع الخدمة
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # أقصى عدد من البودات الإضافية أثناء التحديث
+      maxSurge: 1
+      # أقصى عدد من البودات غير المتاحة أثناء التحديث
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: learnnov
+      app.kubernetes.io/component: django
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: learnnov
+        app.kubernetes.io/component: django
+    spec:
+      # حساب الخدمة المرتبط بـ Workload Identity
+      serviceAccountName: learnnov-sa
+
+      # سياق الأمان على مستوى البود
+      securityContext:
+        # منع تشغيل الحاويات كمستخدم root
+        runAsNonRoot: true
+        # تشغيل كمستخدم غير root (UID 1000)
+        runAsUser: 1000
+        runAsGroup: 1000
+        # نظام الملفات للقراءة فقط حيثما أمكن
+        fsGroup: 1000
+
+      containers:
+        # =====================
+        # حاوية تطبيق جانغو الرئيسية
+        # =====================
+        - name: django
+          image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/learnnov/learnnov-cloud:latest
+          imagePullPolicy: Always
+
+          # أمر تشغيل Gunicorn مع الإعدادات المحسنة
+          command:
+            - "gunicorn"
+            - "config.wsgi:application"
+            - "--bind"
+            - "0.0.0.0:8000"
+            - "--workers"
+            - "4"
+            - "--timeout"
+            - "120"
+            - "--access-logfile"
+            - "-"
+            - "--error-logfile"
+            - "-"
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # تحميل المتغيرات البيئية من خريطة الإعدادات
+          envFrom:
+            - configMapRef:
+                name: learnnov-config
+            - secretRef:
+                name: learnnov-secrets
+
+          # متغيرات بيئية إضافية
+          env:
+            # رابط قاعدة البيانات من السر
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: learnnov-secrets
+                  key: database-url
+
+          # =====================
+          # موارد الحاوية
+          # =====================
+          resources:
+            # الحد الأدنى المطلوب من الموارد
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            # الحد الأقصى المسموح به من الموارد
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # =====================
+          # فحص الجاهزية - يحدد متى تكون الحاوية جاهزة لاستقبال الطلبات
+          # =====================
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            # الانتظار قبل بدء الفحص
+            initialDelaySeconds: 15
+            # الفترة بين كل فحص
+            periodSeconds: 10
+            # مهلة الفحص
+            timeoutSeconds: 5
+            # عدد المحاولات الناجحة المطلوبة
+            successThreshold: 1
+            # عدد المحاولات الفاشلة قبل اعتبار الحاوية غير جاهزة
+            failureThreshold: 3
+
+          # =====================
+          # فحص الحياة - يحدد ما إذا كانت الحاوية تعمل بشكل صحيح
+          # =====================
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            # الانتظار لفترة أطول قبل بدء فحص الحياة
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # سياق الأمان على مستوى الحاوية
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+        # =====================
+        # حاوية Cloud SQL Auth Proxy الجانبية
+        # توفر اتصالاً آمناً بقاعدة بيانات Cloud SQL
+        # =====================
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+          args:
+            # تفعيل السجلات المنظمة
+            - "--structured-logs"
+            # اسم اتصال مثيل Cloud SQL
+            - "${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
+
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+
+          # موارد محدودة لأن البروكسي لا يحتاج الكثير
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

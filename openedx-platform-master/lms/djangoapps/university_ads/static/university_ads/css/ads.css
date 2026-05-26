@@ -1,0 +1,183 @@
+/* =========================================================
+   University Ads — LearnNov Platform
+   ========================================================= */
+
+/* ── Banner (top placement) ────────────────────────────── */
+.univ-ads-banner {
+  width: 100%;
+  margin-bottom: 24px;
+  direction: rtl;
+}
+
+.univ-ads-banner__inner {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+}
+
+.univ-ads-banner__inner::-webkit-scrollbar { height: 4px; }
+.univ-ads-banner__inner::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+/* Single ad card inside banner */
+.univ-ad-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+  background: #fff;
+  transition: transform .2s, box-shadow .2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.univ-ad-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.14);
+}
+
+.univ-ad-card__image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.univ-ad-card__body {
+  padding: 12px 14px;
+}
+
+.univ-ad-card__university {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.univ-ad-card__university-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.univ-ad-card__university-name {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.univ-ad-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.univ-ad-card__desc {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.univ-ad-card__badge {
+  display: inline-block;
+  font-size: 10px;
+  background: #f3f4f6;
+  color: #9ca3af;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+/* ── Sidebar (sidebar placement) ───────────────────────── */
+.univ-ads-sidebar {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  padding: 16px;
+  direction: rtl;
+  margin-bottom: 24px;
+}
+
+.univ-ads-sidebar__header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.univ-ad-sidebar-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background .15s;
+}
+
+.univ-ad-sidebar-item:last-child { border-bottom: none; }
+
+.univ-ad-sidebar-item:hover { background: #f9fafb; border-radius: 8px; }
+
+.univ-ad-sidebar-item__image {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.univ-ad-sidebar-item__info { flex: 1; }
+
+.univ-ad-sidebar-item__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 3px;
+  line-height: 1.3;
+}
+
+.univ-ad-sidebar-item__university {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ── Sponsored label ────────────────────────────────────── */
+.univ-ads-sponsored-label {
+  font-size: 10px;
+  color: #9ca3af;
+  text-align: left;
+  margin-top: 6px;
+}
+
+/* ── Loading skeleton ───────────────────────────────────── */
+.univ-ad-skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: univ-shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+
+@keyframes univ-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

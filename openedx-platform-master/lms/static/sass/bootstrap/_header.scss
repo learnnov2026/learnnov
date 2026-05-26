@@ -1,0 +1,16 @@
+// Open edX: LMS header
+// ====================
+
+.header-global {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e6ea;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  .logo-header {
+    margin: 0;
+    padding: 0;
+
+    .logo-image {
+      height: 40px;
+    }
+  }
+}

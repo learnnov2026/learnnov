@@ -1,0 +1,26 @@
+name: Bandit SARIF
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  bandit-sarif:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Bandit
+        run: pip install bandit
+      - name: Run Bandit and generate SARIF
+        run: |
+          bandit -r . -ll -f sarif -o bandit.sarif
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: bandit.sarif

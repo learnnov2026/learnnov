@@ -1,0 +1,117 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "Certificate of Completion" %} — {{ course_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&family=Merriweather:wght@400;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    {% include "learnnov_certificates/certificate_styles.css" %}
+  </style>
+</head>
+<body class="cert-body">
+
+<div class="cert-page" id="certificate">
+  <div class="cert-corner cert-corner--tl"></div>
+  <div class="cert-corner cert-corner--tr"></div>
+  <div class="cert-corner cert-corner--bl"></div>
+  <div class="cert-corner cert-corner--br"></div>
+
+  <!-- Header -->
+  <header class="cert-header">
+    <div class="cert-header__logo-wrap">
+      <img class="cert-header__logo" src="{% static 'images/logo.png' %}" alt="{{ platform_name }}"
+           onerror="this.style.display='none'">
+      <span class="cert-header__brand">{{ platform_name }}</span>
+    </div>
+    <div class="cert-header__tagline">{% trans "Arabic eLearning Platform" %}</div>
+  </header>
+
+  <!-- Ribbon -->
+  <div class="cert-ribbon">
+    <span class="cert-ribbon__text">{% trans "Certificate of Completion" %}</span>
+  </div>
+
+  <!-- Body -->
+  <main class="cert-body-content">
+
+    <p class="cert-intro">{% trans "This certifies that" %}</p>
+
+    <div class="cert-recipient">
+      <span class="cert-recipient__name">{{ student_name }}</span>
+    </div>
+
+    <p class="cert-description">{% trans "has successfully completed" %}</p>
+
+    <div class="cert-course">
+      <span class="cert-course__name">{{ course_name }}</span>
+      {% if course_org %}
+      <span class="cert-course__org">{% trans "Offered by" %}: {{ course_org }}</span>
+      {% endif %}
+    </div>
+
+    {% if grade %}
+    <div class="cert-grade">
+      <span class="cert-grade__label">{% trans "Final Grade" %}</span>
+      <span class="cert-grade__value">{{ grade }}%</span>
+    </div>
+    {% endif %}
+
+    {% if signatories %}
+    <div class="cert-signatories">
+      {% for sig in signatories %}
+      <div class="cert-signatory">
+        {% if sig.signature_image_path %}
+        <img class="cert-signatory__sig"
+             src="{% static sig.signature_image_path %}" alt="{{ sig.name }}">
+        {% endif %}
+        <div class="cert-signatory__line"></div>
+        <p class="cert-signatory__name">{{ sig.name }}</p>
+        <p class="cert-signatory__title">{{ sig.title }}</p>
+        <p class="cert-signatory__org">{{ sig.organization }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="cert-footer">
+    <div class="cert-footer__date">
+      <span class="cert-footer__label">{% trans "Issue Date" %}</span>
+      <span class="cert-footer__value">{{ issue_date }}</span>
+    </div>
+    <div class="cert-footer__id">
+      <span class="cert-footer__label">{% trans "Certificate ID" %}</span>
+      <span class="cert-footer__value cert-footer__uuid">{{ verify_uuid }}</span>
+    </div>
+    <div class="cert-footer__qr">
+      {% if qr_image_url %}
+      <img class="cert-qr-img" src="{{ qr_image_url }}" alt="{% trans 'Scan to Verify' %}">
+      {% endif %}
+      <p class="cert-qr-label">{% trans "Scan to Verify" %}</p>
+    </div>
+  </footer>
+
+  <div class="cert-watermark" aria-hidden="true">{{ platform_name }}</div>
+</div>
+
+<!-- Action bar -->
+<div class="cert-actions no-print">
+  <button class="cert-action-btn" onclick="window.print()">
+    🖨 {% trans "Print / Save as PDF" %}
+  </button>
+  <a class="cert-action-btn cert-action-btn--outline"
+     href="{% url 'learnnov_certificates:verify_certificate' verify_uuid %}">
+    ✅ {% trans "Verify Certificate" %}
+  </a>
+  <a class="cert-action-btn cert-action-btn--outline" href="{% if LEARNNOV_SITE_URL %}{{ LEARNNOV_SITE_URL }}{% endif %}/dashboard/">
+    {% trans "Back to Dashboard" %}
+  </a>
+</div>
+
+</body>
+</html>

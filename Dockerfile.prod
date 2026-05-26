@@ -1,0 +1,77 @@
+# =============================================================================
+# Dockerfile.prod — LearnNov Cloud Production Image
+# بناء متعدد المراحل لتقليل حجم الصورة وتحسين الأمان
+# =============================================================================
+
+# ── المرحلة 1: البناء ────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# تثبيت أدوات البناء
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc \
+        libpq-dev \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# نسخ وتثبيت المتطلبات أولاً (للاستفادة من Docker cache)
+COPY learnnov-cloud/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ── المرحلة 2: الإنتاج ──────────────────────────────────────────────────────
+FROM python:3.11-slim AS production
+
+# متغيرات البيئة
+ENV DJANGO_SETTINGS_MODULE=config.settings \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+# تثبيت المكتبات اللازمة فقط (بدون أدوات البناء)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpq5 \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# إنشاء مستخدم غير root للأمان
+RUN groupadd -r learnnov && useradd -r -g learnnov -d /app -s /sbin/nologin learnnov
+
+WORKDIR /app
+
+# نسخ المكتبات من مرحلة البناء
+COPY --from=builder /install /usr/local
+
+# نسخ كود المشروع
+COPY learnnov-cloud/ .
+
+# إنشاء مجلدات الملفات الثابتة والوسائط
+RUN mkdir -p /app/staticfiles /app/media /app/static && \
+    chown -R learnnov:learnnov /app
+
+# جمع الملفات الثابتة
+RUN SECRET_KEY=dummy python manage.py collectstatic --noinput
+
+# التبديل إلى المستخدم غير root
+USER learnnov
+
+# فحص صحة الحاوية
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health/ || exit 1
+
+# الكشف عن المنفذ
+EXPOSE ${PORT}
+
+# تشغيل Gunicorn للإنتاج
+CMD ["gunicorn", "config.wsgi:application", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "gthread", \
+     "--threads", "2", \
+     "--timeout", "120", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "50", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]

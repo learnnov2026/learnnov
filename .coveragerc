@@ -1,0 +1,14 @@
+[run]
+# omit the tests themselves from coverage
+omit =
+    */tests/*
+    */venv/*
+    */env/*
+    */setup.py
+    */manage.py
+
+[report]
+# show missing lines in the terminal output
+show_missing = True
+# generate HTML report
+skip_covered = False

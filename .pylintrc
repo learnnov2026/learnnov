@@ -1,0 +1,25 @@
+[MASTER]
+ignore=venv,env,build,dist,__pycache__
+load-plugins=pylint_django
+
+[MESSAGES CONTROL]
+# Disable some messages that are too noisy for this project
+disable=missing-docstring,invalid-name,too-few-public-methods,too-many-arguments,too-many-locals,duplicate-code
+
+[FORMAT]
+max-line-length=120
+indent-string='    '
+
+[TYPECHECK]
+ignored-modules=django
+
+[DESIGN]
+max-parents=7
+max-attributes=10
+max-returns=6
+max-branches=12
+max-statements=50
+
+[REPORTS]
+output-format=colorized
+score=no

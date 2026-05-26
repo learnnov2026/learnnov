@@ -1,0 +1,88 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "Payment Failed" %} — LearnNov</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #fef2f2;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .result-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 56px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(220,38,38,.1);
+      text-align: center;
+    }
+    .result-icon  { font-size: 72px; margin-bottom: 16px; }
+    .result-title { font-size: 26px; font-weight: 800; color: #dc2626; margin-bottom: 12px; }
+    .result-body  { font-size: 15px; color: #374151; margin-bottom: 12px; line-height: 1.7; }
+    .result-code  {
+      font-size: 12px;
+      color: #9ca3af;
+      font-family: monospace;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin-bottom: 24px;
+      display: inline-block;
+    }
+    .btn {
+      display: inline-block;
+      padding: 13px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      margin: 6px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary { background: #dc2626; color: #fff; }
+    .btn-primary:hover { background: #b91c1c; }
+    .btn-outline  { border: 2px solid #dc2626; color: #dc2626; background: transparent; }
+    .btn-outline:hover { background: #fef2f2; }
+    .result-note  { font-size: 13px; color: #6b7280; margin-top: 16px; }
+    .result-brand { font-size: 12px; color: #9ca3af; margin-top: 28px; }
+    .result-brand strong { color: #0f766e; }
+  </style>
+</head>
+<body>
+<div class="result-card">
+  <div class="result-icon">❌</div>
+  <h1 class="result-title">{% trans "Payment Incomplete" %}</h1>
+  <p class="result-body">
+    {% trans "An error occurred while processing your payment. No amount was charged." %}
+  </p>
+  {% if result_code %}
+  <span class="result-code">{% trans "Error code" %}: {{ result_code }}</span>
+  {% endif %}
+  <div>
+    <button class="btn btn-primary" onclick="history.back()">
+      🔄 {% trans "Try Again" %}
+    </button>
+    <a href="/dashboard/" class="btn btn-outline">{% trans "Back to Dashboard" %}</a>
+  </div>
+  <p class="result-note">
+    {% trans "If the issue persists, please contact our support team." %}
+  </p>
+  <p class="result-brand">
+    {% trans "Powered by" %} <strong>LearnNov</strong>
+    &mdash; {% trans "Arabic eLearning Platform" %}
+  </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+# =============================================================================
+# خريطة الإعدادات (ConfigMap) لمنصة ليرن نوف
+# تحتوي على جميع المتغيرات البيئية غير الحساسة المطلوبة لتشغيل التطبيق
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: learnnov-config
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: config
+    app.kubernetes.io/managed-by: kubectl
+data:
+  # =====================
+  # إعدادات جانغو الأساسية
+  # =====================
+
+  # مسار ملف إعدادات جانغو
+  DJANGO_SETTINGS_MODULE: "config.settings"
+
+  # تعطيل وضع التصحيح في بيئة الإنتاج - مهم جداً للأمان
+  DEBUG: "False"
+
+  # النطاقات المسموح بها للوصول إلى التطبيق
+  ALLOWED_HOSTS: "learnnov.org,*.learnnov.org"
+
+  # =====================
+  # إعدادات قاعدة البيانات والتخزين المؤقت
+  # =====================
+
+  # عنوان قاعدة البيانات - يتم تعيينه عبر Cloud SQL Proxy على المنفذ المحلي
+  # القيمة الفعلية محفوظة في السر (Secret) لأنها تحتوي على كلمة المرور
+  DATABASE_HOST: "127.0.0.1"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "learnnov_db"
+
+  # عنوان Redis للتخزين المؤقت وقوائم الانتظار
+  # سيتم تحديث هذا العنوان بعد إنشاء Memorystore
+  REDIS_URL: "redis://MEMORYSTORE_IP:6379/0"
+
+  # =====================
+  # إعدادات الموقع
+  # =====================
+
+  # رابط الموقع الرئيسي
+  LEARNNOV_SITE_URL: "https://learnnov.org"
+
+  # اسم المنصة المعروض للمستخدمين
+  PLATFORM_NAME: "LearnNov"
+
+  # لغة الموقع الافتراضية - العربية
+  LANGUAGE_CODE: "ar"
+
+  # المنطقة الزمنية
+  TIME_ZONE: "Asia/Riyadh"
+
+  # =====================
+  # إعدادات الملفات الثابتة والوسائط
+  # =====================
+
+  # استخدام Google Cloud Storage للملفات الثابتة والوسائط
+  STATIC_URL: "/static/"
+  MEDIA_URL: "/media/"
+
+  # =====================
+  # إعدادات Gunicorn
+  # =====================
+
+  # عدد العمال لخادم Gunicorn
+  GUNICORN_WORKERS: "4"
+
+  # مهلة الاتصال بالثواني
+  GUNICORN_TIMEOUT: "120"

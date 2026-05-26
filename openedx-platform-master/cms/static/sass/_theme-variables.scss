@@ -1,0 +1,45 @@
+// _theme-variables.scss – Centralized design tokens
+// -------------------------------------------------
+
+// Primary brand colours (WCAG AA compliant)
+$color-primary: #0066CC; // vibrant blue
+$color-primary-dark: #0055AA; // darker for hover/focus
+$color-primary-light: #3388FF; // lighter for light backgrounds
+
+// Secondary accent colour
+$color-secondary: #FF5722; // orange accent
+$color-secondary-dark: #E64A19;
+$color-secondary-light: #FF784E;
+
+// Neutral palette
+$color-white: #FFFFFF;
+$color-black: #000000;
+$color-gray-bg: #F5F7FA;
+$color-gray-foreground: #212529;
+
+// Font family
+$font-base: 'Inter', sans-serif;
+
+// Dark‑mode overrides (prefers-color-scheme: dark)
+@media (prefers-color-scheme: dark) {
+  $color-primary: #3399FF;
+  $color-primary-dark: #2277CC;
+  $color-secondary: #FF8A50;
+  $color-gray-bg: #1E1E1E;
+  $color-gray-foreground: #E0E0E0;
+}
+
+// Export as CSS custom properties for runtime theming
+:root {
+  --color-primary: #{$color-primary};
+  --color-primary-dark: #{$color-primary-dark};
+  --color-primary-light: #{$color-primary-light};
+  --color-secondary: #{$color-secondary};
+  --color-secondary-dark: #{$color-secondary-dark};
+  --color-secondary-light: #{$color-secondary-light};
+  --color-white: #{$color-white};
+  --color-black: #{$color-black};
+  --color-gray-bg: #{$color-gray-bg};
+  --color-gray-fg: #{$color-gray-foreground};
+  --font-base: #{$font-base};
+}

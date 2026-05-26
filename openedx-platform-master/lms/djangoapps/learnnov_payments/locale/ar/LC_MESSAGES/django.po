@@ -1,0 +1,116 @@
+# Arabic translations for learnnov_payments
+# LearnNov Platform
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+msgid "Pending"
+msgstr "قيد المعالجة"
+
+msgid "Paid"
+msgstr "مدفوع"
+
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Refunded"
+msgstr "مسترَدّ"
+
+msgid "Course ID"
+msgstr "معرِّف الدورة"
+
+msgid "Course Name"
+msgstr "اسم الدورة"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgid "Currency"
+msgstr "العملة"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Payment Gateway"
+msgstr "بوابة الدفع"
+
+msgid "Order"
+msgstr "طلب شراء"
+
+msgid "Orders"
+msgstr "طلبات الشراء"
+
+msgid "Card Brand"
+msgstr "نوع البطاقة"
+
+msgid "Stripe Payment"
+msgstr "دفعة Stripe"
+
+msgid "Stripe Payments"
+msgstr "دفعات Stripe"
+
+msgid "HyperPay Payment"
+msgstr "دفعة HyperPay"
+
+msgid "HyperPay Payments"
+msgstr "دفعات HyperPay"
+
+msgid "Order Summary"
+msgstr "ملخص الطلب"
+
+msgid "Choose Payment Method"
+msgstr "اختر طريقة الدفع"
+
+msgid "International Card"
+msgstr "بطاقة دولية (Visa / Mastercard)"
+
+msgid "MADA (Saudi Debit)"
+msgstr "مدى (بطاقة سعودية)"
+
+msgid "Pay"
+msgstr "ادفع"
+
+msgid "via MADA"
+msgstr "عبر مدى"
+
+msgid "Payment is secure and encrypted. We do not store your card details."
+msgstr "الدفع آمن ومشفَّر — لا نحتفظ ببيانات بطاقتك."
+
+msgid "Payment Successful"
+msgstr "تمّ الدفع بنجاح"
+
+msgid "Payment Successful!"
+msgstr "تمّ الدفع بنجاح!"
+
+msgid "You have been enrolled in"
+msgstr "تمّ تسجيلك في الدورة"
+
+msgid "Start Learning Now"
+msgstr "ابدأ التعلُّم الآن"
+
+msgid "Back to Dashboard"
+msgstr "العودة إلى لوحة التحكم"
+
+msgid "Payment Failed"
+msgstr "فشل الدفع"
+
+msgid "Payment Incomplete"
+msgstr "لم تكتمل عملية الدفع"
+
+msgid "An error occurred while processing your payment. No amount was charged."
+msgstr "حدث خطأ أثناء معالجة دفعتك. لم يُخصَم أي مبلغ."
+
+msgid "Error code"
+msgstr "رمز الخطأ"
+
+msgid "Try Again"
+msgstr "حاول مجدَّداً"
+
+msgid "An error occurred. Please try again."
+msgstr "حدث خطأ. يُرجى المحاولة مرة أخرى."
+
+msgid "Checkout"
+msgstr "إتمام الدفع"

@@ -1,0 +1,135 @@
+# =============================================================================
+# شهادة SSL المُدارة (ManagedCertificate) لمنصة ليرن نوف
+# يتم إصدارها وتجديدها تلقائياً بواسطة Google Cloud
+# تغطي النطاق الرئيسي ونطاق الاستوديو
+# =============================================================================
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: learnnov-cert
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  domains:
+    # النطاق الرئيسي للمنصة
+    - learnnov.org
+    # نطاق استوديو إنشاء المحتوى
+    - studio.learnnov.org
+
+---
+
+# =============================================================================
+# مورد FrontendConfig لإعادة توجيه HTTP إلى HTTPS
+# يضمن أن جميع الطلبات تمر عبر اتصال مشفر
+# =============================================================================
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: learnnov-frontend-config
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: frontend-config
+spec:
+  # إعادة توجيه جميع طلبات HTTP إلى HTTPS تلقائياً
+  redirectToHttps:
+    enabled: true
+    # كود إعادة التوجيه 301 (دائم)
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT
+
+---
+
+# =============================================================================
+# بوابة الدخول (Ingress) لمنصة ليرن نوف
+# تتحكم في توجيه حركة المرور الخارجية إلى الخدمات الداخلية
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: learnnov-ingress
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    # استخدام موازن أحمال Google Cloud الخارجي
+    kubernetes.io/ingress.class: "gce"
+    # ربط الشهادة المُدارة
+    networking.gke.io/managed-certificates: "learnnov-cert"
+    # ربط إعدادات الواجهة الأمامية لإعادة التوجيه
+    networking.gke.io/v1beta1.FrontendConfig: "learnnov-frontend-config"
+    # عنوان IP ثابت (يجب إنشاؤه مسبقاً باستخدام gcloud)
+    # gcloud compute addresses create learnnov-ip --global
+    kubernetes.io/ingress.global-static-ip-name: "learnnov-ip"
+    description: "بوابة الدخول الرئيسية لمنصة ليرن نوف"
+spec:
+  rules:
+    # =====================
+    # قواعد النطاق الرئيسي learnnov.org
+    # =====================
+    - host: learnnov.org
+      http:
+        paths:
+          # توجيه طلبات API إلى خدمة جانغو
+          - path: /api/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-django-service
+                port:
+                  number: 80
+
+          # توجيه طلبات لوحة الإدارة إلى جانغو
+          - path: /admin/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-django-service
+                port:
+                  number: 80
+
+          # توجيه طلبات الملفات الثابتة لجانغو
+          - path: /static/admin/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-django-service
+                port:
+                  number: 80
+
+          # توجيه webhook الخاص بـ Stripe
+          - path: /webhooks/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-django-service
+                port:
+                  number: 80
+
+          # جميع الطلبات الأخرى تذهب إلى Open edX (المسار الافتراضي)
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-openedx-service
+                port:
+                  number: 80
+
+    # =====================
+    # قواعد نطاق الاستوديو studio.learnnov.org
+    # جميع الطلبات تذهب إلى Open edX CMS
+    # =====================
+    - host: studio.learnnov.org
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: learnnov-openedx-service
+                port:
+                  number: 80

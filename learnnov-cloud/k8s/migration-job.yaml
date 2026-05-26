@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: learnnov-migration-job
+  namespace: learnnov
+  annotations:
+    # سيجعل هذا التعليق التوضيحي وظيفة التهيئة تعمل قبل ترقية الحاويات الأساسية في Helm لو استخدم لاحقاً
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: learnnov-sa
+      containers:
+        - name: django-migrate
+          image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/learnnov/learnnov-cloud:latest
+          command: ["python", "manage.py", "migrate", "--noinput"]
+          envFrom:
+            - secretRef:
+                name: learnnov-secrets
+          env:
+            - name: DATABASE_URL
+              value: "postgres://learnnov:${POSTGRES_PASSWORD}@127.0.0.1:5432/learnnov_db"
+
+        # Sidecar container for Cloud SQL Proxy
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+          args:
+            - "--structured-logs"
+            - "${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
+          securityContext:
+            runAsNonRoot: true
+      restartPolicy: Never
+  backoffLimit: 2

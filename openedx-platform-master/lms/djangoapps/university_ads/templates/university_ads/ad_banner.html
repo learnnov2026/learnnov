@@ -1,0 +1,10 @@
+{% comment %}
+  University ad banner — top placement (dashboard_top / search_top / catalog)
+  Usage: {% include "university_ads/ad_banner.html" with placement="dashboard_top" %}
+{% endcomment %}
+
+<div class="univ-ads-banner" data-placement="{{ placement }}" dir="rtl">
+  <div class="univ-ads-banner__inner" id="univ-ads-banner-{{ placement }}">
+    {# Ads injected by ads.js via /api/university_ads/ads/?placement=... #}
+  </div>
+</div>

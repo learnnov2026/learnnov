@@ -1,0 +1,176 @@
+<%inherit file="main.html" />
+<%namespace name='static' file='static_content.html'/>
+<%!
+from django.utils.translation import gettext as _
+from openedx.core.djangolib.js_utils import dump_js_escaped_json
+%>
+
+<%block name="title">${_("Checkout")} — ${course_name | h}</%block>
+<%block name="bodyclass">checkout-page</%block>
+
+<%block name="headextra">
+<link rel="stylesheet" href="${static.url('learnnov_payments/css/checkout.css')}" type="text/css">
+</%block>
+
+<%block name="content">
+<div class="checkout-wrapper" dir="${static.dir_rtl()}">
+  <div class="checkout-card">
+
+    <!-- ── Order Summary ── -->
+    <div class="checkout-summary">
+      <h2 class="checkout-summary__title">${_("Order Summary")}</h2>
+      <p class="checkout-summary__course">${course_name | h}</p>
+      <div class="checkout-summary__price">
+        <span class="checkout-summary__amount">${price}</span>
+        <span class="checkout-summary__currency">${currency}</span>
+      </div>
+    </div>
+
+    <!-- ── Payment Methods ── -->
+    <div class="checkout-methods">
+      <h3 class="checkout-methods__title">${_("Choose Payment Method")}</h3>
+
+      <div class="checkout-tabs">
+        <button class="checkout-tab active" data-tab="stripe" type="button">
+          <img src="${static.url('learnnov_payments/img/visa-mc.svg')}" alt="Visa/Mastercard" height="24">
+          ${_("International Card")}
+        </button>
+        <button class="checkout-tab" data-tab="mada" type="button">
+          <img src="${static.url('learnnov_payments/img/mada.svg')}" alt="mada" height="24">
+          ${_("MADA (Saudi Debit)")}
+        </button>
+      </div>
+
+      <!-- Stripe panel -->
+      <div class="checkout-panel active" id="panel-stripe">
+        <form id="stripe-form">
+          <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}">
+          <div id="stripe-card-element" class="stripe-card-element"></div>
+          <div id="stripe-errors" class="checkout-error" role="alert"></div>
+          <button type="submit" class="checkout-btn" id="stripe-submit">
+            <span id="stripe-btn-text">${_("Pay")} ${price} ${currency}</span>
+            <span id="stripe-spinner" class="checkout-spinner hidden"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- HyperPay (mada) panel -->
+      <div class="checkout-panel" id="panel-mada">
+        <div id="hyperpay-form-container">
+          <button class="checkout-btn" id="mada-btn" type="button">
+            <span id="mada-btn-text">${_("Pay")} ${price} ${currency} ${_("via MADA")}</span>
+            <span id="mada-spinner" class="checkout-spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="checkout-secure">
+      🔒 ${_("Payment is secure and encrypted. We do not store your card details.")}
+    </p>
+  </div>
+</div>
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+(function () {
+  var COURSE_ID = ${course_id | n, dump_js_escaped_json};
+  var STRIPE_PK = ${stripe_publishable_key | n, dump_js_escaped_json};
+  var CSRF = document.cookie.match('(^|;) ?csrftoken=([^;]*)');
+  CSRF = CSRF ? CSRF[2] : '${csrf_token}';
+
+  // ── Tab switching ──────────────────────────
+  document.querySelectorAll('.checkout-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.checkout-tab').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.checkout-panel').forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Stripe ────────────────────────────────
+  var stripe = Stripe(STRIPE_PK);
+  var elements = stripe.elements({ locale: '${LANGUAGE_CODE}' });
+  var cardElement = elements.create('card', {
+    style: {
+      base: { fontSize: '16px', color: '#111827', fontFamily: 'inherit', direction: 'ltr' }
+    }
+  });
+  cardElement.mount('#stripe-card-element');
+  cardElement.on('change', function (ev) {
+    document.getElementById('stripe-errors').textContent = ev.error ? ev.error.message : '';
+  });
+
+  document.getElementById('stripe-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    setLoading('stripe', true);
+
+    fetch('/payments/stripe/create-intent/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'course_id=' + encodeURIComponent(COURSE_ID),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.error) { showError('stripe', data.error); setLoading('stripe', false); return; }
+      return stripe.confirmCardPayment(data.client_secret, {
+        payment_method: { card: cardElement }
+      }).then(function (result) {
+        if (result.error) {
+          showError('stripe', result.error.message);
+          setLoading('stripe', false);
+        } else {
+          window.location.href = '/payments/stripe/success/?order_id=' + data.order_id;
+        }
+      });
+    })
+    .catch(function () { showError('stripe', '${_("An error occurred. Please try again.") | n, dump_js_escaped_json}'); setLoading('stripe', false); });
+  });
+
+  // ── HyperPay (mada) ───────────────────────
+  document.getElementById('mada-btn').addEventListener('click', function () {
+    setLoading('mada', true);
+
+    fetch('/payments/hyperpay/initiate/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'course_id=' + encodeURIComponent(COURSE_ID) + '&brand=MADA',
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.error) { showError('mada', data.error); setLoading('mada', false); return; }
+      var script = document.createElement('script');
+      script.src = ${hyperpay_script_url | n, dump_js_escaped_json} + '?checkoutId=' + data.checkout_id;
+      script.onload = function () {
+        var form = document.createElement('form');
+        form.action = '/payments/hyperpay/callback/';
+        form.setAttribute('class', 'paymentWidgets');
+        form.setAttribute('data-brands', 'MADA');
+        document.getElementById('hyperpay-form-container').innerHTML = '';
+        document.getElementById('hyperpay-form-container').appendChild(form);
+      };
+      document.head.appendChild(script);
+    })
+    .catch(function () { showError('mada', '${_("An error occurred. Please try again.") | n, dump_js_escaped_json}'); setLoading('mada', false); });
+  });
+
+  function setLoading(type, loading) {
+    var btn = document.getElementById(type === 'stripe' ? 'stripe-submit' : 'mada-btn');
+    var text = document.getElementById(type + '-btn-text');
+    var spinner = document.getElementById(type + '-spinner');
+    btn.disabled = loading;
+    text.classList.toggle('hidden', loading);
+    spinner.classList.toggle('hidden', !loading);
+  }
+
+  function showError(type, msg) {
+    var el = type === 'stripe' ? document.getElementById('stripe-errors') : null;
+    if (el) el.textContent = msg;
+    else alert(msg);
+  }
+})();
+</script>
+</%block>

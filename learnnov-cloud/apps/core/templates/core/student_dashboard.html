@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الطالب - LearnNov</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --surface-color: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .user-greeting {
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-info p {
+            margin: 0.5rem 0 0;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            opacity: 0.2;
+        }
+
+        /* Section Headings */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Course Cards */
+        .course-card {
+            background: var(--surface-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .course-card:hover {
+            border-color: var(--primary);
+        }
+
+        .course-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .course-info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* List Items */
+        .list-card {
+            background: var(--surface-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .list-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .list-item h5 {
+            margin: 0 0 0.3rem 0;
+            font-size: 1rem;
+        }
+
+        .list-item span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h1>LearnNov</h1>
+        <div class="user-greeting">مرحباً، {{ request.user.username|default:"الطالب" }}</div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>الدورات النشطة</h3>
+                    <p>{{ courses_count }}</p>
+                </div>
+                <div class="stat-icon">📚</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>الشهادات المكتسبة</h3>
+                    <p>{{ certificates_count }}</p>
+                </div>
+                <div class="stat-icon">🎓</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>الاختبارات</h3>
+                    <p>{{ exams.count }}</p>
+                </div>
+                <div class="stat-icon">✏️</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            
+            <!-- Left Column: Courses -->
+            <div>
+                <h2 class="section-title">مقرراتي الحالية</h2>
+                
+                {% for app in active_courses %}
+                <div class="course-card">
+                    <div class="course-info">
+                        <h4>{{ app.program.title|default:"مقرر بدون اسم" }}</h4>
+                        <p>الجهة: {{ app.program.provider.name|default:"غير محدد" }}</p>
+                    </div>
+                    <div>
+                        <a href="#" class="btn">متابعة التعلم</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    لا توجد لديك مقررات نشطة حالياً. ابدأ بتصفح الكورسات الآن!
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Right Column: Exams & Certificates -->
+            <div>
+                <div class="list-card">
+                    <h2 class="section-title">الاختبارات الأخيرة</h2>
+                    {% for attempt in exams %}
+                    <div class="list-item">
+                        <h5>{{ attempt.exam.title|default:"اختبار" }}</h5>
+                        <span>الدرجة: {{ attempt.score|default:"قيد التقييم" }} | الحالة: {{ attempt.status }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">لا توجد اختبارات مسجلة.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="list-card">
+                    <h2 class="section-title">الشهادات</h2>
+                    {% for cert in certificates %}
+                    <div class="list-item">
+                        <h5>{{ cert.program.title|default:"شهادة مقرر" }}</h5>
+                        <span><a href="#" style="color: var(--primary);">تنزيل الـ PDF</a></span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">لم تحصل على شهادات بعد. استمر في التعلم!</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+# Arabic translations for university_ads
+# LearnNov Platform
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+msgid "Dashboard — Top Banner"
+msgstr "أعلى لوحة التحكم"
+
+msgid "Dashboard — Sidebar"
+msgstr "الشريط الجانبي — لوحة التحكم"
+
+msgid "Course Search — Top Banner"
+msgstr "أعلى صفحة البحث"
+
+msgid "Course Search — Sidebar"
+msgstr "الشريط الجانبي — البحث"
+
+msgid "Course Catalog"
+msgstr "كتالوج الدورات"
+
+msgid "University Name (English)"
+msgstr "اسم الجامعة (إنجليزي)"
+
+msgid "University Name (Arabic)"
+msgstr "اسم الجامعة (عربي)"
+
+msgid "Logo"
+msgstr "الشعار"
+
+msgid "Official Website"
+msgstr "الموقع الرسمي"
+
+msgid "Staff Account"
+msgstr "حساب المشرف"
+
+msgid "Active"
+msgstr "نشط"
+
+msgid "University"
+msgstr "جامعة"
+
+msgid "Universities"
+msgstr "الجامعات"
+
+msgid "Ad Title (English)"
+msgstr "عنوان الإعلان (إنجليزي)"
+
+msgid "Ad Title (Arabic)"
+msgstr "عنوان الإعلان (عربي)"
+
+msgid "Description (English)"
+msgstr "الوصف (إنجليزي)"
+
+msgid "Description (Arabic)"
+msgstr "الوصف (عربي)"
+
+msgid "Ad Image"
+msgstr "صورة الإعلان"
+
+msgid "Destination URL"
+msgstr "رابط الوجهة"
+
+msgid "Placement"
+msgstr "موضع الإعلان"
+
+msgid "Priority (lower = higher)"
+msgstr "الأولوية (أقل رقم = أعلى أهمية)"
+
+msgid "Start Date"
+msgstr "تاريخ البداية"
+
+msgid "End Date"
+msgstr "تاريخ الانتهاء"
+
+msgid "Max Impressions (0 = unlimited)"
+msgstr "الحد الأقصى للمشاهدات (0 = غير محدود)"
+
+msgid "University Ad"
+msgstr "إعلان جامعي"
+
+msgid "University Ads"
+msgstr "الإعلانات الجامعية"
+
+msgid "Impression"
+msgstr "مشاهدة"
+
+msgid "Impressions"
+msgstr "المشاهدات"
+
+msgid "Click"
+msgstr "نقرة"
+
+msgid "Clicks"
+msgstr "النقرات"
+
+msgid "Partner Universities Ads"
+msgstr "إعلانات الجامعات الشريكة"
+
+msgid "Sponsored Ad"
+msgstr "إعلان مموَّل"
+
+msgid "Sponsored Ads"
+msgstr "إعلانات مموَّلة"

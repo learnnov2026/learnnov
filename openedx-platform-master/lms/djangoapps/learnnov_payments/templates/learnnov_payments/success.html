@@ -1,0 +1,71 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "Payment Successful" %} — LearnNov</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0fdfa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .result-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 56px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(15,118,110,.12);
+      text-align: center;
+    }
+    .result-icon { font-size: 72px; margin-bottom: 16px; }
+    .result-title { font-size: 26px; font-weight: 800; color: #0f766e; margin-bottom: 12px; }
+    .result-body  { font-size: 15px; color: #374151; margin-bottom: 28px; line-height: 1.7; }
+    .result-body strong { color: #111827; }
+    .btn {
+      display: inline-block;
+      padding: 13px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      margin: 6px;
+      cursor: pointer;
+    }
+    .btn-primary { background: #0f766e; color: #fff; }
+    .btn-primary:hover { background: #0d5c56; }
+    .btn-outline  { border: 2px solid #0f766e; color: #0f766e; background: transparent; }
+    .btn-outline:hover { background: #f0fdfa; }
+    .result-brand { font-size: 12px; color: #9ca3af; margin-top: 28px; }
+    .result-brand strong { color: #0f766e; }
+  </style>
+</head>
+<body>
+<div class="result-card">
+  <div class="result-icon">✅</div>
+  <h1 class="result-title">{% trans "Payment Successful!" %}</h1>
+  <p class="result-body">
+    {% trans "You have been successfully enrolled in" %}
+    <strong>{{ order.course_name|default:order.course_id }}</strong>.
+    <br>
+    {% trans "Your enrollment is now active." %}
+  </p>
+  <a href="/courses/{{ order.course_id }}/courseware/" class="btn btn-primary">
+    🎓 {% trans "Start Learning Now" %}
+  </a>
+  <a href="/dashboard/" class="btn btn-outline">{% trans "Back to Dashboard" %}</a>
+  <p class="result-brand">
+    {% trans "Powered by" %} <strong>LearnNov</strong>
+    &mdash; {% trans "Arabic eLearning Platform" %}
+  </p>
+</div>
+</body>
+</html>

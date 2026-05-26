@@ -1,0 +1,86 @@
+# Arabic translations for learnnov_certificates
+# LearnNov Platform
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+msgid "QR Code Image"
+msgstr "صورة رمز QR"
+
+msgid "Verification URL"
+msgstr "رابط التحقق"
+
+msgid "Certificate QR Code"
+msgstr "رمز QR للشهادة"
+
+msgid "Certificate QR Codes"
+msgstr "رموز QR للشهادات"
+
+msgid "Certificate of Completion"
+msgstr "شهادة إتمام"
+
+msgid "This certifies that"
+msgstr "تُشهد هذه الشهادة بأن"
+
+msgid "has successfully completed"
+msgstr "قد أتمَّ/أتمَّت بنجاح دورة"
+
+msgid "Offered by"
+msgstr "المُقدَّمة من"
+
+msgid "Final Grade"
+msgstr "الدرجة النهائية"
+
+msgid "Issue Date"
+msgstr "تاريخ الإصدار"
+
+msgid "Certificate ID"
+msgstr "رقم الشهادة"
+
+msgid "Scan to Verify"
+msgstr "امسح للتحقق"
+
+msgid "Print / Save as PDF"
+msgstr "طباعة / حفظ PDF"
+
+msgid "Verify Certificate"
+msgstr "التحقق من الشهادة"
+
+msgid "Back to Dashboard"
+msgstr "العودة إلى لوحة التحكم"
+
+msgid "Valid Certificate"
+msgstr "شهادة صحيحة ومعتمدة"
+
+msgid "This certificate was officially issued by LearnNov and is currently valid."
+msgstr "هذه الشهادة صادرة رسمياً من منصة LearnNov وهي سارية المفعول."
+
+msgid "Student Name"
+msgstr "اسم المتعلِّم"
+
+msgid "Course"
+msgstr "الدورة"
+
+msgid "Issued by"
+msgstr "جهة الإصدار"
+
+msgid "View Full Certificate"
+msgstr "عرض الشهادة الكاملة"
+
+msgid "Invalid Certificate"
+msgstr "شهادة غير صالحة"
+
+msgid "No certificate found with this ID, or it has not been issued yet."
+msgstr "لا توجد شهادة بهذا الرقم في سجلاتنا، أو أنها لم تُصدر بعد."
+
+msgid "Verification ID"
+msgstr "رقم التحقق"
+
+msgid "Arabic eLearning Platform"
+msgstr "منصة التعلُّم الإلكتروني العربي"
+
+msgid "Verification Service by"
+msgstr "خدمة التحقق من"

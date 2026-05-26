@@ -1,0 +1,32 @@
+# =============================================================================
+# خدمة جانغو (Django Service) لمنصة ليرن نوف
+# خدمة من نوع ClusterIP لتوجيه حركة المرور الداخلية إلى بودات جانغو
+# لا يمكن الوصول إليها من خارج الكلستر - يتم ذلك عبر Ingress
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: learnnov-django-service
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    # تفعيل تجميع نقاط النهاية على مستوى الخدمة
+    cloud.google.com/neg: '{"ingress": true}'
+    description: "خدمة داخلية لتوجيه الطلبات إلى تطبيق جانغو"
+spec:
+  # نوع الخدمة: داخلية فقط
+  type: ClusterIP
+  selector:
+    # اختيار البودات المطابقة لهذه التسميات
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+  ports:
+    - name: http
+      # المنفذ الذي تستمع عليه الخدمة
+      port: 80
+      # المنفذ الهدف في الحاوية
+      targetPort: 8000
+      protocol: TCP

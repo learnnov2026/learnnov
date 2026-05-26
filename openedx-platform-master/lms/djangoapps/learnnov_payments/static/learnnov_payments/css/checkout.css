@@ -1,0 +1,259 @@
+/* =========================================================
+   LearnNov Payments — Checkout & Result Pages
+   ========================================================= */
+
+/* ── Wrapper ────────────────────────────────────────────── */
+.checkout-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, #f0fdfa, #f9fafb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: 'Inter', 'Cairo', sans-serif;
+}
+
+.checkout-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(15, 118, 110, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  max-width: 540px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.checkout-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #0f766e, #2dd4bf);
+}
+
+/* ── Order Summary ──────────────────────────────────────── */
+.checkout-summary {
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 28px;
+  margin-bottom: 32px;
+}
+
+.checkout-summary__title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin: 0 0 12px;
+}
+
+.checkout-summary__course {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.checkout-summary__price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.checkout-summary__amount {
+  font-size: 42px;
+  font-weight: 900;
+  color: #0f766e;
+  letter-spacing: -0.02em;
+}
+
+.checkout-summary__currency {
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* ── Methods ────────────────────────────────────────────── */
+.checkout-methods__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 20px;
+}
+
+.checkout-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.checkout-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border: 2px solid #f1f5f9;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.checkout-tab img {
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.checkout-tab:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.checkout-tab.active {
+  border-color: #0f766e;
+  background: #f0fdfa;
+  color: #0f766e;
+  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.05);
+}
+
+.checkout-tab.active img {
+  opacity: 1;
+}
+
+.checkout-panel { 
+  display: none;
+  animation: fadeIn 0.4s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.checkout-panel.active { display: block; }
+
+/* ── Stripe card element ────────────────────────────────── */
+.stripe-card-element {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 16px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.stripe-card-element.StripeElement--focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+.checkout-btn {
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #0f766e, #134e4a);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(15, 118, 110, 0.2);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.checkout-btn:hover:not(:disabled) { 
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(15, 118, 110, 0.3);
+}
+
+.checkout-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.checkout-btn:disabled { 
+  background: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ── Error ──────────────────────────────────────────────── */
+.checkout-error {
+  color: #e11d48;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 20px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #fff1f2;
+  border-radius: 8px;
+  display: none;
+}
+.checkout-error:not(:empty) { display: block; }
+
+/* ── Secure note ────────────────────────────────────────── */
+.checkout-secure {
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ── Result pages ───────────────────────────────────────── */
+.payment-result {
+  text-align: center;
+  padding: 60px 24px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.payment-result__icon { font-size: 64px; margin-bottom: 16px; }
+
+.payment-result h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+
+.payment-result--success h2 { color: #0f766e; }
+.payment-result--failed  h2 { color: #dc2626; }
+
+.payment-result p { font-size: 15px; color: #6b7280; margin-bottom: 24px; }
+.payment-result__code { font-size: 12px; font-family: monospace; }
+
+.payment-result .btn {
+  display: inline-block;
+  margin: 6px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.payment-result .btn-primary {
+  background: #0f766e;
+  color: #fff;
+}
+
+.payment-result .btn-outline {
+  border: 2px solid #d1d5db;
+  color: #374151;
+  background: transparent;
+}

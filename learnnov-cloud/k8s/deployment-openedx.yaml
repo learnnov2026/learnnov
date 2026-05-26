@@ -1,0 +1,170 @@
+# =============================================================================
+# نشر منصة Open edX لمنصة ليرن نوف
+# يتضمن حاوية Open edX الرئيسية وحاوية Cloud SQL Auth Proxy الجانبية
+# Open edX يحتاج موارد أكثر من تطبيق جانغو العادي
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnnov-openedx
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: openedx
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "نشر منصة Open edX لنظام إدارة التعلم"
+spec:
+  # نسخة واحدة مبدئياً - يمكن زيادتها لاحقاً حسب الحمل
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: learnnov
+      app.kubernetes.io/component: openedx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: learnnov
+        app.kubernetes.io/component: openedx
+    spec:
+      # حساب الخدمة المرتبط بـ Workload Identity
+      serviceAccountName: learnnov-sa
+
+      # سياق الأمان على مستوى البود
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
+      containers:
+        # =====================
+        # حاوية Open edX الرئيسية
+        # تم بناء الصورة باستخدام Tutor
+        # =====================
+        - name: openedx
+          image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/learnnov/openedx:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # =====================
+          # متغيرات البيئة الخاصة بـ Open edX
+          # =====================
+          env:
+            # نطاق نظام إدارة التعلم (LMS)
+            - name: LMS_HOST
+              value: "learnnov.org"
+            # نطاق استوديو إنشاء المحتوى (CMS)
+            - name: CMS_HOST
+              value: "studio.learnnov.org"
+            # بروتوكول LMS
+            - name: LMS_ROOT_URL
+              value: "https://learnnov.org"
+            # بروتوكول CMS
+            - name: CMS_ROOT_URL
+              value: "https://studio.learnnov.org"
+            # اسم المنصة
+            - name: PLATFORM_NAME
+              value: "LearnNov"
+            # لغة المنصة الافتراضية
+            - name: LANGUAGE_CODE
+              value: "ar"
+
+          # تحميل المتغيرات المشتركة
+          envFrom:
+            - secretRef:
+                name: learnnov-secrets
+
+          # =====================
+          # موارد الحاوية - Open edX يحتاج موارد أكبر
+          # =====================
+          resources:
+            # الحد الأدنى: 1 جيجابايت ذاكرة و 500 ملي وحدة معالجة
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            # الحد الأقصى: 2 جيجابايت ذاكرة و 1000 ملي وحدة معالجة
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+
+          # =====================
+          # فحص الجاهزية - Open edX يستخدم نقطة /heartbeat
+          # =====================
+          readinessProbe:
+            httpGet:
+              path: /heartbeat
+              port: 8000
+            # Open edX يحتاج وقتاً أطول للبدء
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+
+          # =====================
+          # فحص الحياة
+          # =====================
+          livenessProbe:
+            httpGet:
+              path: /heartbeat
+              port: 8000
+            # وقت أطول لبدء التشغيل
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 5
+
+          # فحص بدء التشغيل - يعطي Open edX وقتاً كافياً للتهيئة
+          startupProbe:
+            httpGet:
+              path: /heartbeat
+              port: 8000
+            # محاولة كل 10 ثوانٍ لمدة 5 دقائق (30 محاولة × 10 ثوانٍ)
+            periodSeconds: 10
+            failureThreshold: 30
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+        # =====================
+        # حاوية Cloud SQL Auth Proxy الجانبية
+        # =====================
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+          args:
+            - "--structured-logs"
+            - "${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
+
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

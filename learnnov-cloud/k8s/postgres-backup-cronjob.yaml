@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: learnnov-postgres-backup
+  namespace: learnnov
+spec:
+  # 0 22 * * * means 22:00 UTC, which is midnight (00:00) Sudan Time (UTC+2)
+  schedule: "0 22 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: learnnov-sa
+          containers:
+            - name: pg-backup
+              image: postgres:15-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Starting database backup..."
+                  export PGPASSWORD=${POSTGRES_PASSWORD}
+                  FILENAME=learnnov_backup_$(date +\%Y\%m\%d_\%H\%M\%S).sql
+                  pg_dump -h 127.0.0.1 -p 5432 -U learnnov -d learnnov_db -F c -f /backup/$FILENAME
+                  echo "Backup completed: $FILENAME"
+                  # Here you can add gsutil or another CLI to upload /backup/$FILENAME to Google Cloud Storage
+              envFrom:
+                - secretRef:
+                    name: learnnov-secrets
+              volumeMounts:
+                - name: backup-volume
+                  mountPath: /backup
+            # Sidecar container for Cloud SQL Proxy
+            - name: cloud-sql-proxy
+              image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+              args:
+                - "--structured-logs"
+                - "${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
+              securityContext:
+                runAsNonRoot: true
+          volumes:
+            - name: backup-volume
+              emptyDir: {}
+          restartPolicy: OnFailure

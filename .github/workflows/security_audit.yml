@@ -1,0 +1,53 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Run weekly on Sundays
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Safety & Pip-audit
+        run: pip install safety pip-audit
+
+      - name: Run Pip Audit
+        run: |
+          pip-audit -r learnnov-cloud/requirements.txt || echo "Pip-audit found vulnerabilities, please review."
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Uncomment below when package.json is available
+      # - name: Run NPM Audit
+      #   run: npm audit --audit-level=high
+
+  zap-scan:
+    runs-on: ubuntu-latest
+    needs: dependency-audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Start services
+        run: docker-compose up -d
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.9.0
+        with:
+          target: 'http://localhost'
+          fail_action: false # Set to true to fail build on findings
+          cmd_options: '-a'

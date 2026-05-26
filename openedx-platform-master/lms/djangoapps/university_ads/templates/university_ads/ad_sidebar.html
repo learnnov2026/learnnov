@@ -1,0 +1,11 @@
+{% comment %}
+  University ad sidebar — sidebar placement (dashboard_sidebar / search_sidebar)
+  Usage: {% include "university_ads/ad_sidebar.html" with placement="dashboard_sidebar" %}
+{% endcomment %}
+
+<aside class="univ-ads-sidebar" data-placement="{{ placement }}" dir="rtl">
+  <div class="univ-ads-sidebar__header">إعلانات الجامعات الشريكة</div>
+  <div class="univ-ads-sidebar__list" id="univ-ads-sidebar-{{ placement }}">
+    {# Ads injected by ads.js #}
+  </div>
+</aside>

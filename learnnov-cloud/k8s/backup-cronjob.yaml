@@ -1,0 +1,195 @@
+# =============================================================================
+# وظيفة النسخ الاحتياطي المجدولة (CronJob) لقاعدة بيانات ليرن نوف
+# تقوم بإنشاء نسخة احتياطية يومياً في الساعة 2 صباحاً بتوقيت الخادم
+# يتم رفع النسخة الاحتياطية إلى Google Cloud Storage
+#
+# متطلبات مسبقة:
+#   1. إنشاء حاوية تخزين: gsutil mb gs://learnnov-backups
+#   2. منح حساب الخدمة صلاحية الكتابة على الحاوية
+# =============================================================================
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: learnnov-db-backup
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "نسخ احتياطي يومي لقاعدة البيانات إلى Cloud Storage"
+spec:
+  # الجدول الزمني: يومياً في الساعة 2:00 صباحاً
+  schedule: "0 2 * * *"
+
+  # المنطقة الزمنية (GKE 1.27+)
+  timeZone: "Asia/Riyadh"
+
+  # الاحتفاظ بآخر 3 وظائف ناجحة وآخر وظيفة فاشلة
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  # منع تشغيل وظائف متزامنة
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    spec:
+      # مهلة الوظيفة: 30 دقيقة
+      activeDeadlineSeconds: 1800
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: learnnov
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+
+          # حساب الخدمة مع صلاحيات Cloud Storage
+          serviceAccountName: learnnov-sa
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+
+          # =====================
+          # حاوية تهيئة: انتظار جاهزية Cloud SQL Proxy
+          # =====================
+          initContainers:
+            - name: wait-for-proxy
+              image: busybox:1.36
+              command:
+                - "/bin/sh"
+                - "-c"
+                - |
+                  echo "انتظار جاهزية Cloud SQL Proxy..."
+                  until nc -z 127.0.0.1 5432; do
+                    echo "Cloud SQL Proxy غير جاهز بعد، إعادة المحاولة..."
+                    sleep 2
+                  done
+                  echo "Cloud SQL Proxy جاهز!"
+              resources:
+                requests:
+                  memory: "16Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "32Mi"
+                  cpu: "50m"
+
+          containers:
+            # =====================
+            # حاوية النسخ الاحتياطي
+            # تستخدم pg_dump لإنشاء نسخة و gsutil لرفعها
+            # =====================
+            - name: backup
+              image: postgres:15-alpine
+              command:
+                - "/bin/sh"
+                - "-c"
+                - |
+                  set -e
+
+                  # تعيين التاريخ والوقت لاسم الملف
+                  BACKUP_DATE=$(date +%Y-%m-%d_%H-%M-%S)
+                  BACKUP_FILE="learnnov_db_backup_${BACKUP_DATE}.sql.gz"
+
+                  echo "=== بدء النسخ الاحتياطي: ${BACKUP_FILE} ==="
+
+                  # إنشاء نسخة احتياطية مضغوطة
+                  PGPASSWORD="${DB_PASSWORD}" pg_dump \
+                    -h 127.0.0.1 \
+                    -p 5432 \
+                    -U "${DB_USER}" \
+                    -d "${DB_NAME}" \
+                    --no-owner \
+                    --no-privileges \
+                    --format=custom \
+                    --compress=9 \
+                    -f "/tmp/${BACKUP_FILE}"
+
+                  echo "=== تم إنشاء النسخة الاحتياطية بنجاح ==="
+                  echo "حجم الملف: $(du -sh /tmp/${BACKUP_FILE} | cut -f1)"
+
+                  # رفع النسخة إلى Cloud Storage باستخدام curl و API
+                  # ملاحظة: في بيئة الإنتاج يُفضل استخدام صورة تحتوي على gsutil
+                  echo "=== رفع النسخة الاحتياطية إلى Cloud Storage ==="
+
+                  # الحصول على رمز الوصول من Workload Identity
+                  ACCESS_TOKEN=$(wget -qO- \
+                    --header="Metadata-Flavor: Google" \
+                    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
+                    | sed 's/.*"access_token":"\([^"]*\)".*/\1/')
+
+                  # رفع الملف إلى Cloud Storage
+                  wget -qO- \
+                    --method=PUT \
+                    --header="Authorization: Bearer ${ACCESS_TOKEN}" \
+                    --header="Content-Type: application/octet-stream" \
+                    --body-file="/tmp/${BACKUP_FILE}" \
+                    "https://storage.googleapis.com/upload/storage/v1/b/learnnov-backups/o?uploadType=media&name=daily/${BACKUP_FILE}"
+
+                  echo "=== تم رفع النسخة الاحتياطية بنجاح ==="
+
+                  # حذف الملف المحلي
+                  rm -f "/tmp/${BACKUP_FILE}"
+
+                  echo "=== اكتملت عملية النسخ الاحتياطي ==="
+
+              env:
+                # اسم المستخدم لقاعدة البيانات
+                - name: DB_USER
+                  value: "learnnov"
+                # كلمة مرور قاعدة البيانات من السر
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: learnnov-secrets
+                      key: database-url
+                # اسم قاعدة البيانات
+                - name: DB_NAME
+                  value: "learnnov_db"
+
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+
+            # =====================
+            # حاوية Cloud SQL Auth Proxy الجانبية
+            # =====================
+            - name: cloud-sql-proxy
+              image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+              args:
+                - "--structured-logs"
+                - "project-26dbc415-dd49-4210-ada:me-central1:learnnov-db"
+                - "--quitquitquit"
+
+              ports:
+                - name: postgres
+                  containerPort: 5432
+                  protocol: TCP
+
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "100m"
+
+              securityContext:
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL

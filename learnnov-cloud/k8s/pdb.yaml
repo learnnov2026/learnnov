@@ -1,0 +1,34 @@
+# =============================================================================
+# Pod Disruption Budget (PDB) لمنصة ليرن نوف
+# يضمن توفر الخدمة (High Availability) أثناء عمليات الصيانة والتحديثات للـ Nodes
+# =============================================================================
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: learnnov-django-pdb
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+spec:
+  # يجب أن يظل بود واحد على الأقل متاحاً دائماً
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: django
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: learnnov-openedx-pdb
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: openedx
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: openedx

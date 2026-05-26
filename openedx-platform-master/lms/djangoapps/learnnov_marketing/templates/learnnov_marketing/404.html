@@ -1,0 +1,26 @@
+{% extends "main.html" %}
+{% load i18n static %}
+
+{% block headextra %}
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="error-page" dir="rtl" style="font-family: 'Cairo', sans-serif; min-height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center; background: #f8fafc;">
+    <div class="container">
+        <div style="font-size: 120px; font-weight: 800; color: #0f766e; line-height: 1; margin-bottom: 20px;">404</div>
+        <h1 style="font-size: 32px; color: #1e293b; margin-bottom: 20px;">{% trans "عذراً، الصفحة غير موجودة" %}</h1>
+        <p style="font-size: 18px; color: #64748b; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto;">
+            {% trans "يبدو أنك سلكت طريقاً تعليمياً غير موجود حالياً. لا تقلق، يمكنك العودة واستكشاف برامجنا الأكاديمية المميزة." %}
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{% url 'learnnov_marketing:index' %}" style="background: #0f766e; color: white; padding: 15px 30px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(15, 118, 110, 0.3);">
+                {% trans "العودة للرئيسية" %}
+            </a>
+            <a href="/support" style="background: white; color: #0f766e; padding: 15px 30px; border-radius: 12px; text-decoration: none; font-weight: 700; border: 1px solid #e2e8f0;">
+                {% trans "تواصل مع الدعم" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

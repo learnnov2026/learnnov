@@ -1,0 +1,162 @@
+{% extends "main.html" %}
+{% load i18n static %}
+
+{% block title %}LearnNov — {% trans "Arabic eLearning Platform" %}{% endblock %}
+
+{% block headextra %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta name="description" content="{% trans 'LearnNov is the leading Arabic eLearning platform, offering certified academic programs from top regional universities.' %}">
+  <meta name="keywords" content="eLearning, Arabic, Education, University, Saudi Arabia, Degrees, Online Learning">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="LearnNov — {% trans 'Arabic eLearning Platform' %}">
+  <meta property="og:description" content="{% trans 'Access world-class academic programs from top regional universities, all in one place.' %}">
+  <meta property="og:image" content="{% static 'images/logo.png' %}">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="LearnNov — {% trans 'Arabic eLearning Platform' %}">
+  <meta property="twitter:description" content="{% trans 'Access world-class academic programs from top regional universities, all in one place.' %}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'learnnov_marketing/css/landing.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="landing-container" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero__overlay"></div>
+        <div class="hero__content">
+            <h1 class="hero__title">{% trans "Empowering Your Future with" %} <span class="text-gradient">LearnNov</span></h1>
+            <p class="hero__subtitle">{% trans "Access world-class academic programs from top regional universities, all in one place." %}</p>
+            
+            <div class="hero__search" style="margin-bottom: 40px; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <form action="{% url 'academic_programs:programs-list' %}" method="get" style="display: flex; background: var(--bg-card); border-radius: 50px; padding: 5px; box-shadow: var(--card-shadow);">
+                    <input type="text" name="search" placeholder="{% trans 'Search for programs, universities or fields...' %}" style="flex-grow: 1; border: none; background: transparent; padding: 12px 25px; border-radius: 50px; outline: none; font-size: 1rem; color: var(--text-heading);">
+                    <button type="submit" class="btn-premium" style="border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: 700; transition: 0.3s;">
+                        <i class="fa fa-search"></i> {% trans "Search" %}
+                    </button>
+                </form>
+            </div>
+
+            <div class="hero__actions">
+                <a href="{% url 'academic_programs:programs-list' %}" class="btn-premium">{% trans "Explore Programs" %}</a>
+                <a href="{% url 'academic_programs:fields-list' %}" class="btn-outline-white">{% trans "View Categories" %}</a>
+            </div>
+        </div>
+        <div class="hero__stats">
+            <div class="stat-item">
+                <span class="stat-number">50+</span>
+                <span class="stat-label">{% trans "Partner Universities" %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">200+</span>
+                <span class="stat-label">{% trans "Academic Programs" %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">10k+</span>
+                <span class="stat-label">{% trans "Active Students" %}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners Section (Ads) -->
+    {% if top_ads %}
+    <section class="partners">
+        <div class="container">
+            <h2 class="section-title">{% trans "Our Academic Partners" %}</h2>
+            <div class="partner-grid">
+                {% for ad in top_ads %}
+                <a href="{{ ad.link_url }}" class="partner-card">
+                    <img src="{{ ad.image.url }}" alt="{{ ad.university.name }}" loading="lazy" width="150" height="80">
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Featured Programs -->
+    <section id="featured" class="featured-programs">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">{% trans "Featured Academic Programs" %}</h2>
+                <p class="section-subtitle">{% trans "Start your journey with our most popular and highly rated programs." %}</p>
+            </div>
+            
+            <div class="program-grid">
+                {% for program in featured_programs %}
+                <div class="program-card">
+                    <div class="program-card__image" style="background-image: url('{{ program.cover_image.url|default:'/static/images/course-default.png' }}')">
+                        <span class="badge">{{ program.get_degree_level_display }}</span>
+                    </div>
+                    <div class="program-card__content">
+                        <div class="provider-info">
+                            <img src="{{ program.provider.logo.url|default:'/static/images/university-default.png' }}" alt="{{ program.provider.name }}" class="provider-logo" loading="lazy" width="30" height="30">
+                            <span class="provider-name">
+                                {{ program.provider.name }}
+                                {% if program.provider.is_verified %}
+                                    <i class="fa fa-check-circle" style="color: #0f766e; margin-inline-start: 4px;" title="{% trans 'Verified Institution' %}"></i>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <h3 class="program-title">{{ program.title }}</h3>
+                        <div class="program-meta">
+                            <span><i class="fa fa-clock-o"></i> {{ program.duration_months }} {% trans "Months" %}</span>
+                            <span><i class="fa fa-globe"></i> {{ program.get_study_mode_display }}</span>
+                        </div>
+                        <div class="program-footer">
+                            <span class="program-price">{{ program.tuition_fee }} {{ program.currency }}</span>
+                            <a href="{% url 'learnnov_marketing:program-detail' program.slug %}" class="btn-link">{% trans "View Details" %} →</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="view-all">
+                <a href="{% url 'academic_programs:programs-list' %}" class="btn-premium">{% trans "View All Programs" %}</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">{% trans "Why Choose LearnNov?" %}</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa fa-certificate"></i></div>
+                    <h3>{% trans "Certified Excellence" %}</h3>
+                    <p>{% trans "Get recognized certificates from accredited universities in the region." %}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa fa-language"></i></div>
+                    <h3>{% trans "Native Arabic Content" %}</h3>
+                    <p>{% trans "Learn in your language with high-quality Arabic course materials." %}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa fa-credit-card"></i></div>
+                    <h3>{% trans "Flexible Payments" %}</h3>
+                    <p>{% trans "Easy payment options including mada and international credit cards." %}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+  // التقاط كود الإحالة من الرابط وتخزينه في SessionStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get('ref');
+  if (refCode) {
+    sessionStorage.setItem('learnnov_ref', refCode);
+    console.log('Referral captured:', refCode);
+  }
+</script>
+{% endblock %}

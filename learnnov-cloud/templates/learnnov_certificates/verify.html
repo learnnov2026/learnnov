@@ -1,0 +1,109 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{{ text_dir }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "Verify Certificate" %} — LearnNov</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --teal: #0f766e; --teal-light: #f0fdfa; --red: #dc2626; }
+    body {
+      font-family: {% if LANGUAGE_CODE == 'ar' %}'Cairo', {% endif %}'Lato', sans-serif;
+      background: #f9fafb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      direction: {{ text_dir }};
+    }
+    .verify-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 48px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      text-align: center;
+    }
+    .verify-icon { font-size: 64px; margin-bottom: 16px; }
+    .verify-status { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+    .verify-status--valid  { color: var(--teal); }
+    .verify-status--invalid { color: var(--red); }
+    .verify-details {
+      background: var(--teal-light);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 20px 0;
+      text-align: {% if text_dir == 'rtl' %}right{% else %}left{% endif %};
+    }
+    .verify-details__row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+    .verify-details__row:last-child { margin-bottom: 0; }
+    .verify-details__label { color: #6b7280; min-width: 130px; }
+    .verify-details__value { font-weight: 700; color: #111827; }
+    .verify-id { font-family: monospace; font-size: 12px; color: #9ca3af; margin-top: 16px; word-break: break-all; }
+    .verify-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 28px;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .verify-brand { font-size: 13px; color: #9ca3af; margin-top: 24px; }
+    .verify-brand strong { color: var(--teal); }
+  </style>
+</head>
+<body>
+<div class="verify-card">
+
+  {% if status == 'valid' %}
+    <div class="verify-icon">✅</div>
+    <p class="verify-status verify-status--valid">{% trans "Valid Certificate" %}</p>
+    <p style="color:#6b7280;font-size:14px;">{% trans "This certificate was officially issued by LearnNov and is currently valid." %}</p>
+
+    <div class="verify-details">
+      <div class="verify-details__row">
+        <span class="verify-details__label">{% trans "Student Name" %}</span>
+        <span class="verify-details__value">{{ student_name }}</span>
+      </div>
+      <div class="verify-details__row">
+        <span class="verify-details__label">{% trans "Course" %}</span>
+        <span class="verify-details__value">{{ course_name }}</span>
+      </div>
+      {% if course_org %}
+      <div class="verify-details__row">
+        <span class="verify-details__label">{% trans "Issued by" %}</span>
+        <span class="verify-details__value">{{ course_org }}</span>
+      </div>
+      {% endif %}
+      <div class="verify-details__row">
+        <span class="verify-details__label">{% trans "Issue Date" %}</span>
+        <span class="verify-details__value">{{ issue_date }}</span>
+      </div>
+    </div>
+
+    <a href="{{ certificate_url }}" class="verify-btn">{% trans "View Full Certificate" %}</a>
+
+  {% else %}
+    <div class="verify-icon">❌</div>
+    <p class="verify-status verify-status--invalid">{% trans "Invalid Certificate" %}</p>
+    <p style="color:#6b7280;font-size:14px;">
+      {% trans "No certificate found with this ID, or it has not been issued yet." %}
+    </p>
+  {% endif %}
+
+  <p class="verify-id">{% trans "Verification ID" %}: {{ verify_uuid }}</p>
+
+  <p class="verify-brand">
+    {% trans "Verification Service by" %} <strong>LearnNov</strong> — {% trans "Arabic eLearning Platform" %}
+  </p>
+
+</div>
+</body>
+</html>

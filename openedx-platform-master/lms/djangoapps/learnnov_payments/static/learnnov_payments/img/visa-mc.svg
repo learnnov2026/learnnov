@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="80" height="28">
+  <!-- Visa -->
+  <rect x="0" y="2" width="34" height="24" rx="4" fill="#1a1f71"/>
+  <text x="17" y="19" font-family="Arial,sans-serif" font-size="11" font-weight="bold"
+        fill="#ffffff" text-anchor="middle" letter-spacing="0.5">VISA</text>
+  <!-- Mastercard -->
+  <circle cx="56" cy="14" r="10" fill="#eb001b"/>
+  <circle cx="68" cy="14" r="10" fill="#f79e1b"/>
+  <path d="M62 8.4a10 10 0 0 1 0 11.2A10 10 0 0 1 62 8.4z" fill="#ff5f00"/>
+</svg>

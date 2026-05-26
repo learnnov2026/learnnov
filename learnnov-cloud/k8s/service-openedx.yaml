@@ -1,0 +1,30 @@
+# =============================================================================
+# خدمة Open edX لمنصة ليرن نوف
+# خدمة من نوع ClusterIP لتوجيه حركة المرور الداخلية إلى بودات Open edX
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: learnnov-openedx-service
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: openedx
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    # تفعيل تجميع نقاط النهاية لـ GKE Ingress
+    cloud.google.com/neg: '{"ingress": true}'
+    description: "خدمة داخلية لتوجيه الطلبات إلى منصة Open edX"
+spec:
+  type: ClusterIP
+  selector:
+    # اختيار بودات Open edX
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: openedx
+  ports:
+    - name: http
+      # المنفذ الذي تستمع عليه الخدمة
+      port: 80
+      # المنفذ الهدف في حاوية Open edX
+      targetPort: 8000
+      protocol: TCP

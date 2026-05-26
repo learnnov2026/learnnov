@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاهدة: {{ program.title }} - LearnNov</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --surface-dark: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --border: #334155;
+            --success: #10b981;
+            --radius: 12px;
+            --sidebar-width: 350px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar: Syllabus */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--surface-dark);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .sidebar-header p {
+            margin: 0.5rem 0 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .module {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .module-header {
+            padding: 1rem 1.5rem;
+            background-color: rgba(255,255,255,0.02);
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-header:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: var(--bg-dark);
+        }
+
+        .lesson-item {
+            padding: 0.8rem 1.5rem 0.8rem 2.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .lesson-item:hover, .lesson-item.active {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--text-light);
+            border-right: 4px solid var(--primary);
+        }
+
+        .lesson-icon {
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+
+        /* Main Content: Video Player */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .top-nav {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0) 100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            pointer-events: none; /* Let clicks pass through to video */
+        }
+
+        .top-nav .back-btn {
+            pointer-events: auto;
+            color: var(--text-light);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+        }
+
+        .top-nav .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .player-container {
+            width: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            max-height: 70vh;
+            outline: none;
+        }
+
+        /* Lesson Info & Discussion Tab */
+        .lesson-details {
+            padding: 2rem 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .lesson-title {
+            font-size: 1.8rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            gap: 2rem;
+        }
+
+        .tab {
+            padding: 1rem 0;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-weight: 600;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--text-light);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                overflow: auto;
+            }
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                order: 2;
+                max-height: 50vh;
+            }
+            .main-content {
+                order: 1;
+                overflow: visible;
+            }
+            .lesson-details {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="top-nav">
+            <a href="{% url 'student-dashboard' %}" class="back-btn">
+                <span>←</span> العودة للوحة التحكم
+            </a>
+        </div>
+
+        <!-- Video Player -->
+        <div class="player-container">
+            <video class="video-player" controls poster="{{ program.cover_image.url }}">
+                <source src="" type="video/mp4">
+                متصفحك لا يدعم مشغل الفيديو.
+            </video>
+        </div>
+
+        <!-- Details & Discussion -->
+        <div class="lesson-details">
+            <h1 class="lesson-title" id="current-lesson-title">مرحباً بك في {{ program.title }}</h1>
+            
+            <div class="tabs">
+                <div class="tab active">نظرة عامة</div>
+                <div class="tab">أسئلة ومناقشات (Q&A)</div>
+                <div class="tab">مرفقات الدرس</div>
+            </div>
+
+            <div class="tab-content" style="color: var(--text-muted); line-height: 1.8;">
+                اختر درساً من القائمة الجانبية للبدء بالتعلم. المنطقة المخصصة للمناقشات أسفل الفيديو تتيح لك التفاعل المباشر مع المدرب وزملائك في المقرر.
+            </div>
+        </div>
+    </div>
+
+    <!-- Syllabus Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>{{ program.title }}</h2>
+            <p>{{ modules.count }} وحدات دراسية</p>
+        </div>
+
+        {% for module in modules %}
+        <div class="module">
+            <div class="module-header">
+                <span>{{ module.title }}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">{{ module.lessons.count }} دروس</span>
+            </div>
+            <ul class="lesson-list">
+                {% for lesson in module.lessons.all %}
+                <li class="lesson-item {% if forloop.parentloop.first and forloop.first %}active{% endif %}" onclick="playLesson('{{ lesson.title }}', '{{ lesson.media_file.url|default:'' }}')">
+                    <span class="lesson-icon">
+                        {% if lesson.lesson_type == 'video' %}🎥
+                        {% elif lesson.lesson_type == 'pdf' %}📄
+                        {% elif lesson.lesson_type == 'quiz' %}⏱️
+                        {% else %}📝{% endif %}
+                    </span>
+                    <span>{{ lesson.title }}</span>
+                    {% if lesson.duration_minutes %}
+                    <span style="margin-right: auto; font-size: 0.8rem;">{{ lesson.duration_minutes }} دقيقة</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li class="lesson-item" style="justify-content: center; opacity: 0.5;">لا توجد دروس</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function playLesson(title, videoUrl) {
+            document.getElementById('current-lesson-title').innerText = title;
+            
+            // Remove active class from all items
+            document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
+            // Add active class to clicked item (simplified logic, assumes event target)
+            event.currentTarget.classList.add('active');
+
+            if (videoUrl) {
+                const video = document.querySelector('.video-player');
+                video.src = videoUrl;
+                video.play();
+            }
+        }
+    </script>
+</body>
+</html>

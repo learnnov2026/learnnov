@@ -1,0 +1,67 @@
+# =============================================================================
+# التوسع التلقائي الأفقي (HPA) لتطبيق جانغو
+# يقوم بزيادة أو تقليل عدد البودات تلقائياً بناءً على استخدام المعالج
+# يضمن أداءً عالياً أثناء أوقات الذروة وتوفيراً في التكاليف أثناء الهدوء
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: learnnov-django-hpa
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "التوسع التلقائي لتطبيق جانغو بناءً على استخدام المعالج"
+spec:
+  # المرجع: نشر تطبيق جانغو
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: learnnov-django
+
+  # =====================
+  # حدود التوسع
+  # =====================
+  # الحد الأدنى من النسخ المتماثلة - يضمن توفراً عالياً
+  minReplicas: 2
+  # الحد الأقصى من النسخ المتماثلة - يحد من التكاليف
+  maxReplicas: 10
+
+  # =====================
+  # مقاييس التوسع
+  # =====================
+  metrics:
+    # التوسع بناءً على نسبة استخدام المعالج
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # عندما يصل متوسط استخدام المعالج إلى 70% يتم إضافة بودات جديدة
+          averageUtilization: 70
+
+  # =====================
+  # سلوك التوسع - تجنب التقلبات السريعة
+  # =====================
+  behavior:
+    # سياسة التوسع للأعلى (إضافة بودات)
+    scaleUp:
+      # فترة الاستقرار: 60 ثانية قبل إضافة بودات جديدة
+      stabilizationWindowSeconds: 60
+      policies:
+        # إضافة بود واحد كل 60 ثانية كحد أقصى
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+    # سياسة التوسع للأسفل (إزالة بودات)
+    scaleDown:
+      # فترة الاستقرار: 5 دقائق قبل إزالة البودات لتجنب التقلبات
+      stabilizationWindowSeconds: 300
+      policies:
+        # إزالة بود واحد كل 60 ثانية كحد أقصى
+        - type: Pods
+          value: 1
+          periodSeconds: 60

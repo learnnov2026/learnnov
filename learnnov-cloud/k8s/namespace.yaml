@@ -1,0 +1,20 @@
+# =============================================================================
+# مساحة الأسماء (Namespace) لمنصة ليرن نوف
+# يتم إنشاء مساحة أسماء مخصصة لعزل جميع موارد المنصة عن باقي الموارد في الكلستر
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: learnnov
+  labels:
+    # اسم التطبيق
+    app.kubernetes.io/name: learnnov
+    # المكون: مساحة الأسماء
+    app.kubernetes.io/component: namespace
+    # الجزء المسؤول عن الإدارة
+    app.kubernetes.io/managed-by: kubectl
+    # البيئة: إنتاج
+    environment: production
+  annotations:
+    # وصف مساحة الأسماء
+    description: "مساحة الأسماء الرئيسية لمنصة ليرن نوف التعليمية"

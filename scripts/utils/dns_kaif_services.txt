@@ -1,0 +1,41 @@
+================================================================
+ سجلات DNS المطلوبة للنطاق: kaif.services
+ أضفها في لوحة تحكم مزود النطاق (Cloudflare / Namecheap / إلخ)
+================================================================
+
+افتراض: عنوان IP الخادم = YOUR_SERVER_IP  ← استبدله بالعنوان الحقيقي
+
+─── سجلات A (إشارة النطاق للخادم) ───────────────────────────
+
+النوع    الاسم                 القيمة            TTL
+A        @                     YOUR_SERVER_IP    3600   ← المنصة الرئيسية kaif.services
+A        studio                YOUR_SERVER_IP    3600   ← Studio (إنشاء المحتوى)
+A        apps                  YOUR_SERVER_IP    3600   ← MFE (تسجيل الدخول / الملف الشخصي)
+A        preview               YOUR_SERVER_IP    3600   ← معاينة المحتوى في Studio
+A        discovery             YOUR_SERVER_IP    3600   ← Course Discovery (اختياري)
+
+─── في Cloudflare: ───────────────────────────────────────────
+  • Proxy Status: DNS Only (السحابة الرمادية) للبداية
+    (بعد التأكد من عمل SSL، يمكن تفعيل Proxy)
+  • SSL/TLS Mode: Full (strict) — بعد تفعيل المنصة
+
+─── بعد رفع الخادم والتحقق من عمل المنصة ────────────────────
+
+افتح في المتصفح:
+  https://kaif.services           ← الصفحة الرئيسية
+  https://studio.kaif.services    ← الاستيديو
+  https://apps.kaif.services/authn/login  ← تسجيل الدخول
+
+─── Stripe Webhook ───────────────────────────────────────────
+أضفه في: https://dashboard.stripe.com/webhooks
+  Endpoint URL: https://kaif.services/payments/stripe/webhook/
+  Events:       payment_intent.succeeded
+                payment_intent.payment_failed
+
+─── Let's Encrypt SSL ────────────────────────────────────────
+يُفعَّل تلقائياً بواسطة Caddy عند تشغيل:
+  tutor local launch
+
+شرط: سجلات DNS محدَّثة ومتشعبة قبل التشغيل (انتظر 5-15 دقيقة بعد إضافة السجلات)
+
+================================================================

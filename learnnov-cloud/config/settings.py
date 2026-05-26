@@ -155,7 +155,7 @@ REST_FRAMEWORK = {
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL', default=str(DEBUG), cast=bool)
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # ── LearnNov Config ───────────────────────────────────────────────────────────
@@ -190,7 +190,7 @@ if not DEBUG:
 # ── CSRF Trusted Origins (مطلوب لـ GKE Load Balancer) ────────────────────────
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://learnnov.org,https://studio.learnnov.org',
+    default='https://learnnov.org,https://studio.learnnov.org,https://learnnov-web.vercel.app,https://*.vercel.app',
     cast=Csv(),
 )
 

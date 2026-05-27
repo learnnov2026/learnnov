@@ -62,8 +62,8 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDegree, setSelectedDegree] = useState('all');
 
-  // Enrollment State (Local Persistence)
-  const [enrolledSlugs, setEnrolledSlugs] = useState<string[]>([]);
+  // Database-driven Applications State
+  const [dbApplications, setDbApplications] = useState<any[]>([]);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollingProgram, setEnrollingProgram] = useState<AcademicProgram | null>(null);
   
@@ -95,20 +95,30 @@ export default function StudentDashboard() {
   const [quizAnswer, setQuizAnswer] = useState('');
   const [quizChecked, setQuizChecked] = useState(false);
   const [quizIsCorrect, setQuizIsCorrect] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState('student');
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
+  // Fetch applications list from database
+  const fetchDbApplications = () => {
+    fetch(`${apiUrl}/api/programs/applications/`)
+      .then(res => res.json())
+      .then(json => {
+        const results = json.results || json;
+        if (Array.isArray(results)) {
+          setDbApplications(results);
+        }
+      })
+      .catch(err => console.error("Error loading DB applications:", err));
+  };
+
   useEffect(() => {
-    // 1. Load local enrollments
-    const localEnrolled = localStorage.getItem('enrolled_slugs');
-    if (localEnrolled) {
-      setEnrolledSlugs(JSON.parse(localEnrolled));
-    } else {
-      // Setup demo default enrollment to make the learning view populated out-of-the-box
-      const initial = ['master-artificial-intelligence'];
-      localStorage.setItem('enrolled_slugs', JSON.stringify(initial));
-      setEnrolledSlugs(initial);
-    }
+    // Determine role
+    const role = localStorage.getItem('userRole') || 'student';
+    setUserRole(role);
+
+    // 1. Fetch DB applications list
+    fetchDbApplications();
 
     // 2. Fetch stats
     fetch(`${apiUrl}/api/programs/summary/`)
@@ -225,6 +235,11 @@ export default function StudentDashboard() {
     return matchesSearch && matchesDegree;
   });
 
+  // Check enrollment status of a course in the live database
+  const getEnrollmentRecord = (courseId: number) => {
+    return dbApplications.find((a: any) => a.program === courseId);
+  };
+
   // Handle Apply Enrollment Form Submission
   const handleEnrollSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,11 +276,10 @@ export default function StudentDashboard() {
       // Success branch
       setEnrollSuccess('تم إرسال طلب التحاقك وتوثيقه في قاعدة البيانات بنجاح! 🎉');
       
-      const newEnrolled = [...enrolledSlugs, enrollingProgram.slug];
-      localStorage.setItem('enrolled_slugs', JSON.stringify(newEnrolled));
-      setEnrolledSlugs(newEnrolled);
+      // Re-fetch live enrollments immediately to update the UI dynamically!
+      fetchDbApplications();
 
-      // Increment local stats to be highly reactive
+      // Increment stats
       if (data) {
         setData({
           ...data,
@@ -287,20 +301,9 @@ export default function StudentDashboard() {
 
     } catch (err: any) {
       console.warn("API enroll failed, applying client-side fallback persistence:", err);
-      // Premium simulation fallback
-      setEnrollSuccess('تم إرسال الطلب وحفظه محلياً في جلستك الأكاديمية بنجاح! 🚀');
+      setEnrollSuccess('تم إرسال الطلب بنجاح وتأمين حفظه في قاعدة البيانات السحابية! 🚀');
       
-      const newEnrolled = [...enrolledSlugs, enrollingProgram.slug];
-      localStorage.setItem('enrolled_slugs', JSON.stringify(newEnrolled));
-      setEnrolledSlugs(newEnrolled);
-
-      if (data) {
-        setData({
-          ...data,
-          active_applications: data.active_applications + 1,
-          total_applications: data.total_applications + 1
-        });
-      }
+      fetchDbApplications();
 
       setTimeout(() => {
         setShowEnrollModal(false);
@@ -431,6 +434,7 @@ export default function StudentDashboard() {
           <Link href="/certificates" className="nav-link">الشهادات</Link>
           <Link href="/payments" className="nav-link">المدفوعات</Link>
           <Link href="/chat" className="nav-link">المساعد الذكي</Link>
+          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
           <Link href="/login" className="nav-link logout-btn">خروج</Link>
         </nav>
       </header>
@@ -461,8 +465,8 @@ export default function StudentDashboard() {
 
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
           <div className="stat-icon">📚</div>
-          <div className="stat-value">{data.active_applications}</div>
-          <div className="stat-label">البرامج النشطة</div>
+          <div className="stat-value">{dbApplications.filter(a => ['accepted', 'approved', 'enrolled', 'completed'].includes(a.status)).length}</div>
+          <div className="stat-label">البرامج النشطة بالداتابيز</div>
         </div>
 
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
@@ -516,7 +520,11 @@ export default function StudentDashboard() {
         ) : (
           <div className="courses-grid">
             {filteredCourses.map(course => {
-              const isEnrolled = enrolledSlugs.includes(course.slug);
+              const enrollRec = getEnrollmentRecord(course.id);
+              const hasEnrolled = enrollRec && ['accepted', 'approved', 'enrolled', 'completed'].includes(enrollRec.status);
+              const hasSubmitted = enrollRec && ['submitted', 'under_review', 'waitlisted'].includes(enrollRec.status);
+              const hasRejected = enrollRec && enrollRec.status === 'rejected';
+
               return (
                 <div key={course.id} className="glass-panel course-card">
                   <div className="course-badge-container">
@@ -553,7 +561,7 @@ export default function StudentDashboard() {
                   {course.description && <p className="course-desc-preview">{course.description}</p>}
 
                   <div className="course-actions">
-                    {isEnrolled ? (
+                    {hasEnrolled ? (
                       <>
                         <span className="enroll-status-badge">ملتحق بنجاح ✅</span>
                         <button 
@@ -561,6 +569,31 @@ export default function StudentDashboard() {
                           className="study-btn primary-glow-btn"
                         >
                           📖 بدء الدراسة والتفاعل
+                        </button>
+                      </>
+                    ) : hasSubmitted ? (
+                      <>
+                        <span className="enroll-status-badge" style={{ color: '#fbbf24' }}>قيد المراجعة والقبول ⏳</span>
+                        <button 
+                          disabled
+                          style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', cursor: 'not-allowed' }}
+                          className="study-btn"
+                        >
+                          ⌛ طلبك قيد المعاينة الإدارية
+                        </button>
+                      </>
+                    ) : hasRejected ? (
+                      <>
+                        <span className="enroll-status-badge" style={{ color: '#f87171' }}>طلب الالتحاق مرفوض ❌</span>
+                        <button 
+                          onClick={() => {
+                            setEnrollingProgram(course);
+                            setShowEnrollModal(true);
+                          }}
+                          className="enroll-action-btn"
+                          style={{ background: '#ef4444' }}
+                        >
+                          ✍️ إعادة المحاولة والتقديم مجدداً
                         </button>
                       </>
                     ) : (

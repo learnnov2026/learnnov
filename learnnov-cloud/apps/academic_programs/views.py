@@ -10,7 +10,8 @@ from .models import (
 from .serializers import (
     ProgramProviderSerializer, FieldOfStudySerializer,
     AcademicProgramListSerializer, AcademicProgramDetailSerializer,
-    ProgramApplicationSerializer, ApplicationReviewSerializer
+    ProgramApplicationSerializer, ApplicationReviewSerializer,
+    AcademicProgramCreateSerializer
 )
 
 
@@ -159,3 +160,16 @@ class ProgramSyllabusView(generics.ListAPIView):
     def get_queryset(self):
         slug = self.kwargs.get('slug')
         return ProgramModule.objects.filter(program__slug=slug).prefetch_related('lessons')
+
+
+class ProgramCreateView(generics.CreateAPIView):
+    queryset = AcademicProgram.objects.all()
+    serializer_class = AcademicProgramCreateSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def perform_create(self, serializer):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        admin_user = User.objects.filter(is_superuser=True).first()
+        serializer.save(created_by=admin_user)

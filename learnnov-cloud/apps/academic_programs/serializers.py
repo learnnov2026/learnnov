@@ -194,3 +194,9 @@ class ProgramModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramModule
         fields = ['id', 'title', 'description', 'order', 'lessons']
+
+
+class AcademicProgramCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicProgram
+        fields = '__all__'

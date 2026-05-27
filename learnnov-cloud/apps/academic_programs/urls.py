@@ -16,4 +16,5 @@ urlpatterns = [
     path('summary/', views.StudentSummaryView.as_view(), name='student-summary'),
     path('stats/', views.program_stats, name='stats'),
     path('programs/<slug:slug>/syllabus/', views.ProgramSyllabusView.as_view(), name='program-syllabus'),
+    path('programs/create/', views.ProgramCreateView.as_view(), name='program-create'),
 ]

@@ -53,19 +53,22 @@ export default function ChatbotPage() {
   return (
     <main className="dashboard-container" dir="rtl" style={{ height: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '2rem' }}>
       {/* Navigation bar Header */}
-      <header className="glass-panel" style={{ padding: '1rem 2rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="glass-panel main-header" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
+          <div className="profile-avatar logo-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
           <div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
             <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>المساعد التعليمي الذكي</p>
           </div>
         </div>
-        <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+        <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/instructor" className="nav-link">لوحة المشرف</Link>
+          <Link href="/discussions" className="nav-link">المناقشات</Link>
+          <Link href="/exams" className="nav-link">الاختبارات</Link>
+          <Link href="/certificates" className="nav-link">الشهادات</Link>
+          <Link href="/payments" className="nav-link">المدفوعات</Link>
           <Link href="/chat" className="nav-link active">المساعد الذكي</Link>
-          <Link href="/login" className="nav-link" style={{ color: '#f87171', background: 'rgba(239, 68, 68, 0.08)' }}>خروج</Link>
+          <Link href="/login" className="nav-link logout-btn">خروج</Link>
         </nav>
       </header>
 
@@ -144,6 +147,17 @@ export default function ChatbotPage() {
       </div>
 
       <style jsx global>{`
+        .main-header {
+          padding: 1rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .nav-links {
+          display: flex;
+          gap: 1.5rem;
+          align-items: center;
+        }
         .nav-link {
           color: #94a3b8;
           text-decoration: none;
@@ -156,6 +170,19 @@ export default function ChatbotPage() {
           color: #fff;
           background: rgba(59, 130, 246, 0.15);
           box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+        }
+        .logo-avatar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .logout-btn {
+          color: #f87171 !important;
+          background: rgba(239, 68, 68, 0.08) !important;
+        }
+        .logout-btn:hover {
+          background: rgba(239, 68, 68, 0.2) !important;
+          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
         }
       `}</style>
     </main>

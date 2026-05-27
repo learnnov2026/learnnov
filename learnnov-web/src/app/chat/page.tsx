@@ -61,10 +61,11 @@ export default function ChatbotPage() {
             <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>المساعد التعليمي الذكي</p>
           </div>
         </div>
-        <nav style={{ display: 'flex', gap: '1.5rem' }}>
+        <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           <Link href="/" className="nav-link">لوحة الطالب</Link>
           <Link href="/instructor" className="nav-link">لوحة المشرف</Link>
           <Link href="/chat" className="nav-link active">المساعد الذكي</Link>
+          <Link href="/login" className="nav-link" style={{ color: '#f87171', background: 'rgba(239, 68, 68, 0.08)' }}>خروج</Link>
         </nav>
       </header>
 

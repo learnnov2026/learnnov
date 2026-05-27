@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface Application {
@@ -8,6 +8,16 @@ interface Application {
   programTitle: string;
   date: string;
   status: 'pending' | 'approved' | 'rejected';
+}
+
+interface FieldOfStudy {
+  id: number;
+  name: string;
+}
+
+interface Provider {
+  id: number;
+  name: string;
 }
 
 export default function InstructorDashboard() {
@@ -21,6 +31,64 @@ export default function InstructorDashboard() {
   ]);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  
+  // Database Connected States
+  const [fields, setFields] = useState<FieldOfStudy[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [activeCoursesCount, setActiveCoursesCount] = useState(5);
+  
+  // Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Form State
+  const [title, setTitle] = useState('');
+  const [titleEn, setTitleEn] = useState('');
+  const [slug, setSlug] = useState('');
+  const [fieldOfStudy, setFieldOfStudy] = useState('');
+  const [provider, setProvider] = useState('');
+  const [degreeLevel, setDegreeLevel] = useState('master');
+  const [studyMode, setStudyMode] = useState('online');
+  const [language, setLanguage] = useState('ar_en');
+  const [duration, setDuration] = useState('24');
+  const [tuitionFee, setTuitionFee] = useState('35000');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+    
+    // Fetch live fields from database
+    fetch(`${apiUrl}/api/programs/fields/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results) {
+          setFields(data.results.map((f: any) => ({ id: f.id, name: f.name })));
+        }
+      })
+      .catch(err => console.error("Error loading study fields:", err));
+
+    // Fetch live providers from database
+    fetch(`${apiUrl}/api/programs/providers/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results) {
+          setProviders(data.results.map((p: any) => ({ id: p.id, name: p.name })));
+        }
+      })
+      .catch(err => console.error("Error loading providers:", err));
+
+    // Fetch total active programs count from database
+    fetch(`${apiUrl}/api/programs/stats/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.total_programs) {
+          setActiveCoursesCount(data.total_programs);
+        }
+      })
+      .catch(err => console.error("Error loading stats:", err));
+  }, []);
 
   const updateStatus = (id: string, newStatus: 'approved' | 'rejected') => {
     setApplications(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
@@ -31,11 +99,59 @@ export default function InstructorDashboard() {
     return app.status === activeFilter;
   });
 
-  const stats = {
-    totalStudents: 142,
-    activePrograms: 5,
-    pendingApps: applications.filter(a => a.status === 'pending').length,
-    passRate: '87.4%',
+  const handleAddCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
+    const payload = {
+      title,
+      title_en: titleEn,
+      slug,
+      field_of_study: parseInt(fieldOfStudy),
+      provider: parseInt(provider),
+      degree_level: degreeLevel,
+      study_mode: studyMode,
+      language,
+      duration_months: parseInt(duration),
+      tuition_fee: parseFloat(tuitionFee),
+      description,
+      is_active: true,
+      status: 'active'
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}/api/programs/programs/create/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error('فشل تسجيل المقرر في قاعدة البيانات السحابية.');
+      }
+
+      setSuccessMsg('تم إضافة المقرر الدراسي بنجاح وحفظه في قاعدة البيانات الحية! 🎉');
+      setActiveCoursesCount(prev => prev + 1);
+      
+      // Clear form
+      setTitle('');
+      setTitleEn('');
+      setSlug('');
+      setDescription('');
+      
+      setTimeout(() => {
+        setShowAddModal(false);
+        setSuccessMsg('');
+      }, 2000);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'حدث خطأ غير متوقع أثناء الحفظ.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -49,19 +165,33 @@ export default function InstructorDashboard() {
             <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة المشرفين وأعضاء هيئة التدريس</p>
           </div>
         </div>
-        <nav style={{ display: 'flex', gap: '1.5rem' }}>
+        <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           <Link href="/" className="nav-link">لوحة الطالب</Link>
           <Link href="/instructor" className="nav-link active">لوحة المشرف</Link>
           <Link href="/chat" className="nav-link">المساعد الذكي</Link>
+          <Link href="/login" className="nav-link" style={{ color: '#f87171', background: 'rgba(239, 68, 68, 0.08)' }}>خروج</Link>
         </nav>
       </header>
 
       {/* Profile Header section */}
       <div className="glass-panel profile-header">
         <div className="profile-avatar">د</div>
-        <div className="profile-info">
+        <div className="profile-info" style={{ flex: 1 }}>
           <h1>مرحباً بك، <span className="text-gradient">د. علي البراك</span></h1>
           <p>لوحة التحكم الإشرافية وإدارة طلبات الالتحاق الأكاديمية</p>
+        </div>
+        <div>
+          <button 
+            className="action-btn approve" 
+            onClick={() => {
+              setShowAddModal(true);
+              if (fields.length > 0 && !fieldOfStudy) setFieldOfStudy(fields[0].id.toString());
+              if (providers.length > 0 && !provider) setProvider(providers[0].id.toString());
+            }}
+            style={{ padding: '0.9rem 1.8rem', fontSize: '1.05rem', borderRadius: '12px' }}
+          >
+            ➕ إضافة مقرر دراسي جديد
+          </button>
         </div>
       </div>
 
@@ -70,24 +200,24 @@ export default function InstructorDashboard() {
       <div className="stats-grid">
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
           <div className="stat-icon">👥</div>
-          <div className="stat-value">{stats.totalStudents}</div>
+          <div className="stat-value">142</div>
           <div className="stat-label">إجمالي الطلاب المسجلين</div>
         </div>
 
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #10b981' }}>
           <div className="stat-icon">📚</div>
-          <div className="stat-value">{stats.activePrograms}</div>
-          <div className="stat-label">المقررات النشطة</div>
+          <div className="stat-value">{activeCoursesCount}</div>
+          <div className="stat-label">المقررات النشطة بقاعدة البيانات</div>
         </div>
 
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <div className="stat-value" style={{ color: stats.pendingApps > 0 ? '#f59e0b' : '#fff' }}>{stats.pendingApps}</div>
+          <div className="stat-value" style={{ color: '#f59e0b' }}>{applications.filter(a => a.status === 'pending').length}</div>
           <div className="stat-label">طلبات معلقة بحاجة لمراجعة</div>
         </div>
 
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
           <div className="stat-icon">📈</div>
-          <div className="stat-value">{stats.passRate}</div>
+          <div className="stat-value">87.4%</div>
           <div className="stat-label">نسبة نجاح الطلاب</div>
         </div>
       </div>
@@ -186,6 +316,134 @@ export default function InstructorDashboard() {
         </div>
       </section>
 
+      {/* Add Course Glassmorphism Modal Form */}
+      {showAddModal && (
+        <div className="modal-backdrop">
+          <div className="glass-panel modal-card" style={{ maxWidth: '650px', width: '100%', padding: '2.5rem' }}>
+            <h2 className="text-gradient" style={{ marginBottom: '1.5rem', fontSize: '1.8rem', fontWeight: 700 }}>إضافة مقرر دراسي جديد لقاعدة البيانات</h2>
+            
+            <form onSubmit={handleAddCourse} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>عنوان المقرر بالعربية</label>
+                  <input 
+                    type="text" 
+                    value={title} 
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      // Generate simple slug automatically
+                      setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, '-'));
+                    }} 
+                    required 
+                    placeholder="مثال: هندسة البرمجيات المتقدمة"
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>العنوان بالإنجليزية</label>
+                  <input 
+                    type="text" 
+                    value={titleEn} 
+                    onChange={(e) => setTitleEn(e.target.value)} 
+                    required 
+                    placeholder="Advanced Software Engineering"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>الرابط الفريد (Slug)</label>
+                  <input 
+                    type="text" 
+                    value={slug} 
+                    onChange={(e) => setSlug(e.target.value)} 
+                    required 
+                    placeholder="advanced-software-engineering"
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>التخصص الدراسي</label>
+                  <select value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} required>
+                    {fields.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>الجهة الأكاديمية المقدمة</label>
+                  <select value={provider} onChange={(e) => setProvider(e.target.value)} required>
+                    {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>الدرجة العلمية</label>
+                  <select value={degreeLevel} onChange={(e) => setDegreeLevel(e.target.value)}>
+                    <option value="bachelor">بكالوريوس (Bachelor)</option>
+                    <option value="master">ماجستير (Master)</option>
+                    <option value="doctorate">دكتوراه (Doctorate)</option>
+                    <option value="diploma">دبلوم (Diploma)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>طريقة الدراسة</label>
+                  <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>
+                    <option value="online">عن بعد بالكامل (Online)</option>
+                    <option value="on_campus">حضوري بالكامل (On Campus)</option>
+                    <option value="blended">تعليم مدمج (Blended)</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>لغة الدراسة</label>
+                  <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="en">الإنجليزية (English)</option>
+                    <option value="ar_en">ثنائي اللغة (Bilingual)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>مدة المقرر (بالأشهر)</label>
+                  <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} required />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>الرسوم الدراسية (SAR)</label>
+                  <input type="number" value={tuitionFee} onChange={(e) => setTuitionFee(e.target.value)} required />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>وصف مختصر للمقرر وأهدافه</label>
+                <textarea 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)} 
+                  required 
+                  rows={3} 
+                  placeholder="اكتب وصفاً شاملاً للمقرر الدراسي وما سيتعلمه الطالب..."
+                />
+              </div>
+
+              {successMsg && <div style={{ color: '#34d399', fontWeight: 600, textAlign: 'center' }}>{successMsg}</div>}
+              {errorMsg && <div style={{ color: '#f87171', fontWeight: 600, textAlign: 'center' }}>{errorMsg}</div>}
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="submit" className="action-btn approve" style={{ flex: 1, padding: '0.85rem' }} disabled={isSubmitting}>
+                  {isSubmitting ? 'جاري الحفظ في قاعدة البيانات...' : '💾 حفظ وإطلاق المقرر السحابي'}
+                </button>
+                <button type="button" className="action-btn reject" style={{ flex: 0.5, padding: '0.85rem' }} onClick={() => setShowAddModal(false)}>
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Styled JSX support for quick advanced CSS styling */}
       <style jsx global>{`
         .nav-link {
@@ -265,6 +523,56 @@ export default function InstructorDashboard() {
         .action-btn.reject:hover {
           background: #dc2626;
           box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+        .modal-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 2rem;
+          overflow-y: auto;
+        }
+        .modal-card {
+          animation: fadeInUp 0.4s ease-out;
+        }
+        .form-row {
+          display: flex;
+          gap: 1rem;
+        }
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .form-group label {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #cbd5e1;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.15);
+          background: rgba(0,0,0,0.4);
+          color: white;
+          font-size: 0.95rem;
+          outline: none;
+          font-family: inherit;
+          transition: border-color 0.3s;
+        }
+        .form-group select option {
+          background: #0f172a;
+          color: white;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+          border-color: #3b82f6;
         }
       `}</style>
     </main>

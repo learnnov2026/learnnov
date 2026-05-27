@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface StudentData {
   active_applications: number;
@@ -60,6 +61,22 @@ export default function StudentDashboard() {
 
   return (
     <main className="dashboard-container" dir="rtl">
+      {/* Navigation bar Header */}
+      <header className="glass-panel" style={{ padding: '1rem 2rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="profile-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة الطلاب الذكية</p>
+          </div>
+        </div>
+        <nav style={{ display: 'flex', gap: '1.5rem' }}>
+          <Link href="/" className="nav-link active">لوحة الطالب</Link>
+          <Link href="/instructor" className="nav-link">لوحة المشرف</Link>
+          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
+        </nav>
+      </header>
+
       <div className="glass-panel profile-header">
         <div className="profile-avatar">أ</div>
         <div className="profile-info">
@@ -100,6 +117,22 @@ export default function StudentDashboard() {
           <div className="stat-label">نقاط المكافآت (رمز: {data.referral_code})</div>
         </div>
       </div>
+
+      <style jsx global>{`
+        .nav-link {
+          color: #94a3b8;
+          text-decoration: none;
+          font-weight: 500;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          transition: all 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+          color: #fff;
+          background: rgba(59, 130, 246, 0.15);
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+        }
+      `}</style>
     </main>
   );
 }

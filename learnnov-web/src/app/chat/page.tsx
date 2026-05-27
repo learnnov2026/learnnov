@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Message {
   id: string;
@@ -50,7 +51,23 @@ export default function ChatbotPage() {
   };
 
   return (
-    <main className="dashboard-container" dir="rtl" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main className="dashboard-container" dir="rtl" style={{ height: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '2rem' }}>
+      {/* Navigation bar Header */}
+      <header className="glass-panel" style={{ padding: '1rem 2rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="profile-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>المساعد التعليمي الذكي</p>
+          </div>
+        </div>
+        <nav style={{ display: 'flex', gap: '1.5rem' }}>
+          <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/instructor" className="nav-link">لوحة المشرف</Link>
+          <Link href="/chat" className="nav-link active">المساعد الذكي</Link>
+        </nav>
+      </header>
+
       <div className="glass-panel profile-header" style={{ marginBottom: '1rem', padding: '1.5rem' }}>
         <div className="profile-avatar" style={{ width: '50px', height: '50px', fontSize: '1.5rem' }}>🤖</div>
         <div className="profile-info">
@@ -124,6 +141,22 @@ export default function ChatbotPage() {
           </button>
         </div>
       </div>
+
+      <style jsx global>{`
+        .nav-link {
+          color: #94a3b8;
+          text-decoration: none;
+          font-weight: 500;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          transition: all 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+          color: #fff;
+          background: rgba(59, 130, 246, 0.15);
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+        }
+      `}</style>
     </main>
   );
 }

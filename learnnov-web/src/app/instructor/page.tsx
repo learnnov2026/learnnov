@@ -141,7 +141,7 @@ export default function InstructorDashboard() {
             <tbody>
               {filteredApps.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '3rem', textKeep: 'center', color: '#64748b', textAlign: 'center' }}>
+                  <td colSpan={5} style={{ padding: '3rem', color: '#64748b', textAlign: 'center' }}>
                     لا توجد طلبات تطابق الفلتر المحدد حالياً.
                   </td>
                 </tr>

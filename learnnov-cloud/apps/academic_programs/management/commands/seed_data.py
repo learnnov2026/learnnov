@@ -11,8 +11,8 @@ class Command(BaseCommand):
         User = get_user_model()
         admin_user = User.objects.filter(is_superuser=True).first()
         if not admin_user:
-            self.stdout.write(self.style.ERROR('Please create a superuser first!'))
-            return
+            admin_user = User.objects.create_superuser('admin', 'admin@learnnov.com', 'admin2026')
+            self.stdout.write(self.style.SUCCESS('Superuser "admin" created automatically.'))
 
         # 1. Create Fields of Study
         fields_data = [

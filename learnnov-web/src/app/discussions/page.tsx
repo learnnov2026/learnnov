@@ -80,7 +80,10 @@ export default function DiscussionsPage() {
     setLoading(true);
     setActiveThread(null);
 
-    fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`)
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(json => {
         if (Array.isArray(json) && json.length > 0) {
@@ -134,9 +137,13 @@ export default function DiscussionsPage() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/threads/${activeThread.id}/reply/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
@@ -189,9 +196,13 @@ export default function DiscussionsPage() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 

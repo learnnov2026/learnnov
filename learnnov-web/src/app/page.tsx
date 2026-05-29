@@ -101,7 +101,10 @@ export default function StudentDashboard() {
 
   // Fetch applications list from database
   const fetchDbApplications = () => {
-    fetch(`${apiUrl}/api/programs/applications/`)
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/programs/applications/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(json => {
         const results = json.results || json;
@@ -121,8 +124,14 @@ export default function StudentDashboard() {
     fetchDbApplications();
 
     // 2. Fetch stats
-    fetch(`${apiUrl}/api/programs/summary/`)
-      .then(res => res.json())
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/programs/summary/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      })
       .then((json) => {
         setData(json);
         setLoading(false);
@@ -262,9 +271,13 @@ export default function StudentDashboard() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/programs/programs/${enrollingProgram.slug}/apply/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
@@ -329,7 +342,10 @@ export default function StudentDashboard() {
     setVideoProgress(0);
 
     try {
-      const res = await fetch(`${apiUrl}/api/programs/programs/${course.slug}/syllabus/`);
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${apiUrl}/api/programs/programs/${course.slug}/syllabus/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error("Syllabus fetch failed");
       const json = await res.json();
       

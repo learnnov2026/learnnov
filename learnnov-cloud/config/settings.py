@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     # Third-party
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     # LearnNov Apps
     'apps.core',
@@ -60,7 +61,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'csp.middleware.CSPMiddleware',
     'auditlog.middleware.AuditlogMiddleware',
-    'mfa.middleware.MfaMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -145,6 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ── REST Framework ────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -152,6 +153,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
@@ -178,7 +185,10 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-if not DEBUG:
+import sys
+TESTING = 'test' in sys.argv or 'pytest' in sys.argv[0]
+
+if not DEBUG and not TESTING:
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
@@ -190,7 +200,7 @@ if not DEBUG:
 # ── CSRF Trusted Origins (مطلوب لـ GKE Load Balancer) ────────────────────────
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://learnnov.org,https://studio.learnnov.org,https://learnnov-web.vercel.app,https://*.vercel.app',
+    default='https://learnnov.org,https://studio.learnnov.org,https://learnnov-web.vercel.app,https://*.vercel.app,https://*.onrender.com',
     cast=Csv(),
 )
 

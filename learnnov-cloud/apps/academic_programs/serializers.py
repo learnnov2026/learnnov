@@ -205,6 +205,18 @@ class ProgramModuleSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'order', 'lessons']
 
 
+class ProgramModuleCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModule
+        fields = ['id', 'program', 'title', 'description', 'order']
+
+
+class ProgramLessonCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramLesson
+        fields = ['id', 'module', 'title', 'lesson_type', 'content', 'media_file', 'duration_minutes', 'order', 'is_preview']
+
+
 class AcademicProgramCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicProgram

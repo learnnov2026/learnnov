@@ -29,10 +29,14 @@ export default function ChatbotPage() {
     setIsTyping(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/ai/chat/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ message: userMsg.content })
       });
       const data = await res.json();

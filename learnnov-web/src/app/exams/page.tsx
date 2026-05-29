@@ -48,7 +48,10 @@ export default function ExamsPage() {
     setUserRole(role);
 
     // Fetch exams list from database
-    fetch(`${apiUrl}/api/exams/`)
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/exams/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(json => {
         if (Array.isArray(json) && json.length > 0) {
@@ -67,7 +70,9 @@ export default function ExamsPage() {
       });
 
     // Fetch attempts
-    fetch(`${apiUrl}/api/exams/attempts/`)
+    fetch(`${apiUrl}/api/exams/attempts/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(json => {
         if (Array.isArray(json)) {
@@ -218,7 +223,11 @@ export default function ExamsPage() {
     setQuestions(examQuestions);
 
     // Call start API
-    fetch(`${apiUrl}/api/exams/${exam.id}/start/`, { method: 'POST' }).catch(() => {});
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/exams/${exam.id}/start/`, { 
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).catch(() => {});
   };
 
   // Evaluate responses and Submit
@@ -254,9 +263,13 @@ export default function ExamsPage() {
       score: score,
       is_completed: true
     };
+    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/exams/attempts/${activeExam.id}/submit/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(payload)
     }).catch(() => {});
   };

@@ -44,7 +44,10 @@ export default function InstructorDashboard() {
 
   // Fetch applications list from DB
   const fetchDbApplications = () => {
-    fetch(`${apiUrl}/api/programs/applications/`)
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/programs/applications/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(json => {
         const results = json.results || json;
@@ -60,7 +63,10 @@ export default function InstructorDashboard() {
     fetchDbApplications();
 
     // 2. Fetch live fields from database
-    fetch(`${apiUrl}/api/programs/fields/`)
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/programs/fields/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         const results = data.results || data;
@@ -71,7 +77,9 @@ export default function InstructorDashboard() {
       .catch(err => console.error("Error loading study fields:", err));
 
     // 3. Fetch live providers from database
-    fetch(`${apiUrl}/api/programs/providers/`)
+    fetch(`${apiUrl}/api/programs/providers/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         const results = data.results || data;
@@ -82,7 +90,9 @@ export default function InstructorDashboard() {
       .catch(err => console.error("Error loading providers:", err));
 
     // 4. Fetch total active programs count from database
-    fetch(`${apiUrl}/api/programs/stats/`)
+    fetch(`${apiUrl}/api/programs/stats/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (data.total_programs) {
@@ -101,9 +111,13 @@ export default function InstructorDashboard() {
 
   const updateStatus = async (id: number, newStatus: 'accepted' | 'rejected') => {
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/programs/applications/${id}/review/`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error("API status review request failed");
@@ -146,9 +160,13 @@ export default function InstructorDashboard() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/programs/programs/create/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 

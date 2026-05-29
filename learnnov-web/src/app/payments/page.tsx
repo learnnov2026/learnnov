@@ -40,33 +40,85 @@ export default function PaymentsPage() {
     setUserRole(role);
 
     // Initial query to discount check
-    fetch(`${apiUrl}/api/payments/discount/apply/`, { method: 'POST' }).catch(() => {});
+    const token = localStorage.getItem('accessToken');
+    fetch(`${apiUrl}/api/payments/discount/apply/`, { 
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).catch(() => {});
 
-    // Populate invoices with premium templates
-    setTimeout(() => {
-      setInvoices([
-        {
-          id: 901,
-          item_name: "رسوم ماجستير الذكاء الاصطناعي - الفصل الأول",
-          original_amount: 22500,
-          discount_applied: 0,
-          net_amount: 22500,
-          status: "unpaid",
-          date: "2026-05-24"
-        },
-        {
-          id: 902,
-          item_name: "رسوم القبول والتسجيل الأكاديمي الإداري",
-          original_amount: 500,
-          discount_applied: 0,
-          net_amount: 500,
-          status: "paid",
-          date: "2026-05-24",
-          txn_ref: "TXN-LNOV-9328401"
+    // Fetch invoices from database with fallback to premium templates
+    fetch(`${apiUrl}/api/payments/orders/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("API call failed");
+        return res.json();
+      })
+      .then(json => {
+        const results = json.results || json;
+        if (Array.isArray(results) && results.length > 0) {
+          const mappedInvoices = results.map((order: any) => ({
+            id: order.id,
+            item_name: order.course_name || `رسوم برنامج ${order.course_id}`,
+            original_amount: order.amount,
+            discount_applied: 0,
+            net_amount: order.amount,
+            status: (order.status === 'PAID' ? 'paid' : order.status === 'PENDING' ? 'pending' : 'unpaid') as 'paid' | 'pending' | 'unpaid',
+            date: new Date(order.created_at).toISOString().split('T')[0],
+            txn_ref: order.transaction_reference || undefined
+          }));
+          setInvoices(mappedInvoices);
+        } else {
+          // Fallback to premium template
+          setInvoices([
+            {
+              id: 901,
+              item_name: "رسوم ماجستير الذكاء الاصطناعي - الفصل الأول",
+              original_amount: 22500,
+              discount_applied: 0,
+              net_amount: 22500,
+              status: "unpaid",
+              date: "2026-05-24"
+            },
+            {
+              id: 902,
+              item_name: "رسوم القبول والتسجيل الأكاديمي الإداري",
+              original_amount: 500,
+              discount_applied: 0,
+              net_amount: 500,
+              status: "paid",
+              date: "2026-05-24",
+              txn_ref: "TXN-LNOV-9328401"
+            }
+          ]);
         }
-      ]);
-      setLoading(false);
-    }, 600);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback to premium template on error
+        setInvoices([
+          {
+            id: 901,
+            item_name: "رسوم ماجستير الذكاء الاصطناعي - الفصل الأول",
+            original_amount: 22500,
+            discount_applied: 0,
+            net_amount: 22500,
+            status: "unpaid",
+            date: "2026-05-24"
+          },
+          {
+            id: 902,
+            item_name: "رسوم القبول والتسجيل الأكاديمي الإداري",
+            original_amount: 500,
+            discount_applied: 0,
+            net_amount: 500,
+            status: "paid",
+            date: "2026-05-24",
+            txn_ref: "TXN-LNOV-9328401"
+          }
+        ]);
+        setLoading(false);
+      });
   }, []);
 
   // Handle Apply Discount Code
@@ -82,9 +134,13 @@ export default function PaymentsPage() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/payments/discount/apply/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
@@ -146,9 +202,13 @@ export default function PaymentsPage() {
     };
 
     try {
+      const token = localStorage.getItem('accessToken');
       await fetch(`${apiUrl}/api/payments/stripe/create-intent/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
     } catch (err) {

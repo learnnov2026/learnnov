@@ -69,61 +69,43 @@ class ProgramDetailView(generics.RetrieveAPIView):
 
 class ProgramApplyView(generics.CreateAPIView):
     serializer_class = ProgramApplicationSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = self.request.user
         referral_code = self.request.session.get('referral_code', '') if hasattr(self.request, 'session') else ''
         serializer.save(applicant=user, referral_code=referral_code)
 
 
 class MyApplicationsView(generics.ListAPIView):
     serializer_class = ProgramApplicationSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if user and user.is_authenticated:
-            return ProgramApplication.objects.filter(applicant=user)
-        return ProgramApplication.objects.all().order_by('-submitted_at')
+        return ProgramApplication.objects.filter(applicant=self.request.user).order_by('-submitted_at')
 
 
 class ApplicationDetailView(generics.RetrieveAPIView):
     serializer_class = ProgramApplicationSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
-    queryset = ProgramApplication.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return ProgramApplication.objects.all()
+        return ProgramApplication.objects.filter(applicant=self.request.user)
 
 
 class ApplicationReviewView(generics.UpdateAPIView):
     serializer_class = ApplicationReviewSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAdminUser]
     queryset = ProgramApplication.objects.all()
 
 
 class StudentSummaryView(APIView):
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        if not user.is_authenticated:
-            return Response({
-                'active_applications': 3,
-                'total_applications': 5,
-                'referral_code': 'DEMO-NEXTJS',
-                'referral_points': 1500,
-                'exams_passed': 12,
-                'certificates_earned': 4,
-                'discussions_started': 28,
-            })
             
         apps = ProgramApplication.objects.filter(applicant=user)
         referral, _ = UserReferral.generate_code_for_user(user)
@@ -164,7 +146,7 @@ class ProgramSyllabusView(generics.ListAPIView):
     Returns the syllabus (Modules and Lessons) for a specific course.
     """
     serializer_class = ProgramModuleSerializer
-    permission_classes = [permissions.AllowAny] # The serializer handles locking the content
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         slug = self.kwargs.get('slug')
@@ -174,11 +156,60 @@ class ProgramSyllabusView(generics.ListAPIView):
 class ProgramCreateView(generics.CreateAPIView):
     queryset = AcademicProgram.objects.all()
     serializer_class = AcademicProgramCreateSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAdminUser]
 
     def perform_create(self, serializer):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        admin_user = User.objects.filter(is_superuser=True).first()
-        serializer.save(created_by=admin_user)
+        serializer.save(created_by=self.request.user)
+
+
+from django.shortcuts import get_object_or_404
+from .models import ProgramLesson
+from .serializers import ProgramModuleCreateSerializer, ProgramLessonCreateSerializer
+
+class ModuleListCreateView(generics.ListCreateAPIView):
+    """عرض وإنشاء وحدات دراسية لبرنامج محدد."""
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProgramModuleCreateSerializer
+        return ProgramModuleSerializer
+    
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        return ProgramModule.objects.filter(program__slug=slug).prefetch_related('lessons')
+    
+    def perform_create(self, serializer):
+        slug = self.kwargs.get('slug')
+        program = get_object_or_404(AcademicProgram, slug=slug)
+        serializer.save(program=program)
+
+class ModuleUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """تعديل أو حذف وحدة دراسية."""
+    serializer_class = ProgramModuleCreateSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = ProgramModule.objects.all()
+
+class LessonListCreateView(generics.ListCreateAPIView):
+    """عرض وإنشاء دروس لوحدة محددة."""
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProgramLessonCreateSerializer
+        return ProgramLessonSerializer
+    
+    def get_queryset(self):
+        module_id = self.kwargs.get('pk')
+        return ProgramLesson.objects.filter(module_id=module_id)
+    
+    def perform_create(self, serializer):
+        module_id = self.kwargs.get('pk')
+        module = get_object_or_404(ProgramModule, id=module_id)
+        serializer.save(module=module)
+
+class LessonUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """تعديل أو حذف درس."""
+    serializer_class = ProgramLessonCreateSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = ProgramLesson.objects.all()

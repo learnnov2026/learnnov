@@ -19,25 +19,43 @@ export default function LoginPage() {
     }
   }, [role]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+      const res = await fetch(`${apiUrl}/api/auth/token/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        throw new Error('بيانات الدخول غير صحيحة');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.access);
+      localStorage.setItem('refreshToken', data.refresh);
+
       // Set session variables in localStorage for persistence
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', role === 'student' ? 'طالب ليرنوف المتميز' : 'د. علي البراك');
       localStorage.setItem('userAvatar', role === 'student' ? 'أ' : 'د');
       localStorage.setItem('isLoggedIn', 'true');
 
-      setLoading(false);
       if (role === 'student') {
         router.push('/');
       } else {
         router.push('/instructor');
       }
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'حدث خطأ في الاتصال بالخادم');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

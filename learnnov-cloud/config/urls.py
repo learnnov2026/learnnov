@@ -41,6 +41,8 @@ def health_check(request):
     })
 
 
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 urlpatterns = [
     # Landing
     path('', landing_page, name='home'),
@@ -50,6 +52,10 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     path('mfa/', include('mfa.urls')),
+
+    # Auth JWT
+    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # API
     path('api/programs/', include('apps.academic_programs.urls', namespace='academic_programs')),

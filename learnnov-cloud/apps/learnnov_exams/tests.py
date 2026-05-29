@@ -46,7 +46,7 @@ class ExamLogicTests(TestCase):
         attempt.start_time = timezone.now() - timedelta(hours=2)
         attempt.save()
 
-        url = reverse('learnnov_exams:submit_exam', kwargs={'attempt_id': attempt.id})
+        url = reverse('learnnov_exams:exam-submit', kwargs={'attempt_id': attempt.id})
         data = {
             'answers': {
                 str(self.question.id): self.choice_correct.id

@@ -8,11 +8,6 @@ import os
 
 from apps.ai_assistant.models import ChatMessage
 
-# Patch Django's Context copy methods to resolve Python 3.14 compatibility issue with Django 4.2
-from django.template.context import RequestContext, Context
-RequestContext.__copy__ = lambda self: self
-Context.__copy__ = lambda self: self
-
 User = get_user_model()
 
 @override_settings(STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage')

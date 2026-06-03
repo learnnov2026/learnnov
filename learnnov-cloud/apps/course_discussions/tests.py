@@ -6,11 +6,6 @@ from django.contrib.auth import get_user_model
 from apps.academic_programs.models import AcademicProgram, ProgramProvider, ProgramApplication
 from apps.course_discussions.models import DiscussionThread, DiscussionPost
 
-# Patch Django's Context copy methods to resolve Python 3.14 compatibility issue with Django 4.2
-from django.template.context import RequestContext, Context
-RequestContext.__copy__ = lambda self: self
-Context.__copy__ = lambda self: self
-
 User = get_user_model()
 
 @override_settings(STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage')

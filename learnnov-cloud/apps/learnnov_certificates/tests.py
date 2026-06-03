@@ -7,11 +7,6 @@ import uuid
 
 from apps.learnnov_certificates.models import GeneratedCertificate, CertificateQRCode
 
-# Patch Django's Context copy methods to resolve Python 3.14 compatibility issue with Django 4.2
-from django.template.context import RequestContext, Context
-RequestContext.__copy__ = lambda self: self
-Context.__copy__ = lambda self: self
-
 from django.test import override_settings
 
 User = get_user_model()

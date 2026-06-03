@@ -5,6 +5,16 @@ class CoreConfig(AppConfig):
     name = 'apps.core'
 
     def ready(self):
+        # Patch RequestContext and Context for Python 3.14 compatibility with Django 4.2
+        try:
+            from django.template.context import RequestContext, Context
+            if not hasattr(RequestContext, '_patched_314'):
+                RequestContext.__copy__ = lambda self: self
+                Context.__copy__ = lambda self: self
+                RequestContext._patched_314 = True
+        except Exception:
+            pass
+
         # Implicitly connect signal handlers decorated with @receiver.
         import apps.core.signals
         

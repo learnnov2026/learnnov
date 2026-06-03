@@ -1,3 +1,4 @@
+import os
 import filetype
 import clamd
 from django.core.exceptions import ValidationError
@@ -48,9 +49,11 @@ def validate_file_infection(file):
     Scans the uploaded file for malware/viruses using ClamAV.
     Requires a running clamd service.
     """
+    clamav_host = os.getenv('CLAMAV_HOST', 'clamav')
+    clamav_port = int(os.getenv('CLAMAV_PORT', 3310))
     try:
-        # Connect to local ClamAV daemon
-        cd = clamd.ClamdNetworkSocket()
+        # Connect to ClamAV daemon
+        cd = clamd.ClamdNetworkSocket(host=clamav_host, port=clamav_port)
         
         # Test connection
         if not cd.ping() == 'PONG':

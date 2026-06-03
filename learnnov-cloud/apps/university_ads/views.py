@@ -71,21 +71,24 @@ class AdListView(generics.ListAPIView):
 
     def get_queryset(self):
         now = timezone.now()
-        qs = UniversityAd.objects.filter(is_active=True, start_date__lte=now, end_date__gte=now).select_related('university')
+        from django.db.models import F, Q
+        qs = UniversityAd.objects.filter(
+            is_active=True, 
+            start_date__lte=now, 
+            end_date__gte=now
+        ).select_related('university')
         
         # فلترة حسب مكان الإعلان
         placement = self.request.query_params.get('placement')
         if placement:
             qs = qs.filter(placement=placement)
             
-        # فلترة الإعلانات التي تجاوزت الحد الأقصى للمشاهدات
-        active_ads = []
-        for ad in qs:
-            if ad.max_impressions > 0 and ad.impressions_count >= ad.max_impressions:
-                continue
-            active_ads.append(ad.id)
+        # فلترة الإعلانات التي تجاوزت الحد الأقصى للمشاهدات في قاعدة البيانات مباشرة
+        qs = qs.filter(
+            Q(max_impressions=0) | Q(impressions_count__lt=F('max_impressions'))
+        )
             
-        return UniversityAd.objects.filter(id__in=active_ads).select_related('university').order_by('priority')
+        return qs.order_by('priority')
 
 
 # ── Analytics Tracking Views ──────────────────────────────────────────────────

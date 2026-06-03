@@ -69,3 +69,39 @@ class PaymentSecurityTests(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('already used', response.data['error'])
+
+    def test_anonymous_requests_rejected(self):
+        # Disconnect authentication for testing anonymous behavior
+        self.client.force_authenticate(user=None)
+
+        # 1. Stripe payment intent creation should be rejected
+        url_stripe = reverse('learnnov_payments:stripe-create-intent')
+        response = self.client.post(url_stripe, {'course_id': 'prog-a'}, format='json')
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+        # 2. Discount code application should be rejected
+        url_discount = reverse('learnnov_payments:discount-apply')
+        response = self.client.post(url_discount, {'course_id': 'prog-a', 'code': 'FREE100'}, format='json')
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+        # 3. Accessing order list should be rejected
+        url_orders = reverse('learnnov_payments:student-orders')
+        response = self.client.get(url_orders)
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_order_list_restricted_to_owner(self):
+        # Create another user and an order belonging to them
+        other_user = User.objects.create_user(username='otheruser', password='password123')
+        Order.objects.create(user=other_user, course_id='prog-a', amount=500.00, status=OrderStatus.PAID)
+
+        # Create an order belonging to self.user
+        Order.objects.create(user=self.user, course_id='prog-a', amount=500.00, status=OrderStatus.PENDING)
+
+        # Retrieve orders as self.user
+        url_orders = reverse('learnnov_payments:student-orders')
+        response = self.client.get(url_orders)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify that only 1 order (the one belonging to self.user) is returned, and other_user's order is not leaked
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['status'], OrderStatus.PENDING)

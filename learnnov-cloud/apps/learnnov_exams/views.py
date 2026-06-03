@@ -46,16 +46,11 @@ class ExamListView(generics.ListAPIView):
 class StartExamView(generics.CreateAPIView):
     """بدء محاولة اختبار جديدة."""
     serializer_class = ExamAttemptSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, exam_id):
         exam = get_object_or_404(MockExam, id=exam_id, is_active=True)
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = request.user
             
         active_attempt = ExamAttempt.objects.filter(user=user, exam=exam, is_completed=False).first()
         if active_attempt:
@@ -75,16 +70,10 @@ class StartExamView(generics.CreateAPIView):
 
 class SubmitExamView(generics.UpdateAPIView):
     """تسليم الإجابات والتصحيح الآلي."""
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, attempt_id):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
-            
+        user = request.user
         attempt = get_object_or_404(ExamAttempt, id=attempt_id, user=user, is_completed=False)
         _log_exam_action(attempt, 'submit_full_exam', request=request)
         
@@ -136,6 +125,10 @@ class SubmitExamView(generics.UpdateAPIView):
             
         _log_exam_action(attempt, 'finish', request=request)
         
+        # Clear heartbeat cache key
+        from django.core.cache import cache
+        cache.delete(f"exam_attempt:{attempt_id}:{user.id}")
+        
         return Response({
             'status': 'completed',
             'final_score': total_score,
@@ -150,53 +143,51 @@ class HeartbeatRateThrottle(UserRateThrottle):
 
 class ExamHeartbeatView(generics.GenericAPIView):
     """نبضات القلب للتأكد من نشاط الطالب ومتابعة المحاولة ومنع الغش."""
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [HeartbeatRateThrottle]
 
     def post(self, request, attempt_id):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = request.user
+        
+        from django.core.cache import cache
+        cache_key = f"exam_attempt:{attempt_id}:{user.id}"
+        attempt_info = cache.get(cache_key)
+        
+        if not attempt_info:
+            attempt = get_object_or_404(ExamAttempt, id=attempt_id, user=user, is_completed=False)
+            attempt_info = {
+                'id': attempt.id,
+                'start_time': attempt.start_time,
+                'time_limit_minutes': attempt.exam.time_limit_minutes,
+            }
+            cache.set(cache_key, attempt_info, timeout=7200) # 2 hours
             
-        attempt = get_object_or_404(ExamAttempt, id=attempt_id, user=user, is_completed=False)
         # تسجيل نبضة القلب فقط بنسبة 10% لتقليل الحمل على قاعدة البيانات
         if secrets.SystemRandom().random() < 0.1:
+            attempt = get_object_or_404(ExamAttempt, id=attempt_id, user=user, is_completed=False)
             _log_exam_action(attempt, 'heartbeat', request=request)
         
-        remaining = (attempt.exam.time_limit_minutes * 60) - (timezone.now() - attempt.start_time).total_seconds()
+        remaining = (attempt_info['time_limit_minutes'] * 60) - (timezone.now() - attempt_info['start_time']).total_seconds()
         return Response({'status': 'alive', 'remaining_seconds': max(0, remaining)})
 
 
 class MyExamAttemptsView(generics.ListAPIView):
     """قائمة محاولات الطالب في الاختبارات."""
     serializer_class = ExamAttemptSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = self.request.user
         return ExamAttempt.objects.filter(user=user).select_related('exam').order_by('-start_time')
 
 
 class ExamResultDetailView(generics.RetrieveAPIView):
     """تفاصيل نتيجة اختبار محدد مع تحليل كامل للإجابات."""
     serializer_class = ExamAttemptSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = self.request.user
         return ExamAttempt.objects.filter(user=user)
 
     def retrieve(self, request, *args, **kwargs):
@@ -219,3 +210,32 @@ class ExamResultDetailView(generics.RetrieveAPIView):
         data = serializer.data
         data['detailed_results'] = answer_data
         return Response(data)
+
+
+class ReportProctoringActionView(generics.CreateAPIView):
+    """
+    تسجيل حركات الطالب المريبة أو مخالفات المراقبة أثناء الاختبار (مثل مغادرة الصفحة أو نسخ نصوص).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, attempt_id):
+        user = request.user
+        attempt = get_object_or_404(ExamAttempt, id=attempt_id, user=user, is_completed=False)
+        action_type = request.data.get('action_type')
+        metadata = request.data.get('metadata', {})
+        
+        # التأكد من صحة نوع الحركة
+        VALID_PROCTOR_ACTIONS = [
+            'tab_lost_focus',    # مغادرة لسان التبويب
+            'copy_attempt',      # محاولة نسخ الأسئلة
+            'paste_attempt',     # محاولة لصق نصوص
+            'window_resize',     # تغيير حجم النافذة
+            'full_screen_exit',  # الخروج من وضع ملء الشاشة
+        ]
+        
+        if action_type not in VALID_PROCTOR_ACTIONS:
+            return Response({'error': 'نوع الحركة غير صالح'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        _log_exam_action(attempt, action_type, metadata=metadata, request=request)
+        return Response({'status': 'logged', 'action_type': action_type}, status=status.HTTP_201_CREATED)
+

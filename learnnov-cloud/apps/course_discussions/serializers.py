@@ -28,4 +28,4 @@ class DiscussionThreadSerializer(serializers.ModelSerializer):
         read_only_fields = ['author', 'is_pinned', 'is_resolved']
 
     def get_reply_count(self, obj):
-        return obj.posts.count()
+        return getattr(obj, 'annotated_reply_count', None) if getattr(obj, 'annotated_reply_count', None) is not None else obj.posts.count()

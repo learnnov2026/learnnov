@@ -58,3 +58,41 @@ class ExamLogicTests(TestCase):
         # We modified the view to return 400 when severely overdue
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
+
+    def test_proctoring_action_logged(self):
+        attempt = ExamAttempt.objects.create(
+            user=self.user,
+            exam=self.exam
+        )
+        
+        url = reverse('learnnov_exams:exam-proctoring', kwargs={'attempt_id': attempt.id})
+        data = {
+            'action_type': 'tab_lost_focus',
+            'metadata': {'reason': 'switched to stackoverflow'}
+        }
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'logged')
+        
+        # Verify it created an ExamActionLog object
+        from apps.learnnov_exams.models import ExamActionLog
+        log_entry = ExamActionLog.objects.filter(attempt=attempt, action_type='tab_lost_focus').first()
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.metadata['reason'], 'switched to stackoverflow')
+
+    def test_invalid_proctoring_action_rejected(self):
+        attempt = ExamAttempt.objects.create(
+            user=self.user,
+            exam=self.exam
+        )
+        
+        url = reverse('learnnov_exams:exam-proctoring', kwargs={'attempt_id': attempt.id})
+        data = {
+            'action_type': 'cheating_hack',
+            'metadata': {}
+        }
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+

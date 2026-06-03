@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 
 interface StudentData {
   active_applications: number;
@@ -53,10 +55,13 @@ interface SyllabusModule {
 }
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const [data, setData] = useState<StudentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<AcademicProgram[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,16 +125,30 @@ export default function StudentDashboard() {
     const role = localStorage.getItem('userRole') || 'student';
     setUserRole(role);
 
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
     // 1. Fetch DB applications list
     fetchDbApplications();
 
     // 2. Fetch stats
-    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/programs/summary/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
-        if (!res.ok) throw new Error("Unauthorized");
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.clear();
+            router.push('/login');
+            throw new Error("Session expired. Redirecting...");
+          }
+          throw new Error("Failed to load statistics.");
+        }
         return res.json();
       })
       .then((json) => {
@@ -137,22 +156,26 @@ export default function StudentDashboard() {
         setLoading(false);
       })
       .catch(err => {
-        console.warn("API load failed, using fallback summary data:", err);
+        console.warn("API load failed, using empty data status:", err);
+        setStatsError("فشل تحميل البيانات الأكاديمية الحية من الخادم.");
         setData({
-          active_applications: 3,
-          total_applications: 5,
-          referral_code: 'DEMO-NEXTJS',
-          referral_points: 1500,
-          exams_passed: 12,
-          certificates_earned: 4,
-          discussions_started: 28,
+          active_applications: 0,
+          total_applications: 0,
+          referral_code: 'ERR',
+          referral_points: 0,
+          exams_passed: 0,
+          certificates_earned: 0,
+          discussions_started: 0,
         });
         setLoading(false);
       });
 
     // 3. Fetch courses list
     fetch(`${apiUrl}/api/programs/programs/`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Catalog fetch failed");
+        return res.json();
+      })
       .then((json) => {
         if (json.results && Array.isArray(json.results)) {
           setCourses(json.results);
@@ -164,70 +187,9 @@ export default function StudentDashboard() {
         setCoursesLoading(false);
       })
       .catch(err => {
-        console.warn("API failed fetching courses, loading fallback catalog:", err);
-        // Beautiful fallback academic catalog
-        setCourses([
-          {
-            id: 1,
-            title: "ماجستير العلوم في الذكاء الاصطناعي",
-            title_en: "Master of Science in Artificial Intelligence",
-            slug: "master-artificial-intelligence",
-            provider_name: "جامعة الملك سعود",
-            provider_logo: null,
-            field_name: "علوم الحاسب والمعلومات",
-            degree_level: "master",
-            degree_level_display: "ماجستير",
-            study_mode: "online",
-            study_mode_display: "عن بُعد بالكامل",
-            language: "ar_en",
-            duration_months: 24,
-            tuition_fee: 45000,
-            currency: "SAR",
-            scholarship_available: true,
-            is_open: true,
-            description: "برنامج متكامل يهدف لتأهيل الكوادر في بناء الأنظمة الذكية، تعلم الآلة، الرؤية الحاسوبية، ومعالجة اللغات الطبيعية باستخدام أحدث التقنيات السحابية."
-          },
-          {
-            id: 2,
-            title: "ماجستير العلوم في الأمن السيبراني المتقدم",
-            title_en: "Master of Science in Advanced Cybersecurity",
-            slug: "master-cybersecurity",
-            provider_name: "جامعة الملك فهد للبترول والمعادن",
-            provider_logo: null,
-            field_name: "الأمن السيبراني والمطابقة",
-            degree_level: "master",
-            degree_level_display: "ماجستير",
-            study_mode: "blended",
-            study_mode_display: "تعليم مدمج",
-            language: "en",
-            duration_months: 18,
-            tuition_fee: 38000,
-            currency: "SAR",
-            scholarship_available: false,
-            is_open: true,
-            description: "يهيئك هذا البرنامج لحماية البنى التحتية الحساسة، واكتشاف الثغرات الأمنية، وتحليل الهجمات السيبرانية ووضع استراتيجيات الاستجابة للحوادث."
-          },
-          {
-            id: 3,
-            title: "دبلوم تطوير تطبيقات الويب المتكاملة (Full Stack)",
-            title_en: "Full Stack Web Development Diploma",
-            slug: "diploma-full-stack-web",
-            provider_name: "أكاديمية طويق الرقمية",
-            provider_logo: null,
-            field_name: "تقنية البرمجيات",
-            degree_level: "diploma",
-            degree_level_display: "دبلوم",
-            study_mode: "online",
-            study_mode_display: "عن بُعد بالكامل",
-            language: "ar",
-            duration_months: 6,
-            tuition_fee: 15000,
-            currency: "SAR",
-            scholarship_available: true,
-            is_open: true,
-            description: "ابدأ رحلتك البرمجية باحتراف تقنيات تطوير الواجهات الأمامية والخلفية باستخدام React و Next.js و Django ومبادئ هندسة البرمجيات الحديثة."
-          }
-        ]);
+        console.warn("API failed fetching courses:", err);
+        setCoursesError("فشل الاتصال بالخادم السحابي. يرجى التأكد من تشغيل السيرفر الخلفي وتغذية قاعدة البيانات.");
+        setCourses([]);
         setCoursesLoading(false);
       });
   }, []);
@@ -466,6 +428,11 @@ export default function StudentDashboard() {
 
       {/* Stats Summary Grid */}
       <h2 className="section-title">إحصائياتك الأكاديمية الحية</h2>
+      {statsError && (
+        <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', color: '#f87171', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          ⚠️ {statsError}
+        </div>
+      )}
       <div className="stats-grid">
         <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
           <div className="stat-icon">🎓</div>
@@ -528,6 +495,10 @@ export default function StudentDashboard() {
         {coursesLoading ? (
           <div className="spinner-container" style={{ minHeight: '20vh' }}>
             <div className="spinner" style={{ width: '30px', height: '30px' }}></div>
+          </div>
+        ) : coursesError ? (
+          <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171' }}>
+            ⚠️ {coursesError}
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>

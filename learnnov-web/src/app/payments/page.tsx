@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Invoice {
   id: number;
@@ -14,6 +15,7 @@ interface Invoice {
 }
 
 export default function PaymentsPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState('student');
@@ -36,11 +38,18 @@ export default function PaymentsPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
     const role = localStorage.getItem('userRole') || 'student';
     setUserRole(role);
 
     // Initial query to discount check
-    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/payments/discount/apply/`, { 
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }

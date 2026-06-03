@@ -74,7 +74,12 @@ class ProgramApplyView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         referral_code = self.request.session.get('referral_code', '') if hasattr(self.request, 'session') else ''
-        serializer.save(applicant=user, referral_code=referral_code)
+        from django.db import IntegrityError
+        from rest_framework.exceptions import ValidationError
+        try:
+            serializer.save(applicant=user, referral_code=referral_code)
+        except IntegrityError:
+            raise ValidationError({'error': 'لقد قمت بالتقديم لهذا البرنامج مسبقاً.'})
 
 
 class MyApplicationsView(generics.ListAPIView):

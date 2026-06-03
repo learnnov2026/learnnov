@@ -157,8 +157,21 @@ class AcademicProgram(models.Model):
         return f"{self.title} — {self.provider.name}"
 
     def increment_views(self):
-        self.views_count = models.F('views_count') + 1
-        self.save(update_fields=['views_count'])
+        from django.core.cache import cache
+        cache_key = f"program:views:{self.id}"
+        try:
+            try:
+                views = cache.incr(cache_key)
+            except ValueError:
+                cache.set(cache_key, 1, timeout=None)
+                views = 1
+                
+            if views % 10 == 0:
+                self.views_count = models.F('views_count') + 10
+                self.save(update_fields=['views_count'])
+        except Exception:
+            self.views_count = models.F('views_count') + 1
+            self.save(update_fields=['views_count'])
 
     @property
     def is_open_for_applications(self):

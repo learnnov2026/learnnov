@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Exam {
   id: number;
@@ -26,6 +27,7 @@ interface Question {
 }
 
 export default function ExamsPage() {
+  const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,11 +46,18 @@ export default function ExamsPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
     const role = localStorage.getItem('userRole') || 'student';
     setUserRole(role);
 
     // Fetch exams list from database
-    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/exams/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })

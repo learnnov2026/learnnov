@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Certificate {
   id: number;
@@ -10,9 +11,17 @@ interface Certificate {
   grade: string;
   date_earned: string;
   verify_uuid: string;
+  qr_image_url?: string;
+  verification_url?: string;
+  signatories?: Array<{
+    name: string;
+    title: string;
+    organization: string;
+  }>;
 }
 
 export default function CertificatesPage() {
+  const router = useRouter();
   const [certs, setCerts] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState('student');
@@ -29,71 +38,46 @@ export default function CertificatesPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
     const role = localStorage.getItem('userRole') || 'student';
     setUserRole(role);
 
-    // Fetch active earned certificates from database with fallbacks
-    const token = localStorage.getItem('accessToken');
+    // Fetch active earned certificates from database
     fetch(`${apiUrl}/api/certificates/my/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
-        if (!res.ok) throw new Error("Unauthorized or API error");
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.clear();
+            router.push('/login');
+            throw new Error("Session expired. Redirecting...");
+          }
+          throw new Error("Unauthorized or API error");
+        }
         return res.json();
       })
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setCerts(data);
         } else {
-          // If no certificates found, fall back to premium demo list
-          setCerts([
-            {
-              id: 701,
-              course_title: "ماجستير العلوم في الذكاء الاصطناعي البشري",
-              provider_name: "جامعة الملك سعود",
-              student_name: "طالب ليرنوف المتميز",
-              grade: "امتياز مرتفع (A+)",
-              date_earned: "2026-05-24",
-              verify_uuid: "LNOV-AI-9382F6CC"
-            },
-            {
-              id: 702,
-              course_title: "دبلوم تطوير تطبيقات الويب المتكاملة",
-              provider_name: "أكاديمية طويق الرقمية",
-              student_name: "طالب ليرنوف المتميز",
-              grade: "امتياز (A)",
-              date_earned: "2026-05-25",
-              verify_uuid: "LNOV-WEB-102A392C"
-            }
-          ]);
+          setCerts([]);
         }
         setLoading(false);
       })
-      .catch(() => {
-        // Fallback on error
-        setCerts([
-          {
-            id: 701,
-            course_title: "ماجستير العلوم في الذكاء الاصطناعي البشري",
-            provider_name: "جامعة الملك سعود",
-            student_name: "طالب ليرنوف المتميز",
-            grade: "امتياز مرتفع (A+)",
-            date_earned: "2026-05-24",
-            verify_uuid: "LNOV-AI-9382F6CC"
-          },
-          {
-            id: 702,
-            course_title: "دبلوم تطوير تطبيقات الويب المتكاملة",
-            provider_name: "أكاديمية طويق الرقمية",
-            student_name: "طالب ليرنوف المتميز",
-            grade: "امتياز (A)",
-            date_earned: "2026-05-25",
-            verify_uuid: "LNOV-WEB-102A392C"
-          }
-        ]);
+      .catch((err) => {
+        console.error("Error loading certificates:", err);
+        setCerts([]);
         setLoading(false);
       });
-  }, []);
+  }, [apiUrl, router]);
 
   // Handle Third-Party Certificate Verification UUID lookup
   const handleVerifyLookup = async (e: React.FormEvent) => {
@@ -108,33 +92,12 @@ export default function CertificatesPage() {
       const res = await fetch(`${apiUrl}/api/certificates/verify/${searchUuid.trim()}/`);
       if (!res.ok) throw new Error("Document not found in database");
       const json = await res.json();
-      setVerifiedResult(json);
-    } catch {
-      // Local robust simulation verification so employers can test hashes successfully!
-      const testUuid = searchUuid.trim().toUpperCase();
-      if (testUuid === 'LNOV-AI-9382F6CC' || testUuid === '9382F6CC') {
-        setVerifiedResult({
-          id: 701,
-          course_title: "ماجستير العلوم في الذكاء الاصطناعي البشري",
-          provider_name: "جامعة الملك سعود",
-          student_name: "أحمد العتيبي",
-          grade: "امتياز مرتفع (A+)",
-          date_earned: "2026-05-24",
-          verify_uuid: "LNOV-AI-9382F6CC"
-        });
-      } else if (testUuid === 'LNOV-WEB-102A392C' || testUuid === '102A392C') {
-        setVerifiedResult({
-          id: 702,
-          course_title: "دبلوم تطوير تطبيقات الويب المتكاملة",
-          provider_name: "أكاديمية طويق الرقمية",
-          student_name: "أحمد العتيبي",
-          grade: "امتياز (A)",
-          date_earned: "2026-05-25",
-          verify_uuid: "LNOV-WEB-102A392C"
-        });
-      } else {
-        setVerifyError("عذراً، لم يتم العثور على وثيقة متوافقة مع هذا المعرف في سجلات قاعدة البيانات المعتمدة. يرجى التحقق من الرقم التعريفي وإعادة المحاولة.");
+      if (json.is_valid === false) {
+        throw new Error(json.error || "Document not found in database");
       }
+      setVerifiedResult(json);
+    } catch (err: any) {
+      setVerifyError(err.message || "عذراً، لم يتم العثور على وثيقة متوافقة مع هذا المعرف في سجلات قاعدة البيانات المعتمدة. يرجى التحقق من الرقم التعريفي وإعادة المحاولة.");
     } finally {
       setVerifying(false);
     }
@@ -337,24 +300,33 @@ export default function CertificatesPage() {
                 {/* Signatures */}
                 <div className="cert-signatures-row">
                   <div className="signature-block">
-                    <p className="sig-title">عميد الشؤون الأكاديمية</p>
-                    <p className="sig-handwritten">د. علي البراك</p>
+                    <p className="sig-title">{printingCert.signatories?.[0]?.title || 'عميد الشؤون الأكاديمية'}</p>
+                    <p className="sig-handwritten">{printingCert.signatories?.[0]?.name || 'د. خالد بن محمد'}</p>
+                    <p className="sig-org" style={{ fontSize: '0.7rem', color: '#78716c', margin: 0 }}>{printingCert.signatories?.[0]?.organization || 'منصة ليرنوف الأكاديمية'}</p>
                     <div className="sig-line"></div>
                   </div>
 
                   <div className="cert-qr-block">
-                    {/* Simulated QR representing database validation URL */}
-                    <div className="qr-simulated-box">
-                      <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
-                      <div className="qr-row"><span></span><span className="b"></span><span></span><span className="b"></span><span></span></div>
-                      <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
-                    </div>
+                    {printingCert.qr_image_url ? (
+                      <img 
+                        src={printingCert.qr_image_url} 
+                        alt="QR Verification" 
+                        style={{ width: '85px', height: '85px', border: '1px solid #c5a880', padding: '2px', backgroundColor: 'white' }} 
+                      />
+                    ) : (
+                      <div className="qr-simulated-box">
+                        <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
+                        <div className="qr-row"><span></span><span className="b"></span><span></span><span className="b"></span><span></span></div>
+                        <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
+                      </div>
+                    )}
                     <span style={{ fontSize: '0.65rem', color: '#888', marginTop: '0.25rem', display: 'block' }}>قاعدة البيانات السحابية</span>
                   </div>
 
                   <div className="signature-block">
-                    <p className="sig-title">مدير عام منصة ليرنوف</p>
-                    <p className="sig-handwritten">أحمد بن محمد</p>
+                    <p className="sig-title">{printingCert.signatories?.[1]?.title || 'المديرة التنفيذية'}</p>
+                    <p className="sig-handwritten">{printingCert.signatories?.[1]?.name || 'أ. سارة الودعاني'}</p>
+                    <p className="sig-org" style={{ fontSize: '0.7rem', color: '#78716c', margin: 0 }}>{printingCert.signatories?.[1]?.organization || 'منصة ليرنوف الأكاديمية'}</p>
                     <div className="sig-line"></div>
                   </div>
                 </div>

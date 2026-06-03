@@ -10,4 +10,5 @@ urlpatterns = [
     path('attempts/<int:pk>/', views.ExamResultDetailView.as_view(), name='result-detail'),
     path('attempts/<int:attempt_id>/submit/', views.SubmitExamView.as_view(), name='exam-submit'),
     path('attempts/<int:attempt_id>/heartbeat/', views.ExamHeartbeatView.as_view(), name='exam-heartbeat'),
+    path('attempts/<int:attempt_id>/proctoring/', views.ReportProctoringActionView.as_view(), name='exam-proctoring'),
 ]

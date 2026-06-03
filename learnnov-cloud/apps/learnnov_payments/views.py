@@ -14,8 +14,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'status', 'created_at']
 
 class CreateStripePaymentView(APIView):
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         course_id = request.data.get('course_id')
@@ -35,80 +34,86 @@ class CreateStripePaymentView(APIView):
         except AcademicProgram.DoesNotExist:
             return Response({'error': 'Invalid course_id'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = request.user
 
-        discount_code_str = request.data.get('discount_code')
-        discount_obj = None
-        if discount_code_str:
-            try:
-                discount_obj = DiscountCode.objects.get(code__iexact=discount_code_str, is_active=True)
-                if discount_obj.expiration_date and discount_obj.expiration_date < timezone.now():
-                    return Response({'error': 'Discount code has expired'}, status=status.HTTP_400_BAD_REQUEST)
-                if discount_obj.valid_programs.exists() and not discount_obj.valid_programs.filter(id=program.id).exists():
-                    return Response({'error': 'Discount code is not valid for this program'}, status=status.HTTP_400_BAD_REQUEST)
-                
-                total_uses = DiscountCodeUsage.objects.filter(discount_code=discount_obj).count()
-                if total_uses >= discount_obj.max_uses_total:
-                    return Response({'error': 'Discount code usage limit reached'}, status=status.HTTP_400_BAD_REQUEST)
-                
-                user_uses = DiscountCodeUsage.objects.filter(discount_code=discount_obj, user=user).count()
-                if user_uses >= discount_obj.max_uses_per_user:
-                    return Response({'error': 'You have already used this discount code'}, status=status.HTTP_400_BAD_REQUEST)
-                
-                # Apply discount
-                import decimal
-                amount = amount * decimal.Decimal(1 - (discount_obj.discount_percentage / 100))
-                amount = max(amount, decimal.Decimal('0.00'))
-            except DiscountCode.DoesNotExist:
-                return Response({'error': 'Invalid discount code'}, status=status.HTTP_400_BAD_REQUEST)
-
-        from django.db import transaction
-        
-        with transaction.atomic():
-            # Prevent double subscription race condition
-            order, created = Order.objects.get_or_create(
-                user=user,
-                course_id=course_id,
-                gateway=PaymentGateway.STRIPE,
-                status=OrderStatus.PENDING,
-                defaults={'amount': amount, 'program': program, 'discount_code': discount_obj}
-            )
-            
-            if not created:
-                # Reuse existing pending order, but update amount if code changed
-                order.amount = amount
-                order.discount_code = discount_obj
-                order.save()
+        from django.core.cache import cache
+        lock_key = f"lock:order:{user.id}:{course_id}"
+        lock_acquired = cache.add(lock_key, "true", timeout=15)
+        if not lock_acquired:
+            return Response({'error': 'الطلب قيد المعالجة حالياً. يرجى الانتظار.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            from apps.core.circuit_breaker import circuit_breaker
+            discount_code_str = request.data.get('discount_code')
+            discount_obj = None
+            if discount_code_str:
+                try:
+                    discount_obj = DiscountCode.objects.get(code__iexact=discount_code_str, is_active=True)
+                    if discount_obj.expiration_date and discount_obj.expiration_date < timezone.now():
+                        return Response({'error': 'Discount code has expired'}, status=status.HTTP_400_BAD_REQUEST)
+                    if discount_obj.valid_programs.exists() and not discount_obj.valid_programs.filter(id=program.id).exists():
+                        return Response({'error': 'Discount code is not valid for this program'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    total_uses = DiscountCodeUsage.objects.filter(discount_code=discount_obj).count()
+                    if total_uses >= discount_obj.max_uses_total:
+                        return Response({'error': 'Discount code usage limit reached'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    user_uses = DiscountCodeUsage.objects.filter(discount_code=discount_obj, user=user).count()
+                    if user_uses >= discount_obj.max_uses_per_user:
+                        return Response({'error': 'You have already used this discount code'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Apply discount
+                    import decimal
+                    amount = amount * decimal.Decimal(1 - (discount_obj.discount_percentage / 100))
+                    amount = max(amount, decimal.Decimal('0.00'))
+                except DiscountCode.DoesNotExist:
+                    return Response({'error': 'Invalid discount code'}, status=status.HTTP_400_BAD_REQUEST)
+
+            from django.db import transaction
             
-            def create_intent(*args, **kwargs):
-                return stripe.PaymentIntent.create(
-                    amount=int(float(amount) * 100),
-                    currency='sar',
-                    metadata={'order_id': str(order.id)}
+            with transaction.atomic():
+                # Prevent double subscription race condition
+                order, created = Order.objects.get_or_create(
+                    user=user,
+                    course_id=course_id,
+                    gateway=PaymentGateway.STRIPE,
+                    status=OrderStatus.PENDING,
+                    defaults={'amount': amount, 'program': program, 'discount_code': discount_obj}
+                )
+                
+                if not created:
+                    # Reuse existing pending order, but update amount if code changed
+                    order.amount = amount
+                    order.discount_code = discount_obj
+                    order.save()
+
+            try:
+                from apps.core.circuit_breaker import circuit_breaker
+                
+                def create_intent(*args, **kwargs):
+                    return stripe.PaymentIntent.create(
+                        amount=int(float(amount) * 100),
+                        currency='sar',
+                        metadata={'order_id': str(order.id)},
+                        request_timeout=8.0
+                    )
+
+                intent = circuit_breaker.call(create_intent)
+                
+                StripePayment.objects.create(
+                    order=order,
+                    payment_intent_id=intent.id,
+                    client_secret=intent.client_secret
                 )
 
-            intent = circuit_breaker.call(create_intent)
-            
-            StripePayment.objects.create(
-                order=order,
-                payment_intent_id=intent.id,
-                client_secret=intent.client_secret
-            )
-
-            return Response({
-                'client_secret': intent.client_secret,
-                'order_id': order.id
-            })
-        except Exception as e:
-            # Fallback handling
-            return Response({'error': 'Payment service is currently unavailable. Please try again later.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response({
+                    'client_secret': intent.client_secret,
+                    'order_id': order.id
+                })
+            except Exception as e:
+                # Fallback handling
+                return Response({'error': 'Payment service is currently unavailable. Please try again later.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        finally:
+            cache.delete(lock_key)
 
 class StripeWebhookView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -156,8 +161,7 @@ class VerifyPaymentView(APIView):
     SECURITY FIX (PAY01): Verify payment status securely via server.
     The frontend calls this endpoint after Stripe completes instead of unlocking content blindly.
     """
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         intent_id = request.data.get('payment_intent_id')
@@ -165,15 +169,11 @@ class VerifyPaymentView(APIView):
             return Response({'error': 'Missing payment_intent_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            intent = stripe.PaymentIntent.retrieve(intent_id)
+            intent = stripe.PaymentIntent.retrieve(intent_id, request_timeout=8.0)
             if intent.status == 'succeeded':
                 from django.db import transaction
                 from .models import DiscountCodeUsage
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-                if not user:
-                    user = User.objects.first()
+                user = request.user
                     
                 with transaction.atomic():
                     payment = StripePayment.objects.select_related('order').select_for_update().get(payment_intent_id=intent_id)
@@ -204,8 +204,7 @@ class ApplyDiscountCodeView(APIView):
     """
     SECURITY FIX (PAY03): Secure Discount Code application enforcing limits.
     """
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         code = request.data.get('code')
@@ -238,46 +237,47 @@ class ApplyDiscountCodeView(APIView):
         if total_uses >= discount.max_uses_total:
             return Response({'error': 'Discount code usage limit reached'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = request.user
 
-        user_uses = DiscountCodeUsage.objects.filter(discount_code=discount, user=user).count()
-        if user_uses >= discount.max_uses_per_user:
-            return Response({'error': 'You have already used this discount code'}, status=status.HTTP_400_BAD_REQUEST)
+        from django.core.cache import cache
+        lock_key = f"lock:discount:{user.id}:{code}"
+        lock_acquired = cache.add(lock_key, "true", timeout=10)
+        if not lock_acquired:
+            return Response({'error': 'جاري معالجة كود الخصم حالياً. يرجى الانتظار.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from django.db import transaction
-        with transaction.atomic():
-            # If 100% discount, fulfill order immediately
-            if discount.discount_percentage == 100:
-                order, _ = Order.objects.get_or_create(
-                    user=user,
-                    course_id=course_id,
-                    gateway=PaymentGateway.STRIPE,
-                    defaults={'amount': 0, 'program': program}
-                )
-                order.status = OrderStatus.PAID
-                order.save()
-                
-                DiscountCodeUsage.objects.create(
-                    discount_code=discount,
-                    user=user,
-                    order=order
-                )
-                return Response({'status': 'success', 'message': 'Course unlocked successfully with 100% discount.'})
-            else:
-                return Response({'status': 'applied', 'discount_percentage': discount.discount_percentage})
+        try:
+            user_uses = DiscountCodeUsage.objects.filter(discount_code=discount, user=user).count()
+            if user_uses >= discount.max_uses_per_user:
+                return Response({'error': 'You have already used this discount code'}, status=status.HTTP_400_BAD_REQUEST)
+
+            from django.db import transaction
+            with transaction.atomic():
+                # If 100% discount, fulfill order immediately
+                if discount.discount_percentage == 100:
+                    order, _ = Order.objects.get_or_create(
+                        user=user,
+                        course_id=course_id,
+                        gateway=PaymentGateway.STRIPE,
+                        defaults={'amount': 0, 'program': program}
+                    )
+                    order.status = OrderStatus.PAID
+                    order.save()
+                    
+                    DiscountCodeUsage.objects.create(
+                        discount_code=discount,
+                        user=user,
+                        order=order
+                    )
+                    return Response({'status': 'success', 'message': 'Course unlocked successfully with 100% discount.'})
+                else:
+                    return Response({'status': 'applied', 'discount_percentage': discount.discount_percentage})
+        finally:
+            cache.delete(lock_key)
 
 class StudentOrderListView(generics.ListAPIView):
     """قائمة فواتير/طلبات الطالب."""
     serializer_class = OrderSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if user and user.is_authenticated:
-            return Order.objects.filter(user=user).order_by('-created_at')
-        return Order.objects.all().order_by('-created_at')[:20]
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')

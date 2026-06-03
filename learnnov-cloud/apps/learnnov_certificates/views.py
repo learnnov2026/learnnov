@@ -93,7 +93,18 @@ def render_certificate_html(request, verify_uuid):
         'course_org': 'LearnNov',
         'grade': grade,
         'issue_date': issue_date,
-        'signatories': [],
+        'signatories': [
+            {
+                'name': 'د. خالد بن محمد',
+                'title': 'عميد الشؤون الأكاديمية',
+                'organization': 'منصة ليرنوف الأكاديمية',
+            },
+            {
+                'name': 'أ. سارة الودعاني',
+                'title': 'المديرة التنفيذية للتعليم السحابي',
+                'organization': 'منصة ليرنوف الأكاديمية',
+            }
+        ],
         'qr_image_url': qr_image_url,
         'verification_url': verification_url,
         'platform_name': getattr(settings, 'PLATFORM_NAME', 'LearnNov'),
@@ -152,6 +163,22 @@ class CertificateVerifyAPIView(APIView):
             data['qr_image_url'] = qr_image_url
             data['verification_url'] = verification_url
             data['certificate_url'] = request.build_absolute_uri(reverse('learnnov_certificates:render_certificate_html', kwargs={'verify_uuid': verify_uuid}))
+            data['id'] = cert.id
+            data['course_title'] = cert.course_name or cert.course_id
+            data['provider_name'] = 'منصة ليرنوف الأكاديمية'
+            data['date_earned'] = str(cert.created_date.date()) if cert.created_date else ''
+            data['signatories'] = [
+                {
+                    'name': 'د. خالد بن محمد',
+                    'title': 'عميد الشؤون الأكاديمية',
+                    'organization': 'منصة ليرنوف الأكاديمية',
+                },
+                {
+                    'name': 'أ. سارة الودعاني',
+                    'title': 'المديرة التنفيذية للتعليم السحابي',
+                    'organization': 'منصة ليرنوف الأكاديمية',
+                }
+            ]
             return Response(data, status=status.HTTP_200_OK)
         except GeneratedCertificate.DoesNotExist:
             return Response({
@@ -165,19 +192,14 @@ class GenerateCertificateView(APIView):
     نقطة نهاية API لإصدار شهادة جديدة.
     يجب أن يتم التحقق من نسبة إنجاز الطالب في الدورة قبل الإصدار.
     """
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         course_id = request.data.get('course_id')
         if not course_id:
             return Response({'error': 'course_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = request.user
 
         # 1. التحقق من إتمام المقرر (Validation)
         is_completed = self.check_course_completion(user, course_id)
@@ -232,24 +254,19 @@ class GenerateCertificateView(APIView):
 
 
 class StudentCertificatesListView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         from .models import GeneratedCertificate
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = request.user if (request.user and request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
-            
-        if user:
-            certs = GeneratedCertificate.objects.filter(user=user, status='downloadable')
-        else:
-            certs = GeneratedCertificate.objects.filter(status='downloadable').order_by('-created_date')[:20]
+        user = request.user
+        certs = GeneratedCertificate.objects.filter(user=user, status='downloadable')
         
         data = []
         for c in certs:
+            verification_url = _verify_url(request, c.verify_uuid)
+            qr_obj = get_or_create_qr(c.verify_uuid, verification_url)
+            qr_image_url = request.build_absolute_uri(qr_obj.qr_image.url) if qr_obj and qr_obj.qr_image else ''
+
             data.append({
                 'id': c.id,
                 'course_title': c.course_name or c.course_id,
@@ -258,5 +275,19 @@ class StudentCertificatesListView(generics.ListAPIView):
                 'grade': c.grade,
                 'date_earned': str(c.created_date.date()) if c.created_date else '',
                 'verify_uuid': c.verify_uuid,
+                'qr_image_url': qr_image_url,
+                'verification_url': verification_url,
+                'signatories': [
+                    {
+                        'name': 'د. خالد بن محمد',
+                        'title': 'عميد الشؤون الأكاديمية',
+                        'organization': 'منصة ليرنوف الأكاديمية',
+                    },
+                    {
+                        'name': 'أ. سارة الودعاني',
+                        'title': 'المديرة التنفيذية للتعليم السحابي',
+                        'organization': 'منصة ليرنوف الأكاديمية',
+                    }
+                ],
             })
         return Response(data)

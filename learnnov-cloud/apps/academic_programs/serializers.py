@@ -138,13 +138,11 @@ class ApplicationReviewSerializer(serializers.ModelSerializer):
         instance.status = new_status
         instance.reviewer_notes = validated_data.get('reviewer_notes', instance.reviewer_notes)
         
-        # Gracefully handle anonymous/demo reviews
+        # Require an authenticated user for reviews
         request = self.context.get('request')
         user = request.user if (request and request.user and request.user.is_authenticated) else None
         if not user:
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+            raise serializers.ValidationError("يجب تسجيل الدخول لإجراء المراجعة.")
             
         instance.reviewed_by = user
         instance.reviewed_at = timezone.now()

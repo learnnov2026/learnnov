@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Course {
   id: number;
@@ -28,6 +29,7 @@ interface Thread {
 }
 
 export default function DiscussionsPage() {
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -42,16 +44,60 @@ export default function DiscussionsPage() {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState('student');
 
+  const mapPost = (p: any): Reply => {
+    const authorName = `${p.author?.first_name || ''} ${p.author?.last_name || ''}`.trim() || p.author?.username || 'مستعمل ليرنوف';
+    return {
+      id: p.id,
+      author_name: authorName,
+      author_avatar: p.is_instructor_reply ? 'د' : authorName.charAt(0),
+      content: p.body,
+      submitted_at: p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : 'الآن'
+    };
+  };
+
+  const mapThread = (t: any): Thread => {
+    const authorName = `${t.author?.first_name || ''} ${t.author?.last_name || ''}`.trim() || t.author?.username || 'مستعمل ليرنوف';
+    return {
+      id: t.id,
+      title: t.title,
+      author_name: authorName,
+      author_avatar: authorName.charAt(0),
+      content: t.body,
+      replies_count: t.reply_count || 0,
+      submitted_at: t.created_at ? new Date(t.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : 'الآن',
+      replies: Array.isArray(t.posts) ? t.posts.map(mapPost) : []
+    };
+  };
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
-    // Determine logged in profile
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
     const role = localStorage.getItem('userRole') || 'student';
     setUserRole(role);
 
     // Fetch courses to populate dropdown
-    fetch(`${apiUrl}/api/programs/programs/`)
-      .then(res => res.json())
+    fetch(`${apiUrl}/api/programs/programs/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.clear();
+            router.push('/login');
+            throw new Error("Session expired. Redirecting...");
+          }
+          throw new Error("Could not load programs");
+        }
+        return res.json();
+      })
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
@@ -72,7 +118,7 @@ export default function DiscussionsPage() {
         setCourses(fallbacks);
         setSelectedCourse(fallbacks[0]);
       });
-  }, []);
+  }, [apiUrl, router]);
 
   // Fetch threads when course changes
   useEffect(() => {
@@ -84,12 +130,23 @@ export default function DiscussionsPage() {
     fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.clear();
+            router.push('/login');
+            throw new Error("Session expired. Redirecting...");
+          }
+          throw new Error("Could not load discussions");
+        }
+        return res.json();
+      })
       .then(json => {
-        if (Array.isArray(json) && json.length > 0) {
-          setThreads(json);
+        const results = json.results || json;
+        if (Array.isArray(results)) {
+          setThreads(results.map(mapThread));
         } else {
-          throw new Error("Empty threads");
+          setThreads([]);
         }
         setLoading(false);
       })
@@ -125,7 +182,7 @@ export default function DiscussionsPage() {
         setThreads(fallbackThreads);
         setLoading(false);
       });
-  }, [selectedCourse]);
+  }, [selectedCourse, apiUrl, router]);
 
   // Handle Reply submission
   const handleReplySubmit = async (e: React.FormEvent) => {
@@ -133,7 +190,7 @@ export default function DiscussionsPage() {
     if (!selectedCourse || !activeThread || !replyContent.trim()) return;
 
     const payload = {
-      content: replyContent
+      body: replyContent
     };
 
     try {
@@ -149,21 +206,26 @@ export default function DiscussionsPage() {
 
       if (!res.ok) throw new Error("Could not post reply");
       
-      const newReply = await res.json();
+      const newReplyRaw = await res.json();
+      const mappedReply = mapPost(newReplyRaw);
+      
       setActiveThread(prev => {
         if (!prev) return null;
         return {
           ...prev,
           replies_count: prev.replies_count + 1,
-          replies: [...prev.replies, {
-            id: newReply.id || Date.now(),
-            author_name: userRole === 'student' ? 'طالب ليرنوف المتميز' : 'د. علي البراك',
-            author_avatar: userRole === 'student' ? 'أ' : 'د',
-            content: replyContent,
-            submitted_at: 'الآن'
-          }]
+          replies: [...prev.replies, mappedReply]
         };
       });
+
+      // Also update the thread list replies count
+      setThreads(prev => prev.map(t => {
+        if (t.id === activeThread.id) {
+          return { ...t, replies_count: t.replies_count + 1 };
+        }
+        return t;
+      }));
+
       setReplyContent('');
     } catch {
       // Local fallback simulation
@@ -192,7 +254,7 @@ export default function DiscussionsPage() {
 
     const payload = {
       title: newTitle,
-      content: newContent
+      body: newContent
     };
 
     try {
@@ -208,8 +270,10 @@ export default function DiscussionsPage() {
 
       if (!res.ok) throw new Error("Could not create thread");
       
-      const newTh = await res.json();
-      setThreads(prev => [newTh, ...prev]);
+      const newThRaw = await res.json();
+      const mappedTh = mapThread(newThRaw);
+      
+      setThreads(prev => [mappedTh, ...prev]);
       setShowNewThreadModal(false);
       setNewTitle('');
       setNewContent('');

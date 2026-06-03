@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface FieldOfStudy {
   id: number;
@@ -13,6 +14,7 @@ interface Provider {
 }
 
 export default function InstructorDashboard() {
+  const router = useRouter();
   const [applications, setApplications] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   
@@ -59,11 +61,19 @@ export default function InstructorDashboard() {
   };
 
   useEffect(() => {
+    // Check Authentication and Role
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const role = localStorage.getItem('userRole');
+    if (!token || !isLoggedIn || role !== 'instructor') {
+      router.push('/login');
+      return;
+    }
+
     // 1. Fetch DB applications list
     fetchDbApplications();
 
     // 2. Fetch live fields from database
-    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/programs/fields/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })

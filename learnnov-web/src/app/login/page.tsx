@@ -15,7 +15,7 @@ export default function LoginPage() {
     if (role === 'student') {
       setUsername('student_demo');
     } else {
-      setUsername('dr_ali_albarrak');
+      setUsername('dr_ali');
     }
   }, [role]);
 

@@ -41,22 +41,21 @@ class ThreadListCreateView(generics.ListCreateAPIView):
     List all threads for a course, or create a new one.
     """
     serializer_class = DiscussionThreadSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [IsEnrolledOrInstructor]
 
     def get_queryset(self):
         course_slug = self.kwargs.get('course_slug')
-        return DiscussionThread.objects.filter(program__slug=course_slug)
+        from django.db.models import Count
+        return DiscussionThread.objects.filter(
+            program__slug=course_slug
+        ).select_related('author').prefetch_related('posts__author').annotate(
+            annotated_reply_count=Count('posts')
+        )
 
     def perform_create(self, serializer):
         course_slug = self.kwargs.get('course_slug')
         program = get_object_or_404(AcademicProgram, slug=course_slug)
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
-        serializer.save(author=user, program=program)
+        serializer.save(author=self.request.user, program=program)
 
 
 class ThreadDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -64,24 +63,25 @@ class ThreadDetailView(generics.RetrieveUpdateDestroyAPIView):
     Retrieve, update or delete a specific thread.
     """
     serializer_class = DiscussionThreadSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [IsEnrolledOrInstructor]
 
     def get_queryset(self):
         course_slug = self.kwargs.get('course_slug')
-        return DiscussionThread.objects.filter(program__slug=course_slug)
+        from django.db.models import Count
+        return DiscussionThread.objects.filter(
+            program__slug=course_slug
+        ).select_related('author').prefetch_related('posts__author').annotate(
+            annotated_reply_count=Count('posts')
+        )
 
     def perform_update(self, serializer):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
+        user = self.request.user
         obj = self.get_object()
         if obj.author == user or user.is_staff or user.is_superuser:
             serializer.save()
         else:
-            serializer.save()
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You are not the author of this thread.")
 
 
 class PostCreateView(generics.CreateAPIView):
@@ -89,23 +89,15 @@ class PostCreateView(generics.CreateAPIView):
     Add a reply to a thread.
     """
     serializer_class = DiscussionPostSerializer
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [IsEnrolledOrInstructor]
 
     def perform_create(self, serializer):
         course_slug = self.kwargs.get('course_slug')
         thread_id = self.kwargs.get('thread_id')
         thread = get_object_or_404(DiscussionThread, id=thread_id, program__slug=course_slug)
         
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = self.request.user if (self.request.user and self.request.user.is_authenticated) else User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.first()
-            
-        is_instructor = False
-        if user:
-            is_instructor = user.groups.filter(name='Instructors').exists() or user.is_staff or user.is_superuser
+        user = self.request.user
+        is_instructor = user.groups.filter(name='Instructors').exists() or user.is_staff or user.is_superuser
         
         serializer.save(
             author=user,

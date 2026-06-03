@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -8,13 +9,137 @@ interface Message {
   content: string;
 }
 
+function renderMessageContent(content: string) {
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('```') && part.endsWith('```')) {
+      const match = part.match(/```(\w*)\n?([\s\S]*?)```/);
+      const lang = match ? match[1] : '';
+      const code = match ? match[2] : part.slice(3, -3);
+
+      return (
+        <div key={index} style={{ 
+          background: 'rgba(0,0,0,0.6)', 
+          border: '1px solid rgba(255,255,255,0.1)', 
+          borderRadius: '8px', 
+          margin: '0.75rem 0', 
+          overflow: 'hidden',
+          fontFamily: 'monospace',
+          fontSize: '0.9rem',
+          textAlign: 'left'
+        }} dir="ltr">
+          {lang && (
+            <div style={{ 
+              background: 'rgba(255,255,255,0.05)', 
+              padding: '0.35rem 1rem', 
+              fontSize: '0.75rem', 
+              color: '#94a3b8', 
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              textTransform: 'uppercase',
+              fontWeight: 'bold',
+              letterSpacing: '0.5px'
+            }}>
+              {lang}
+            </div>
+          )}
+          <pre style={{ 
+            padding: '1rem', 
+            margin: 0, 
+            overflowX: 'auto',
+            whiteSpace: 'pre',
+            color: '#a7f3d0'
+          }}>
+            <code>{code.trim()}</code>
+          </pre>
+        </div>
+      );
+    } else {
+      const inlineParts = part.split(/(`[^`]+`)/g);
+      
+      return (
+        <span key={index} style={{ whiteSpace: 'pre-wrap' }}>
+          {inlineParts.map((subPart, subIdx) => {
+            if (subPart.startsWith('`') && subPart.endsWith('`')) {
+              return (
+                <code key={subIdx} style={{ 
+                  background: 'rgba(255,255,255,0.12)', 
+                  color: '#f43f5e', 
+                  padding: '0.2rem 0.4rem', 
+                  borderRadius: '4px', 
+                  fontSize: '0.9em',
+                  fontFamily: 'monospace'
+                }}>
+                  {subPart.slice(1, -1)}
+                </code>
+              );
+            } else {
+              const boldParts = subPart.split(/(\*\*[^*]+\*\*)/g);
+              return boldParts.map((bPart, bIdx) => {
+                if (bPart.startsWith('**') && bPart.endsWith('**')) {
+                  return <strong key={bIdx} style={{ color: '#fff', fontWeight: 'bold' }}>{bPart.slice(2, -2)}</strong>;
+                }
+                
+                const italicParts = bPart.split(/(\*[^*]+\*)/g);
+                return italicParts.map((iPart, iIdx) => {
+                  if (iPart.startsWith('*') && iPart.endsWith('*')) {
+                    return <em key={iIdx} style={{ fontStyle: 'italic', color: '#cbd5e1' }}>{iPart.slice(1, -1)}</em>;
+                  }
+                  return iPart;
+                });
+              });
+            }
+          })}
+        </span>
+      );
+    }
+  });
+}
+
 export default function ChatbotPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'أهلاً بك! أنا مساعد ليرنوف الأكاديمي. كيف يمكنني مساعدتك في دراستك اليوم؟' }
-  ]);
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Check Authentication
+    const token = localStorage.getItem('accessToken');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!token || !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+    // Fetch message history from database
+    fetch(`${apiUrl}/api/ai/chat/history/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Could not load history");
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setMessages(data.map((msg: any, idx: number) => ({
+            id: `hist-${idx}`,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content
+          })));
+        } else {
+          setMessages([
+            { id: 'welcome', role: 'assistant', content: 'أهلاً بك! أنا مساعد ليرنوف الأكاديمي. كيف يمكنني مساعدتك في دراستك اليوم؟' }
+          ]);
+        }
+      })
+      .catch(() => {
+        setMessages([
+          { id: 'welcome', role: 'assistant', content: 'أهلاً بك! أنا مساعد ليرنوف الأكاديمي. كيف يمكنني مساعدتك في دراستك اليوم؟' }
+        ]);
+      });
+  }, [router]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,12 +224,24 @@ export default function ChatbotPage() {
               maxWidth: '80%',
               lineHeight: 1.6
             }}>
-              {msg.content}
+              {renderMessageContent(msg.content)}
             </div>
           ))}
           {isTyping && (
-            <div style={{ alignSelf: 'flex-end', backgroundColor: 'rgba(255, 255, 255, 0.05)', padding: '1rem 1.5rem', borderRadius: '16px', borderBottomLeftRadius: '0' }}>
-              يكتب...
+            <div style={{ 
+              alignSelf: 'flex-end', 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '1rem 1.5rem', 
+              borderRadius: '16px', 
+              borderBottomLeftRadius: '0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              <span className="dot" style={{ animationDelay: '0s' }}></span>
+              <span className="dot" style={{ animationDelay: '0.2s' }}></span>
+              <span className="dot" style={{ animationDelay: '0.4s' }}></span>
             </div>
           )}
           <div ref={endRef} />
@@ -187,6 +324,18 @@ export default function ChatbotPage() {
         .logout-btn:hover {
           background: rgba(239, 68, 68, 0.2) !important;
           box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .dot {
+          width: 8px;
+          height: 8px;
+          background-color: #3b82f6;
+          border-radius: 50%;
+          display: inline-block;
+          animation: bounce 1.2s infinite ease-in-out;
         }
       `}</style>
     </main>

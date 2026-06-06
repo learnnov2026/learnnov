@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 
 interface StudentData {
@@ -110,20 +111,15 @@ export default function StudentDashboard() {
   const [quizAnswer, setQuizAnswer] = useState('');
   const [quizChecked, setQuizChecked] = useState(false);
   const [quizIsCorrect, setQuizIsCorrect] = useState<boolean | null>(null);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   // Fetch applications list from database
   const fetchDbApplications = () => {
-    const token = localStorage.getItem('accessToken');
+    if (!accessToken) return;
     fetch(`${apiUrl}/api/programs/applications/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(json => {
@@ -136,20 +132,20 @@ export default function StudentDashboard() {
   };
 
   useEffect(() => {
-    // Check Authentication
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken) return;
 
     // 1. Fetch DB applications list
     fetchDbApplications();
 
     // 2. Fetch stats
     fetch(`${apiUrl}/api/programs/summary/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) {
@@ -244,7 +240,7 @@ export default function StudentDashboard() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/programs/programs/${enrollingProgram.slug}/apply/`, {
         method: 'POST',
         headers: { 
@@ -316,7 +312,7 @@ export default function StudentDashboard() {
     setVideoProgress(0);
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/programs/programs/${course.slug}/syllabus/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -406,30 +402,16 @@ export default function StudentDashboard() {
     return <div style={{ textAlign: 'center', marginTop: '100px', fontSize: '1.5rem' }}>فشل تحميل البيانات</div>;
   }
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation bar Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة الطلاب والتعليم التفاعلي</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link active">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
-
       {/* Profile Header section */}
       <div className="glass-panel profile-header">
         <div className="profile-avatar">أ</div>
@@ -1055,42 +1037,6 @@ export default function StudentDashboard() {
 
       {/* Styled JSX for custom premium RTL layouts */}
       <style jsx global>{`
-        .main-header {
-          padding: 1rem 2rem;
-          margin-bottom: 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          position: sticky;
-          top: 1rem;
-          z-index: 100;
-        }
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-        .nav-link {
-          color: #94a3b8;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          transition: all 0.3s;
-        }
-        .nav-link:hover, .nav-link.active {
-          color: #fff;
-          background: rgba(59, 130, 246, 0.15);
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-        }
-        .logout-btn {
-          color: #f87171 !important;
-          background: rgba(239, 68, 68, 0.08) !important;
-        }
-        .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.2) !important;
-          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
-        }
         .section-title {
           font-size: 1.8rem;
           font-weight: 600;

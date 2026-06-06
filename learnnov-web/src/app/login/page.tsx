@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [role, setRole] = useState<'student' | 'instructor'>('student');
   const [username, setUsername] = useState('student_demo');
   const [password, setPassword] = useState('••••••••');
@@ -28,14 +30,13 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-      localStorage.setItem('accessToken', data.access);
-      localStorage.setItem('refreshToken', data.refresh);
-
-      // Set session variables in localStorage for persistence
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('userName', role === 'student' ? 'طالب ليرنوف المتميز' : 'د. علي البراك');
-      localStorage.setItem('userAvatar', role === 'student' ? 'أ' : 'د');
-      localStorage.setItem('isLoggedIn', 'true');
+      login(
+        data.access,
+        data.refresh,
+        role,
+        role === 'student' ? 'طالب ليرنوف المتميز' : 'د. علي البراك',
+        role === 'student' ? 'أ' : 'د'
+      );
 
       if (role === 'student') {
         router.push('/');

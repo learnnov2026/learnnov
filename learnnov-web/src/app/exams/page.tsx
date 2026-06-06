@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Exam {
   id: number;
@@ -31,12 +31,7 @@ export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
 
   // Live Exam Testing Engine States
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
@@ -51,17 +46,17 @@ export default function ExamsPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
-    // Check Authentication
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken) return;
 
     // Fetch exams list from database
     fetch(`${apiUrl}/api/exams/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(json => {
@@ -82,7 +77,7 @@ export default function ExamsPage() {
 
     // Fetch attempts
     fetch(`${apiUrl}/api/exams/attempts/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(json => {
@@ -99,7 +94,7 @@ export default function ExamsPage() {
         ]);
         setLoading(false);
       });
-  }, []);
+  }, [isLoggedIn, accessToken]);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -234,7 +229,7 @@ export default function ExamsPage() {
     setQuestions(examQuestions);
 
     // Call start API
-    const token = localStorage.getItem('accessToken');
+    const token = accessToken;
     fetch(`${apiUrl}/api/exams/${exam.id}/start/`, { 
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
@@ -274,7 +269,7 @@ export default function ExamsPage() {
       score: score,
       is_completed: true
     };
-    const token = localStorage.getItem('accessToken');
+    const token = accessToken;
     fetch(`${apiUrl}/api/exams/attempts/${activeExam.id}/submit/`, {
       method: 'POST',
       headers: { 
@@ -292,29 +287,16 @@ export default function ExamsPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation bar Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>مركز الاختبارات والتقييم الذكي</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link active">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {activeExam ? (
         /* Live Exam Workspace */

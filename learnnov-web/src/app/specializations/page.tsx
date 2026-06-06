@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Specialization {
   id: number;
@@ -18,23 +19,18 @@ export default function SpecializationsCatalog() {
   const router = useRouter();
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
-    // Check Auth
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
 
     // Fetch specializations list
     fetch(`${apiUrl}/api/programs/specializations/`)
@@ -68,29 +64,16 @@ export default function SpecializationsCatalog() {
       });
   }, [apiUrl, router]);
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>المسارات التخصصية والشهادات المهنية</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link active">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاخـتبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {/* Header Banner */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2.5rem', borderLeft: '5px solid #d4af37' }}>

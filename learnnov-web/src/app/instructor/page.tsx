@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface FieldOfStudy {
   id: number;
@@ -23,6 +23,7 @@ interface ApplicationInfo {
 
 export default function InstructorDashboard() {
   const router = useRouter();
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
   const [applications, setApplications] = useState<ApplicationInfo[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   
@@ -54,9 +55,9 @@ export default function InstructorDashboard() {
 
   // Fetch applications list from DB
   const fetchDbApplications = () => {
-    const token = localStorage.getItem('accessToken');
+    if (!accessToken) return;
     fetch(`${apiUrl}/api/programs/applications/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(json => {
@@ -69,21 +70,22 @@ export default function InstructorDashboard() {
   };
 
   useEffect(() => {
-    // Check Authentication and Role
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const role = localStorage.getItem('userRole');
-    if (!token || !isLoggedIn || role !== 'instructor') {
-      router.push('/login');
-      return;
+    if (!isLoading) {
+      if (!isLoggedIn || userRole !== 'instructor') {
+        router.push('/login');
+      }
     }
+  }, [isLoggedIn, userRole, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken || userRole !== 'instructor') return;
 
     // 1. Fetch DB applications list
     fetchDbApplications();
 
     // 2. Fetch live fields from database
     fetch(`${apiUrl}/api/programs/fields/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(data => {
@@ -96,7 +98,7 @@ export default function InstructorDashboard() {
 
     // 3. Fetch live providers from database
     fetch(`${apiUrl}/api/programs/providers/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(data => {
@@ -109,7 +111,7 @@ export default function InstructorDashboard() {
 
     // 4. Fetch total active programs count from database
     fetch(`${apiUrl}/api/programs/stats/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(data => {
@@ -118,7 +120,7 @@ export default function InstructorDashboard() {
         }
       })
       .catch(err => console.error("Error loading stats:", err));
-  }, []);
+  }, [isLoggedIn, accessToken, userRole]);
 
   const getMappedStatus = (dbStatus: string) => {
     if (['submitted', 'under_review', 'waitlisted'].includes(dbStatus)) return 'pending';
@@ -129,7 +131,7 @@ export default function InstructorDashboard() {
 
   const updateStatus = async (id: number, newStatus: 'accepted' | 'rejected') => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/programs/applications/${id}/review/`, {
         method: 'PATCH',
         headers: { 
@@ -178,7 +180,7 @@ export default function InstructorDashboard() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/programs/programs/create/`, {
         method: 'POST',
         headers: { 
@@ -219,28 +221,16 @@ export default function InstructorDashboard() {
     return date.toISOString().split('T')[0];
   };
 
+  if (isLoading || !isLoggedIn || userRole !== 'instructor') {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation bar Header */}
-      <header className="glass-panel main-header" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة المشرفين وأعضاء هيئة التدريس</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          <Link href="/instructor" className="nav-link active">لوحة المشرف</Link>
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {/* Profile Header section */}
       <div className="glass-panel profile-header">
@@ -538,42 +528,6 @@ export default function InstructorDashboard() {
 
       {/* Styled JSX support for quick advanced CSS styling */}
       <style jsx global>{`
-        .main-header {
-          padding: 1rem 2rem;
-          margin-bottom: 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          position: sticky;
-          top: 1rem;
-          z-index: 100;
-        }
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-        .nav-link {
-          color: #94a3b8;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          transition: all 0.3s;
-        }
-        .nav-link:hover, .nav-link.active {
-          color: #fff;
-          background: rgba(59, 130, 246, 0.15);
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-        }
-        .logout-btn {
-          color: #f87171 !important;
-          background: rgba(239, 68, 68, 0.08) !important;
-        }
-        .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.2) !important;
-          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
-        }
         .filter-btn {
           background: transparent;
           border: none;

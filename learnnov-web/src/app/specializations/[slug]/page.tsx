@@ -2,6 +2,7 @@
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Course {
   id: number;
@@ -38,21 +39,16 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
   const [spec, setSpec] = useState<SpecializationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrollLoading, setEnrollLoading] = useState(false);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   const fetchDetails = useCallback(() => {
-    const token = localStorage.getItem('accessToken');
+    if (!accessToken) return;
     fetch(`${apiUrl}/api/programs/specializations/${slug}/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch details");
@@ -89,28 +85,29 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
   }, [apiUrl, slug]);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
 
-    fetchDetails();
-  }, [fetchDetails, router]);
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchDetails();
+    }
+  }, [fetchDetails, isLoggedIn]);
 
   const handleEnroll = async () => {
     setEnrollLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const token = localStorage.getItem('accessToken');
+    if (!accessToken) return;
     try {
       const res = await fetch(`${apiUrl}/api/programs/specializations/${slug}/enroll/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 
@@ -143,29 +140,16 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
     return <div style={{ textAlign: 'center', marginTop: '100px', fontSize: '1.5rem', color: 'white' }}>لم يتم العثور على المسار التخصصي المطلوب.</div>;
   }
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>سلسلة وتتابع المسارات التخصصية</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link active">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاخـتبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {/* Specialization Header */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem', borderLeft: '5px solid #d4af37' }}>

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Course {
   id: number;
@@ -73,13 +73,8 @@ export default function DiscussionsPage() {
   const [newContent, setNewContent] = useState('');
   const [replyContent, setReplyContent] = useState('');
   
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
 
   const mapPost = (p: PostApiResponse): Reply => {
     const authorName = `${p.author?.first_name || ''} ${p.author?.last_name || ''}`.trim() || p.author?.username || 'مستعمل ليرنوف';
@@ -109,58 +104,58 @@ export default function DiscussionsPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
-    // Check Authentication
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken) return;
 
     // Fetch courses to populate dropdown
     fetch(`${apiUrl}/api/programs/programs/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) {
           if (res.status === 401 || res.status === 403) {
-            localStorage.clear();
             router.push('/login');
             throw new Error("Session expired. Redirecting...");
           }
-          throw new Error("Could not load programs");
+          throw new Error("Could not load courses");
         }
         return res.json();
       })
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
-          const coursesList = results.map((c: CourseApiResponse) => ({ id: c.id, title: c.title, slug: c.slug }));
-          setCourses(coursesList);
-          setSelectedCourse(coursesList[0]);
-        } else {
-          throw new Error("No courses returned");
+          const mapped = results.map((c: CourseApiResponse) => ({
+            id: c.id,
+            title: c.title,
+            slug: c.slug
+          }));
+          setCourses(mapped);
+          setSelectedCourse(mapped[0]);
         }
       })
-      .catch(() => {
-        // Fallback courses
-        const fallbacks = [
-          { id: 1, title: "ماجستير العلوم في الذكاء الاصطناعي", slug: "master-artificial-intelligence" },
-          { id: 2, title: "ماجستير العلوم في الأمن السيبراني المتقدم", slug: "master-cybersecurity" },
+      .catch(err => {
+        console.warn("Could not fetch database courses, using local premium fallbacks:", err);
+        const fallbacks: Course[] = [
+          { id: 1, title: "ماجستير الذكاء الاصطناعي السحابي المتقدم", slug: "advanced-cloud-ai-master" },
+          { id: 2, title: "ماجستير الأمن السيبراني وهندسة الشبكات", slug: "cybersecurity-network-engineering-master" },
           { id: 3, title: "دبلوم تطوير تطبيقات الويب المتكاملة (Full Stack)", slug: "diploma-full-stack-web" }
         ];
         setCourses(fallbacks);
         setSelectedCourse(fallbacks[0]);
       });
-  }, [apiUrl, router]);
+  }, [isLoggedIn, accessToken, apiUrl, router]);
 
   // Fetch threads when course changes
   useEffect(() => {
-    if (!selectedCourse) return;
+    if (!selectedCourse || !accessToken) return;
 
-    const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) {
@@ -226,7 +221,7 @@ export default function DiscussionsPage() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/threads/${activeThread.id}/reply/`, {
         method: 'POST',
         headers: { 
@@ -290,7 +285,7 @@ export default function DiscussionsPage() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
         method: 'POST',
         headers: { 
@@ -328,29 +323,16 @@ export default function DiscussionsPage() {
     }
   };
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation bar Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>حلقات النقاش والتعلم المجتمعي</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link">التخصصات</Link>
-          <Link href="/discussions" className="nav-link active">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {/* Forums Selector and Info */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2rem' }}>
@@ -531,43 +513,6 @@ export default function DiscussionsPage() {
 
       {/* Custom Styles */}
       <style jsx global>{`
-        .main-header {
-          padding: 1rem 2rem;
-          margin-bottom: 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          position: sticky;
-          top: 1rem;
-          z-index: 100;
-        }
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-        .nav-link {
-          color: #94a3b8;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          transition: all 0.3s;
-        }
-        .nav-link:hover, .nav-link.active {
-          color: #fff;
-          background: rgba(59, 130, 246, 0.15);
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-        }
-        .logout-btn {
-          color: #f87171 !important;
-          background: rgba(239, 68, 68, 0.08) !important;
-        }
-        .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.2) !important;
-          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
-        }
-
         /* Forums specific layout */
         .forum-select {
           padding: 0.6rem 1rem;

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Message {
   id: string;
@@ -104,30 +104,25 @@ interface ChatMessageResponse {
 
 export default function ChatbotPage() {
   const router = useRouter();
+  const { isLoggedIn, accessToken, isLoading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
 
   useEffect(() => {
-    // Check Authentication
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken) return;
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
     // Fetch message history from database
     fetch(`${apiUrl}/api/ai/chat/history/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) throw new Error("Could not load history");
@@ -151,14 +146,14 @@ export default function ChatbotPage() {
           { id: 'welcome', role: 'assistant', content: 'أهلاً بك! أنا مساعد ليرنوف الأكاديمي. كيف يمكنني مساعدتك في دراستك اليوم؟' }
         ]);
       });
-  }, [router]);
+  }, [isLoggedIn, accessToken]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !accessToken) return;
     
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input };
     setMessages(prev => [...prev, userMsg]);
@@ -167,12 +162,11 @@ export default function ChatbotPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
-      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${apiUrl}/api/ai/chat/`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({ message: userMsg.content })
       });
@@ -191,30 +185,16 @@ export default function ChatbotPage() {
     }
   };
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl" style={{ height: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '2rem' }}>
-      {/* Navigation bar Header */}
-      <header className="glass-panel main-header" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>المساعد التعليمي الذكي</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link">المدفوعات</Link>
-          <Link href="/chat" className="nav-link active">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
-
       <div className="glass-panel profile-header" style={{ marginBottom: '1rem', padding: '1.5rem' }}>
         <div className="profile-avatar" style={{ width: '50px', height: '50px', fontSize: '1.5rem' }}>🤖</div>
         <div className="profile-info">
@@ -302,43 +282,6 @@ export default function ChatbotPage() {
       </div>
 
       <style jsx global>{`
-        .main-header {
-          padding: 1rem 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-        .nav-link {
-          color: #94a3b8;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          transition: all 0.3s;
-        }
-        .nav-link:hover, .nav-link.active {
-          color: #fff;
-          background: rgba(59, 130, 246, 0.15);
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-        }
-        .logo-avatar {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .logout-btn {
-          color: #f87171 !important;
-          background: rgba(239, 68, 68, 0.08) !important;
-        }
-        .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.2) !important;
-          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
-        }
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-5px); }

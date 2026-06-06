@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface Invoice {
   id: number;
@@ -40,15 +40,7 @@ function getFutureDateISO(days: number): string {
 }
 
 export default function PaymentsPage() {
-  const router = useRouter();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userRole') || 'student';
-    }
-    return 'student';
-  });
+  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
 
   // Discount Code States
   const [couponCode, setCouponCode] = useState('');
@@ -79,24 +71,28 @@ export default function PaymentsPage() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
+  const router = useRouter();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // Check Authentication
-    const token = localStorage.getItem('accessToken');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!token || !isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push('/login');
-      return;
     }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accessToken) return;
 
     // Initial query to discount check
     fetch(`${apiUrl}/api/payments/discount/apply/`, { 
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     }).catch(() => {});
 
     // Fetch invoices
     fetch(`${apiUrl}/api/payments/orders/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => {
         if (!res.ok) throw new Error("API call failed");
@@ -169,7 +165,7 @@ export default function PaymentsPage() {
 
     // Fetch active user subscription
     fetch(`${apiUrl}/api/payments/subscriptions/my/`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     })
       .then(res => res.json())
       .then(json => {
@@ -198,7 +194,7 @@ export default function PaymentsPage() {
           { id: 2, name: 'الاشتراك السنوي الشامل', name_en: 'Premium Annual', slug: 'yearly', description: 'وصول شامل لجميع الكورسات والتخصصات والشهادات المهنية طوال العام ووفر 20%.', price: '2499.00', currency: 'SAR', billing_cycle: 'yearly' }
         ]);
       });
-  }, []);
+  }, [isLoggedIn, accessToken]);
 
   // Handle Apply Discount Code
   const handleApplyDiscount = async (e: React.FormEvent) => {
@@ -214,7 +210,7 @@ export default function PaymentsPage() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       const res = await fetch(`${apiUrl}/api/payments/discount/apply/`, {
         method: 'POST',
         headers: { 
@@ -278,7 +274,7 @@ export default function PaymentsPage() {
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = accessToken;
       await fetch(`${apiUrl}/api/payments/stripe/create-intent/`, {
         method: 'POST',
         headers: { 
@@ -320,8 +316,7 @@ export default function PaymentsPage() {
   // Simulate subscription activation
   const handleSimulateSubscription = async (planId: number, action: 'activate' | 'deactivate' = 'activate') => {
     setSubSuccess(null);
-    const token = localStorage.getItem('accessToken');
-
+    const token = accessToken;
     try {
       const res = await fetch(`${apiUrl}/api/payments/subscriptions/simulate/`, {
         method: 'POST',
@@ -370,7 +365,7 @@ export default function PaymentsPage() {
 
   // Cancel renewal
   const handleCancelRenewal = async () => {
-    const token = localStorage.getItem('accessToken');
+    const token = accessToken;
     try {
       const res = await fetch(`${apiUrl}/api/payments/subscriptions/cancel/`, {
         method: 'POST',
@@ -386,29 +381,16 @@ export default function PaymentsPage() {
     }
   };
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation Header */}
-      <header className="glass-panel main-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div className="profile-avatar logo-avatar">🎓</div>
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة المدفوعات والاشتراكات</p>
-          </div>
-        </div>
-        <nav className="nav-links">
-          <Link href="/" className="nav-link">لوحة الطالب</Link>
-          <Link href="/specializations" className="nav-link">التخصصات</Link>
-          <Link href="/discussions" className="nav-link">المناقشات</Link>
-          <Link href="/exams" className="nav-link">الاختبارات</Link>
-          <Link href="/certificates" className="nav-link">الشهادات</Link>
-          <Link href="/payments" className="nav-link active">المدفوعات</Link>
-          <Link href="/chat" className="nav-link">المساعد الذكي</Link>
-          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
-          <Link href="/login" className="nav-link logout-btn">خروج</Link>
-        </nav>
-      </header>
 
       {/* Header Banner */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2rem' }}>

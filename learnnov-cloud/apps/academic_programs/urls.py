@@ -21,4 +21,7 @@ urlpatterns = [
     path('modules/<int:pk>/', views.ModuleUpdateDeleteView.as_view(), name='module-detail'),
     path('modules/<int:pk>/lessons/', views.LessonListCreateView.as_view(), name='lesson-list-create'),
     path('lessons/<int:pk>/', views.LessonUpdateDeleteView.as_view(), name='lesson-detail'),
+    path('specializations/', views.SpecializationListView.as_view(), name='specializations-list'),
+    path('specializations/<slug:slug>/', views.SpecializationDetailView.as_view(), name='specialization-detail'),
+    path('specializations/<slug:slug>/enroll/', views.SpecializationEnrollView.as_view(), name='specialization-enroll'),
 ]

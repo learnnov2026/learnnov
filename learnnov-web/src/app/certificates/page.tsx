@@ -13,6 +13,9 @@ interface Certificate {
   verify_uuid: string;
   qr_image_url?: string;
   verification_url?: string;
+  is_specialization?: boolean;
+  specialization_title?: string;
+  specialization_title_en?: string;
   signatories?: Array<{
     name: string;
     title: string;
@@ -20,16 +23,43 @@ interface Certificate {
   }>;
 }
 
+interface VerifiedCertificateResult {
+  is_specialization: boolean;
+  student_name: string;
+  specialization_title?: string;
+  course_title?: string;
+  provider_name: string;
+  date_earned: string;
+  verify_uuid: string;
+}
+
+interface SpecCertItem {
+  id: number;
+  specialization_title: string;
+  provider_name: string;
+  student_name: string;
+  date_earned: string;
+  verify_uuid: string;
+  qr_image_url: string;
+  verification_url: string;
+}
+
 export default function CertificatesPage() {
   const router = useRouter();
   const [certs, setCerts] = useState<Certificate[]>([]);
+  const [specCerts, setSpecCerts] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
   // Verification Portal States
   const [searchUuid, setSearchUuid] = useState('');
   const [verifying, setVerifying] = useState(false);
-  const [verifiedResult, setVerifiedResult] = useState<Certificate | null>(null);
+  const [verifiedResult, setVerifiedResult] = useState<VerifiedCertificateResult | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // Active Printing Overlay
@@ -38,7 +68,6 @@ export default function CertificatesPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
-    // Check Authentication
     const token = localStorage.getItem('accessToken');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (!token || !isLoggedIn) {
@@ -46,10 +75,7 @@ export default function CertificatesPage() {
       return;
     }
 
-    const role = localStorage.getItem('userRole') || 'student';
-    setUserRole(role);
-
-    // Fetch active earned certificates from database
+    // Fetch earned course certificates
     fetch(`${apiUrl}/api/certificates/my/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -70,16 +96,47 @@ export default function CertificatesPage() {
         } else {
           setCerts([]);
         }
-        setLoading(false);
       })
       .catch((err) => {
         console.error("Error loading certificates:", err);
         setCerts([]);
+      });
+
+    // Fetch earned specialization certificates
+    fetch(`${apiUrl}/api/certificates/my-specializations/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          const formatted = data.map((c: SpecCertItem) => ({
+            id: c.id,
+            course_title: c.specialization_title,
+            provider_name: c.provider_name,
+            student_name: c.student_name,
+            grade: 'معتمدة',
+            date_earned: c.date_earned,
+            verify_uuid: c.verify_uuid,
+            qr_image_url: c.qr_image_url,
+            verification_url: c.verification_url,
+            is_specialization: true
+          }));
+          setSpecCerts(formatted);
+        } else {
+          setSpecCerts([]);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setSpecCerts([]);
         setLoading(false);
       });
   }, [apiUrl, router]);
 
-  // Handle Third-Party Certificate Verification UUID lookup
+  // Handle Third-Party Verification UUID lookup
   const handleVerifyLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchUuid.trim()) return;
@@ -96,8 +153,9 @@ export default function CertificatesPage() {
         throw new Error(json.error || "Document not found in database");
       }
       setVerifiedResult(json);
-    } catch (err: any) {
-      setVerifyError(err.message || "عذراً، لم يتم العثور على وثيقة متوافقة مع هذا المعرف في سجلات قاعدة البيانات المعتمدة. يرجى التحقق من الرقم التعريفي وإعادة المحاولة.");
+    } catch (err) {
+      const error = err as Error;
+      setVerifyError(error.message || "عذراً، لم يتم العثور على وثيقة متوافقة مع هذا المعرف في سجلات قاعدة البيانات المعتمدة. يرجى التحقق من الرقم التعريفي وإعادة المحاولة.");
     } finally {
       setVerifying(false);
     }
@@ -116,6 +174,7 @@ export default function CertificatesPage() {
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link">المناقشات</Link>
           <Link href="/exams" className="nav-link">الاختبارات</Link>
           <Link href="/certificates" className="nav-link active">الشهادات</Link>
@@ -135,7 +194,7 @@ export default function CertificatesPage() {
         </div>
       </div>
 
-      {/* Main Certificates View split layout */}
+      {/* Main Certificates split layout */}
       <div className="forum-split-layout">
         {/* Left column: My Certificates list */}
         <div className="threads-list-pane glass-panel" style={{ flex: 1.3 }}>
@@ -145,17 +204,42 @@ export default function CertificatesPage() {
             <div className="spinner-container" style={{ minHeight: '20vh' }}>
               <div className="spinner" style={{ width: '30px', height: '30px' }}></div>
             </div>
-          ) : certs.length === 0 ? (
+          ) : certs.length === 0 && specCerts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
               لم تصدر لك أي شهادة بعد. أكمل الوحدات الدراسية واجتز الاختبارات بنسبة 60% أو أعلى لتكسب شهادتك الأولى!
             </div>
           ) : (
             <div className="certs-grid-vertical">
+              {/* Render Specialization Certificates First */}
+              {specCerts.map(c => (
+                <div key={`spec-${c.id}`} className="glass-panel cert-card-item" style={{ border: '1px solid rgba(212, 175, 55, 0.3)', background: 'rgba(212, 175, 55, 0.02)' }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '3.25rem' }}>🏆</span>
+                    <div style={{ flex: 1 }}>
+                      <span className="badge" style={{ background: '#d4af37', color: 'black', fontWeight: 800, fontSize: '0.7rem', marginBottom: '0.3rem' }}>تخصص مهني معتمد</span>
+                      <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white', marginBottom: '0.2rem' }}>{c.course_title}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>جهة الاعتماد: {c.provider_name} • المسار المهني المكتمل</p>
+                      <p style={{ fontSize: '0.75rem', color: '#d4af37', marginTop: '0.5rem', fontFamily: 'monospace', fontWeight: 'bold' }}>رقم التوثيق: {c.verify_uuid}</p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => setPrintingCert(c)}
+                      className="print-preview-btn"
+                      style={{ background: 'linear-gradient(135deg, #aa7c11, #d4af37)', color: 'white' }}
+                    >
+                      📜 عرض وطباعة شهادة التخصص
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Render Course Certificates */}
               {certs.map(c => (
-                <div key={c.id} className="glass-panel cert-card-item">
-                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                <div key={`course-${c.id}`} className="glass-panel cert-card-item">
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '3rem' }}>📜</span>
                     <div style={{ flex: 1 }}>
+                      <span className="badge" style={{ background: '#3b82f6', color: 'white', fontWeight: 700, fontSize: '0.7rem', marginBottom: '0.3rem' }}>شهادة إتمام مقرر</span>
                       <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white', marginBottom: '0.2rem' }}>{c.course_title}</h4>
                       <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>جهة الاعتماد: {c.provider_name} • التقدير: {c.grade}</p>
                       <p style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '0.5rem', fontFamily: 'monospace', fontWeight: 'bold' }}>رقم التوثيق: {c.verify_uuid}</p>
@@ -201,9 +285,9 @@ export default function CertificatesPage() {
 
           {/* Verification Result Output */}
           {verifiedResult && (
-            <div className="verification-success-card glass-panel">
-              <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#10b981', fontWeight: 'bold', fontSize: '1rem', marginBottom: '1rem' }}>
-                <span>✅ وثيقة أصلية معتمدة وموثقة</span>
+            <div className="verification-success-card glass-panel" style={{ border: verifiedResult.is_specialization ? '1px solid rgba(212, 175, 55, 0.3)' : '1px solid rgba(16, 185, 129, 0.2)', background: verifiedResult.is_specialization ? 'rgba(212, 175, 55, 0.02)' : 'rgba(16, 185, 129, 0.03)' }}>
+              <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'center', gap: '0.5rem', color: verifiedResult.is_specialization ? '#d4af37' : '#10b981', fontWeight: 'bold', fontSize: '1rem', marginBottom: '1rem' }}>
+                <span>✅ {verifiedResult.is_specialization ? 'وثيقة تخصص مهني أصلية معتمدة' : 'وثيقة مقرر أصلية معتمدة'}</span>
               </div>
 
               <div className="verified-meta-grid">
@@ -213,15 +297,17 @@ export default function CertificatesPage() {
                 </div>
                 <div className="v-meta-row">
                   <span className="v-lbl">اسم البرنامج:</span>
-                  <span className="v-val">{verifiedResult.course_title}</span>
+                  <span className="v-val">{verifiedResult.specialization_title || verifiedResult.course_title}</span>
                 </div>
                 <div className="v-meta-row">
                   <span className="v-lbl">المؤسسة المانحة:</span>
                   <span className="v-val">{verifiedResult.provider_name}</span>
                 </div>
                 <div className="v-meta-row">
-                  <span className="v-lbl">التقدير الأكاديمي:</span>
-                  <span className="v-val" style={{ color: '#34d399', fontWeight: 600 }}>{verifiedResult.grade}</span>
+                  <span className="v-lbl">النوع:</span>
+                  <span className="v-val" style={{ color: verifiedResult.is_specialization ? '#d4af37' : '#3b82f6', fontWeight: 600 }}>
+                    {verifiedResult.is_specialization ? 'تخصص مهني كامل' : 'مقرر فردي'}
+                  </span>
                 </div>
                 <div className="v-meta-row">
                   <span className="v-lbl">تاريخ التوثيق:</span>
@@ -252,44 +338,52 @@ export default function CertificatesPage() {
           </div>
 
           {/* Printable Frame */}
-          <div className="official-golden-certificate-frame">
-            <div className="golden-border-outer">
-              <div className="golden-border-inner">
+          <div className="official-golden-certificate-frame" style={{ border: printingCert.is_specialization ? '4px solid #d4af37' : 'none' }}>
+            <div className="golden-border-outer" style={{ borderColor: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}>
+              <div className="golden-border-inner" style={{ borderColor: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}>
                 {/* Headers */}
-                <div className="cert-header-row">
+                <div className="cert-header-row" style={{ borderColor: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}>
                   <div className="cert-header-side left">
-                    <h4>KING SAUD UNIVERSITY</h4>
-                    <h5>ACADEMIC AFFAIRS</h5>
+                    <h4>{printingCert.is_specialization ? 'ACADEMIC SPECIALIZATION BOARD' : 'ACADEMIC AFFAIRS'}</h4>
+                    <h5>{printingCert.provider_name.toUpperCase()}</h5>
                   </div>
                   
                   <div className="cert-header-center">
-                    <span className="cert-logo-emoji">🎓</span>
-                    <h3>منصة ليرنوف الأكاديمية</h3>
+                    <span className="cert-logo-emoji">{printingCert.is_specialization ? '🏆' : '🎓'}</span>
+                    <h3 style={{ color: printingCert.is_specialization ? '#d4af37' : '#b45309' }}>
+                      {printingCert.is_specialization ? 'منصة ليرنوف للتخصصات المهنية' : 'منصة ليرنوف الأكاديمية'}
+                    </h3>
                     <h6>LEARNNOV PLATFORM</h6>
                   </div>
 
                   <div className="cert-header-side right">
-                    <h4>جامعة الملك سعود</h4>
-                    <h5>الشؤون الأكاديمية للمساقات</h5>
+                    <h4>{printingCert.is_specialization ? 'الهيئة المشتركة للتخصصات' : 'الشؤون الأكاديمية للمساقات'}</h4>
+                    <h5>{printingCert.provider_name}</h5>
                   </div>
                 </div>
 
                 {/* Main Body */}
                 <div className="cert-main-body">
-                  <h2>شهادة إتمام وتخرج معتمدة</h2>
-                  <h4 className="en-sub">CERTIFICATE OF GRADUATION</h4>
+                  <h2>{printingCert.is_specialization ? 'شهادة تخصص مهنية معتمدة' : 'شهادة إتمام وتخرج معتمدة'}</h2>
+                  <h4 className="en-sub" style={{ color: printingCert.is_specialization ? '#d4af37' : '#b45309' }}>
+                    {printingCert.is_specialization ? 'PROFESSIONAL SPECIALIZATION CERTIFICATE' : 'CERTIFICATE OF GRADUATION'}
+                  </h4>
                   
                   <p className="cert-prose-ar">
                     تشهد عمادة القبول والشؤون الأكاديمية بمنصة ليرنوف بالتعاون مع <strong>{printingCert.provider_name}</strong> بأن الطالب:
                   </p>
                   <h1 className="student-name-cert">{printingCert.student_name}</h1>
+                  
                   <p className="cert-prose-en">
                     This is to officially certify that the student above has successfully completed the program:
                   </p>
                   
-                  <h3 className="course-title-cert">{printingCert.course_title}</h3>
+                  <h3 className="course-title-cert" style={{ color: printingCert.is_specialization ? '#d4af37' : '#78350f' }}>{printingCert.course_title}</h3>
+                  
                   <p className="cert-prose-ar">
-                    وقد اجتاز كافة المتطلبات الدراسية والاختبارات التقييمية بنجاح بتقدير عام: <strong>{printingCert.grade}</strong>
+                    {printingCert.is_specialization 
+                      ? 'وقد اجتاز كافة مساقات المسار التخصصي والتطبيقات العملية المقررة بنجاح متفوقاً.' 
+                      : `وقد اجتاز كافة المتطلبات الدراسية والاختبارات التقييمية بنجاح بتقدير عام: ${printingCert.grade}`}
                   </p>
 
                   <p className="cert-date-verify">
@@ -303,7 +397,7 @@ export default function CertificatesPage() {
                     <p className="sig-title">{printingCert.signatories?.[0]?.title || 'عميد الشؤون الأكاديمية'}</p>
                     <p className="sig-handwritten">{printingCert.signatories?.[0]?.name || 'د. خالد بن محمد'}</p>
                     <p className="sig-org" style={{ fontSize: '0.7rem', color: '#78716c', margin: 0 }}>{printingCert.signatories?.[0]?.organization || 'منصة ليرنوف الأكاديمية'}</p>
-                    <div className="sig-line"></div>
+                    <div className="sig-line" style={{ background: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}></div>
                   </div>
 
                   <div className="cert-qr-block">
@@ -311,10 +405,10 @@ export default function CertificatesPage() {
                       <img 
                         src={printingCert.qr_image_url} 
                         alt="QR Verification" 
-                        style={{ width: '85px', height: '85px', border: '1px solid #c5a880', padding: '2px', backgroundColor: 'white' }} 
+                        style={{ width: '85px', height: '85px', border: printingCert.is_specialization ? '1px solid #d4af37' : '1px solid #c5a880', padding: '2px', backgroundColor: 'white' }} 
                       />
                     ) : (
-                      <div className="qr-simulated-box">
+                      <div className="qr-simulated-box" style={{ borderColor: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}>
                         <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
                         <div className="qr-row"><span></span><span className="b"></span><span></span><span className="b"></span><span></span></div>
                         <div className="qr-row"><span className="b"></span><span></span><span className="b"></span><span></span><span className="b"></span></div>
@@ -327,7 +421,7 @@ export default function CertificatesPage() {
                     <p className="sig-title">{printingCert.signatories?.[1]?.title || 'المديرة التنفيذية'}</p>
                     <p className="sig-handwritten">{printingCert.signatories?.[1]?.name || 'أ. سارة الودعاني'}</p>
                     <p className="sig-org" style={{ fontSize: '0.7rem', color: '#78716c', margin: 0 }}>{printingCert.signatories?.[1]?.organization || 'منصة ليرنوف الأكاديمية'}</p>
-                    <div className="sig-line"></div>
+                    <div className="sig-line" style={{ background: printingCert.is_specialization ? '#d4af37' : '#c5a880' }}></div>
                   </div>
                 </div>
               </div>
@@ -336,7 +430,7 @@ export default function CertificatesPage() {
         </div>
       )}
 
-      {/* Styled JSX for credentials components */}
+      {/* Styled JSX */}
       <style jsx global>{`
         .cert-card-item {
           padding: 1.5rem 2rem;
@@ -369,8 +463,6 @@ export default function CertificatesPage() {
           flex-direction: column;
           gap: 1.25rem;
         }
-        
-        /* Verification Form inputs */
         .verify-input {
           padding: 0.85rem 1.25rem;
           border-radius: 10px;
@@ -402,8 +494,6 @@ export default function CertificatesPage() {
           background: #2563eb;
           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
-
-        /* Verification success details card */
         .verification-success-card {
           padding: 1.5rem;
           background: rgba(16, 185, 129, 0.03);
@@ -433,8 +523,6 @@ export default function CertificatesPage() {
           line-height: 1.5;
           text-align: center;
         }
-
-        /* Golden bilingual certificate styling for print overlays */
         .cert-print-backdrop {
           position: fixed;
           top: 0;
@@ -557,7 +645,6 @@ export default function CertificatesPage() {
           border-top: 1px dashed #e7e5e4;
           padding-top: 0.85rem;
         }
-
         .cert-signatures-row {
           display: flex;
           justify-content: space-between;
@@ -611,8 +698,6 @@ export default function CertificatesPage() {
         .qr-row span.b {
           background: black;
         }
-
-        /* Print formatting */
         @media print {
           body * {
             visibility: hidden;

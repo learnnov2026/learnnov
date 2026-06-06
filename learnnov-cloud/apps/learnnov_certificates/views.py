@@ -121,22 +121,40 @@ def verify_certificate_html(request, verify_uuid):
     base_ctx = {'verify_uuid': verify_uuid, 'status': 'invalid'}
     base_ctx.update(_lang_context(request))
 
+    from apps.learnnov_certificates.models import SpecializationCertificate
+
     try:
         cert = _get_cert_or_404(verify_uuid)
+        student_name = f'{cert.user.first_name} {cert.user.last_name}'.strip() or cert.user.username
+        issue_date = cert.created_date.strftime('%d / %m / %Y') if cert.created_date else ''
+
+        base_ctx.update({
+            'status': 'valid',
+            'student_name': student_name,
+            'course_name': cert.course_name or cert.course_id,
+            'course_org': 'LearnNov',
+            'issue_date': issue_date,
+            'certificate_url': request.build_absolute_uri(reverse('learnnov_certificates:render_certificate_html', kwargs={'verify_uuid': verify_uuid})),
+        })
     except Http404:
-        return render(request, 'learnnov_certificates/verify.html', base_ctx)
+        # Check SpecializationCertificate
+        try:
+            cert = SpecializationCertificate.objects.select_related('user', 'specialization', 'specialization__provider').get(verify_uuid=verify_uuid, status='downloadable')
+            student_name = f'{cert.user.first_name} {cert.user.last_name}'.strip() or cert.user.username
+            issue_date = cert.created_date.strftime('%d / %m / %Y') if cert.created_date else ''
 
-    student_name = f'{cert.user.first_name} {cert.user.last_name}'.strip() or cert.user.username
-    issue_date = cert.created_date.strftime('%d / %m / %Y') if cert.created_date else ''
+            base_ctx.update({
+                'status': 'valid',
+                'student_name': student_name,
+                'course_name': cert.specialization.title,
+                'course_org': cert.specialization.provider.name,
+                'issue_date': issue_date,
+                'certificate_url': '#',
+                'is_specialization': True
+            })
+        except SpecializationCertificate.DoesNotExist:
+            return render(request, 'learnnov_certificates/verify.html', base_ctx)
 
-    base_ctx.update({
-        'status': 'valid',
-        'student_name': student_name,
-        'course_name': cert.course_name or cert.course_id,
-        'course_org': 'LearnNov',
-        'issue_date': issue_date,
-        'certificate_url': request.build_absolute_uri(reverse('learnnov_certificates:render_certificate_html', kwargs={'verify_uuid': verify_uuid})),
-    })
     return render(request, 'learnnov_certificates/verify.html', base_ctx)
 
 
@@ -150,6 +168,7 @@ class CertificateVerifyAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, verify_uuid):
+        from apps.learnnov_certificates.models import SpecializationCertificate
         try:
             cert = GeneratedCertificate.objects.select_related('user').get(verify_uuid=verify_uuid, status='downloadable')
             serializer = GeneratedCertificateSerializer(cert)
@@ -160,6 +179,7 @@ class CertificateVerifyAPIView(APIView):
 
             data = serializer.data
             data['is_valid'] = True
+            data['is_specialization'] = False
             data['qr_image_url'] = qr_image_url
             data['verification_url'] = verification_url
             data['certificate_url'] = request.build_absolute_uri(reverse('learnnov_certificates:render_certificate_html', kwargs={'verify_uuid': verify_uuid}))
@@ -181,11 +201,35 @@ class CertificateVerifyAPIView(APIView):
             ]
             return Response(data, status=status.HTTP_200_OK)
         except GeneratedCertificate.DoesNotExist:
-            return Response({
-                'is_valid': False,
-                'verify_uuid': verify_uuid,
-                'error': 'Certificate not found or not active.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            try:
+                cert = SpecializationCertificate.objects.select_related('user', 'specialization', 'specialization__provider').get(verify_uuid=verify_uuid, status='downloadable')
+                
+                verification_url = _verify_url(request, verify_uuid)
+                qr_obj = get_or_create_qr(verify_uuid, verification_url)
+                qr_image_url = request.build_absolute_uri(qr_obj.qr_image.url) if qr_obj and qr_obj.qr_image else ''
+                
+                student_name = f'{cert.user.first_name} {cert.user.last_name}'.strip() or cert.user.username
+                data = {
+                    'verify_uuid': cert.verify_uuid,
+                    'username': cert.user.username,
+                    'student_name': student_name,
+                    'is_valid': True,
+                    'is_specialization': True,
+                    'specialization_title': cert.specialization.title,
+                    'specialization_title_en': cert.specialization.title_en,
+                    'course_title': cert.specialization.title,
+                    'provider_name': cert.specialization.provider.name,
+                    'qr_image_url': qr_image_url,
+                    'verification_url': verification_url,
+                    'date_earned': str(cert.created_date.date()) if cert.created_date else '',
+                }
+                return Response(data, status=status.HTTP_200_OK)
+            except SpecializationCertificate.DoesNotExist:
+                return Response({
+                    'is_valid': False,
+                    'verify_uuid': verify_uuid,
+                    'error': 'Certificate not found or not active.'
+                }, status=status.HTTP_404_NOT_FOUND)
 
 class GenerateCertificateView(APIView):
     """
@@ -219,6 +263,40 @@ class GenerateCertificateView(APIView):
                 'status': 'downloadable'
             }
         )
+
+        # 3. التحقق من إكمال التخصصات المرتبطة
+        from django.utils import timezone
+        from apps.academic_programs.models import Specialization, SpecializationEnrollment
+        from apps.learnnov_certificates.models import SpecializationCertificate
+
+        specializations = Specialization.objects.filter(courses__slug=course_id, is_active=True)
+        for spec in specializations:
+            all_completed = True
+            for c in spec.courses.all():
+                completed = GeneratedCertificate.objects.filter(
+                    user=user,
+                    course_id=c.slug,
+                    status='downloadable'
+                ).exists()
+                if not completed:
+                    all_completed = False
+                    break
+            
+            if all_completed:
+                spec_cert, spec_created = SpecializationCertificate.objects.get_or_create(
+                    user=user,
+                    specialization=spec,
+                    defaults={
+                        'verify_uuid': uuid.uuid4().hex,
+                        'status': 'downloadable'
+                    }
+                )
+                if spec_created:
+                    # تحديث حالة الالتحاق بالتخصص كـ مكتمل
+                    SpecializationEnrollment.objects.filter(user=user, specialization=spec).update(
+                        status='completed',
+                        completed_at=timezone.now()
+                    )
 
         return Response({
             'message': 'Certificate generated successfully',
@@ -291,3 +369,33 @@ class StudentCertificatesListView(generics.ListAPIView):
                 ],
             })
         return Response(data)
+
+
+from .models import SpecializationCertificate
+
+class StudentSpecializationCertificatesListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        certs = SpecializationCertificate.objects.filter(user=user, status='downloadable').select_related('specialization', 'specialization__provider')
+        
+        data = []
+        for c in certs:
+            verification_url = _verify_url(request, c.verify_uuid)
+            qr_obj = get_or_create_qr(c.verify_uuid, verification_url)
+            qr_image_url = request.build_absolute_uri(qr_obj.qr_image.url) if qr_obj and qr_obj.qr_image else ''
+
+            data.append({
+                'id': c.id,
+                'specialization_title': c.specialization.title,
+                'specialization_title_en': c.specialization.title_en,
+                'provider_name': c.specialization.provider.name,
+                'student_name': f'{c.user.first_name} {c.user.last_name}'.strip() or c.user.username if c.user else 'طالب ليرنوف',
+                'date_earned': str(c.created_date.date()) if c.created_date else '',
+                'verify_uuid': c.verify_uuid,
+                'qr_image_url': qr_image_url,
+                'verification_url': verification_url,
+            })
+        return Response(data)
+

@@ -27,6 +27,18 @@ services:
       timeout: 5s
       retries: 5
 
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   learnnov-cloud:
     build:
       context: .
@@ -38,10 +50,14 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings
       DATABASE_URL: postgres://learnnov:${POSTGRES_PASSWORD}@db:5432/learnnov_db
       REDIS_URL: redis://redis:6379/0
+      MONGODB_URI: mongodb://mongodb:27017/
+      MONGODB_DB_NAME: learnnov
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     volumes:
       - ./learnnov-cloud:/app
@@ -96,3 +112,4 @@ services:
 
 volumes:
   pgdata:
+  mongodata:

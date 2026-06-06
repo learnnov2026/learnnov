@@ -28,6 +28,38 @@ interface Thread {
   replies: Reply[];
 }
 
+interface PostApiResponse {
+  id: number;
+  author?: {
+    first_name?: string;
+    last_name?: string;
+    username: string;
+  };
+  is_instructor_reply?: boolean;
+  body: string;
+  created_at?: string;
+}
+
+interface ThreadApiResponse {
+  id: number;
+  title: string;
+  author?: {
+    first_name?: string;
+    last_name?: string;
+    username: string;
+  };
+  body: string;
+  reply_count?: number;
+  created_at?: string;
+  posts?: PostApiResponse[];
+}
+
+interface CourseApiResponse {
+  id: number;
+  title: string;
+  slug: string;
+}
+
 export default function DiscussionsPage() {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -42,9 +74,14 @@ export default function DiscussionsPage() {
   const [replyContent, setReplyContent] = useState('');
   
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
-  const mapPost = (p: any): Reply => {
+  const mapPost = (p: PostApiResponse): Reply => {
     const authorName = `${p.author?.first_name || ''} ${p.author?.last_name || ''}`.trim() || p.author?.username || 'مستعمل ليرنوف';
     return {
       id: p.id,
@@ -55,7 +92,7 @@ export default function DiscussionsPage() {
     };
   };
 
-  const mapThread = (t: any): Thread => {
+  const mapThread = (t: ThreadApiResponse): Thread => {
     const authorName = `${t.author?.first_name || ''} ${t.author?.last_name || ''}`.trim() || t.author?.username || 'مستعمل ليرنوف';
     return {
       id: t.id,
@@ -80,9 +117,6 @@ export default function DiscussionsPage() {
       return;
     }
 
-    const role = localStorage.getItem('userRole') || 'student';
-    setUserRole(role);
-
     // Fetch courses to populate dropdown
     fetch(`${apiUrl}/api/programs/programs/`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -101,7 +135,7 @@ export default function DiscussionsPage() {
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
-          const coursesList = results.map((c: any) => ({ id: c.id, title: c.title, slug: c.slug }));
+          const coursesList = results.map((c: CourseApiResponse) => ({ id: c.id, title: c.title, slug: c.slug }));
           setCourses(coursesList);
           setSelectedCourse(coursesList[0]);
         } else {
@@ -123,8 +157,6 @@ export default function DiscussionsPage() {
   // Fetch threads when course changes
   useEffect(() => {
     if (!selectedCourse) return;
-    setLoading(true);
-    setActiveThread(null);
 
     const token = localStorage.getItem('accessToken');
     fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
@@ -332,7 +364,11 @@ export default function DiscussionsPage() {
             value={selectedCourse?.slug || ''} 
             onChange={(e) => {
               const matched = courses.find(c => c.slug === e.target.value);
-              if (matched) setSelectedCourse(matched);
+              if (matched) {
+                setLoading(true);
+                setActiveThread(null);
+                setSelectedCourse(matched);
+              }
             }}
             className="forum-select"
           >

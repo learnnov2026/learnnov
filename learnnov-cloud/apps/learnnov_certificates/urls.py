@@ -8,6 +8,7 @@ urlpatterns = [
     path('verify/<str:verify_uuid>/', views.CertificateVerifyAPIView.as_view(), name='verify_api'),
     path('generate/', views.GenerateCertificateView.as_view(), name='generate-certificate'),
     path('my/', views.StudentCertificatesListView.as_view(), name='my-certificates'),
+    path('my-specializations/', views.StudentSpecializationCertificatesListView.as_view(), name='my-specialization-certificates'),
     
     # HTML Renderings (Bilingual template previews and printable PDFs)
     path('ar/<str:verify_uuid>/', views.render_certificate_html, name='render_certificate_html'),

@@ -73,3 +73,42 @@ class AcademicProgramApplicationSecurityTests(TestCase):
         # Under normal conditions Django DRF returns ValidationError. Under concurrency unique constraints raise IntegrityError caught by the view.
         # Either way we expect a 400 response.
         self.assertTrue(status.is_client_error(response.status_code))
+
+    def test_specialization_listing_and_enrollment(self):
+        from apps.academic_programs.models import Specialization, SpecializationCourse, SpecializationEnrollment
+        
+        spec = Specialization.objects.create(
+            provider=self.provider,
+            title='Integrated Specialization A',
+            slug='spec-a',
+            description='Integrated path for learning A'
+        )
+        SpecializationCourse.objects.create(specialization=spec, course=self.program, order=1)
+        
+        # Test Listing URL
+        url_list = reverse('academic_programs:specializations-list')
+        response_list = self.client.get(url_list)
+        self.assertEqual(response_list.status_code, status.HTTP_200_OK)
+        results = response_list.data.get('results') if isinstance(response_list.data, dict) else response_list.data
+        self.assertGreaterEqual(len(results), 1)
+        
+        # Verify the created specialization is in the list
+        spec_slugs = [s['slug'] for s in results]
+        self.assertIn('spec-a', spec_slugs)
+        
+        # Test Detail URL
+        url_detail = reverse('academic_programs:specialization-detail', kwargs={'slug': 'spec-a'})
+        response_detail = self.client.get(url_detail)
+        self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_detail.data['courses'][0]['slug'], 'prog-a')
+        
+        # Test Enroll URL
+        self.client.force_authenticate(user=self.user)
+        url_enroll = reverse('academic_programs:specialization-enroll', kwargs={'slug': 'spec-a'})
+        response_enroll = self.client.post(url_enroll)
+        self.assertEqual(response_enroll.status_code, status.HTTP_200_OK)
+        
+        # Verify SpecializationEnrollment and ProgramApplication exist
+        self.assertTrue(SpecializationEnrollment.objects.filter(user=self.user, specialization=spec).exists())
+        self.assertTrue(ProgramApplication.objects.filter(applicant=self.user, program=self.program).exists())
+

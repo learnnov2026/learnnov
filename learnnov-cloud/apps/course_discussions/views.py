@@ -26,14 +26,13 @@ class IsEnrolledOrInstructor(permissions.BasePermission):
         if request.user.groups.filter(name='Instructors').exists():
             return True
 
-        # Check if user is enrolled
-        is_enrolled = ProgramApplication.objects.filter(
-            applicant=request.user,
-            program__slug=course_slug,
-            status__in=['approved', 'enrolled', 'completed']
-        ).exists()
+        try:
+            program = AcademicProgram.objects.get(slug=course_slug)
+        except AcademicProgram.DoesNotExist:
+            return False
 
-        return is_enrolled
+        from apps.core.permissions import has_active_enrollment
+        return has_active_enrollment(request.user, program)
 
 
 class ThreadListCreateView(generics.ListCreateAPIView):

@@ -105,3 +105,44 @@ class PaymentSecurityTests(TestCase):
         # Verify that only 1 order (the one belonging to self.user) is returned, and other_user's order is not leaked
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['status'], OrderStatus.PENDING)
+
+    def test_subscription_simulation_activation_and_access(self):
+        from apps.learnnov_payments.models import SubscriptionPlan, UserSubscription
+        from apps.academic_programs.models import ProgramModule, ProgramLesson
+        
+        plan = SubscriptionPlan.objects.create(
+            name='Test Plan',
+            slug='test-plan',
+            price=99.00,
+            billing_cycle='monthly'
+        )
+        
+        url = reverse('learnnov_payments:subscription-simulate')
+        data = {'plan_id': plan.id}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'active')
+        
+        self.assertTrue(UserSubscription.objects.filter(user=self.user, plan=plan, status='active').exists())
+        
+        module = ProgramModule.objects.create(program=self.program, title='Module A')
+        lesson = ProgramLesson.objects.create(module=module, title='Lesson A', is_preview=False, content='Secret contents')
+        
+        from apps.academic_programs.serializers import ProgramLessonSerializer
+        from rest_framework.request import Request
+        from django.test import RequestFactory
+        factory = RequestFactory()
+        django_req = factory.get('/')
+        django_req.user = self.user
+        req = Request(django_req)
+        req._user = self.user
+        
+        serializer = ProgramLessonSerializer(lesson, context={'request': req})
+        self.assertFalse(serializer.data.get('is_locked'))
+        self.assertEqual(serializer.data.get('content'), 'Secret contents')
+        
+        url_cancel = reverse('learnnov_payments:subscription-cancel')
+        response_cancel = self.client.post(url_cancel)
+        self.assertEqual(response_cancel.status_code, status.HTTP_200_OK)
+        self.assertTrue(response_cancel.data['cancel_at_period_end'])
+

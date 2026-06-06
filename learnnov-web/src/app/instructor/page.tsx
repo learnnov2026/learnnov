@@ -13,9 +13,17 @@ interface Provider {
   name: string;
 }
 
+interface ApplicationInfo {
+  id: number;
+  full_name: string;
+  program_title: string;
+  status: string;
+  submitted_at: string;
+}
+
 export default function InstructorDashboard() {
   const router = useRouter();
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<ApplicationInfo[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   
   // Database Connected States
@@ -81,7 +89,7 @@ export default function InstructorDashboard() {
       .then(data => {
         const results = data.results || data;
         if (Array.isArray(results)) {
-          setFields(results.map((f: any) => ({ id: f.id, name: f.name })));
+          setFields(results.map((f: FieldOfStudy) => ({ id: f.id, name: f.name })));
         }
       })
       .catch(err => console.error("Error loading study fields:", err));
@@ -94,7 +102,7 @@ export default function InstructorDashboard() {
       .then(data => {
         const results = data.results || data;
         if (Array.isArray(results)) {
-          setProviders(results.map((p: any) => ({ id: p.id, name: p.name })));
+          setProviders(results.map((p: Provider) => ({ id: p.id, name: p.name })));
         }
       })
       .catch(err => console.error("Error loading providers:", err));
@@ -197,8 +205,9 @@ export default function InstructorDashboard() {
         setShowAddModal(false);
         setSuccessMsg('');
       }, 2000);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'حدث خطأ غير متوقع أثناء الحفظ.');
+    } catch (err) {
+      const error = err as Error;
+      setErrorMsg(error.message || 'حدث خطأ غير متوقع أثناء الحفظ.');
     } finally {
       setIsSubmitting(false);
     }

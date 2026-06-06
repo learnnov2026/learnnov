@@ -218,3 +218,32 @@ class LessonUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProgramLessonCreateSerializer
     permission_classes = [permissions.IsAdminUser]
     queryset = ProgramLesson.objects.all()
+
+
+from .models import Specialization, SpecializationEnrollment
+from .serializers import SpecializationListSerializer, SpecializationDetailSerializer
+
+class SpecializationListView(generics.ListAPIView):
+    queryset = Specialization.objects.filter(is_active=True).select_related('provider')
+    serializer_class = SpecializationListSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class SpecializationDetailView(generics.RetrieveAPIView):
+    queryset = Specialization.objects.filter(is_active=True).select_related('provider')
+    serializer_class = SpecializationDetailSerializer
+    lookup_field = 'slug'
+    permission_classes = [permissions.AllowAny]
+
+
+class SpecializationEnrollView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        from apps.academic_programs.services import enroll_user_in_specialization
+        enrollment = enroll_user_in_specialization(request.user, slug)
+        return Response({
+            'message': 'تم الالتحاق بالمسار التخصصي وكافة مقرراته بنجاح!',
+            'status': enrollment.status
+        }, status=status.HTTP_200_OK)
+

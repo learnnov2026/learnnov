@@ -96,6 +96,12 @@ function renderMessageContent(content: string) {
   });
 }
 
+interface ChatMessageResponse {
+  role: string;
+  content: string;
+  timestamp: string;
+}
+
 export default function ChatbotPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -123,7 +129,7 @@ export default function ChatbotPage() {
       })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          setMessages(data.map((msg: any, idx: number) => ({
+          setMessages(data.map((msg: ChatMessageResponse, idx: number) => ({
             id: `hist-${idx}`,
             role: msg.role as 'user' | 'assistant',
             content: msg.content
@@ -172,7 +178,7 @@ export default function ChatbotPage() {
         content: data.reply || data.error 
       };
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'عذراً، حدث خطأ في الاتصال بالخادم.' }]);
     } finally {
       setIsTyping(false);

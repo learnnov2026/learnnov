@@ -45,3 +45,26 @@ class CertificateQRCode(models.Model):
 
     def __str__(self):
         return f'QR — {self.verify_uuid}'
+
+
+class SpecializationCertificate(models.Model):
+    """الشهادات المصدرة للطلاب عند إكمال التخصص المهني كاملاً."""
+    STATUS_CHOICES = [
+        ('downloadable', _('جاهزة للتحميل')),
+        ('generating', _('قيد الإصدار')),
+        ('error', _('خطأ في الإصدار')),
+    ]
+    
+    verify_uuid = models.CharField(max_length=32, unique=True, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='specialization_certificates')
+    specialization = models.ForeignKey('academic_programs.Specialization', on_delete=models.CASCADE, related_name='certificates')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='downloadable')
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Specialization Certificate')
+        verbose_name_plural = _('Specialization Certificates')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.specialization.title} ({self.status})"
+

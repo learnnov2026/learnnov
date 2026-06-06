@@ -67,8 +67,18 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDegree, setSelectedDegree] = useState('all');
 
+  interface DBApplication {
+    id: number;
+    program: number | string;
+    status: string;
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    gpa?: string;
+  }
+
   // Database-driven Applications State
-  const [dbApplications, setDbApplications] = useState<any[]>([]);
+  const [dbApplications, setDbApplications] = useState<DBApplication[]>([]);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollingProgram, setEnrollingProgram] = useState<AcademicProgram | null>(null);
   
@@ -100,7 +110,12 @@ export default function StudentDashboard() {
   const [quizAnswer, setQuizAnswer] = useState('');
   const [quizChecked, setQuizChecked] = useState(false);
   const [quizIsCorrect, setQuizIsCorrect] = useState<boolean | null>(null);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
@@ -121,10 +136,6 @@ export default function StudentDashboard() {
   };
 
   useEffect(() => {
-    // Determine role
-    const role = localStorage.getItem('userRole') || 'student';
-    setUserRole(role);
-
     // Check Authentication
     const token = localStorage.getItem('accessToken');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -208,7 +219,7 @@ export default function StudentDashboard() {
 
   // Check enrollment status of a course in the live database
   const getEnrollmentRecord = (courseId: number) => {
-    return dbApplications.find((a: any) => a.program === courseId);
+    return dbApplications.find((a: DBApplication) => a.program === courseId);
   };
 
   // Handle Apply Enrollment Form Submission
@@ -274,8 +285,9 @@ export default function StudentDashboard() {
         setPersonalStatement('');
       }, 2000);
 
-    } catch (err: any) {
-      console.warn("API enroll failed, applying client-side fallback persistence:", err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.warn("API enroll failed, applying client-side fallback persistence:", error);
       setEnrollSuccess('تم إرسال الطلب بنجاح وتأمين حفظه في قاعدة البيانات السحابية! 🚀');
       
       fetchDbApplications();

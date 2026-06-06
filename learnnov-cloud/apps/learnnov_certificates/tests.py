@@ -66,3 +66,38 @@ class CertificateLogicTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Valid Certificate')
         self.assertContains(response, 'certuser')
+
+    def test_specialization_certificate_auto_generation(self):
+        from apps.academic_programs.models import ProgramProvider, AcademicProgram, Specialization, SpecializationCourse, SpecializationEnrollment
+        from apps.learnnov_certificates.models import SpecializationCertificate
+        
+        provider = ProgramProvider.objects.create(name='Provider B', slug='prov-b')
+        c1 = AcademicProgram.objects.create(provider=provider, title='Course 1', slug='c1', degree_level='diploma', status='active')
+        c2 = AcademicProgram.objects.create(provider=provider, title='Course 2', slug='c2', degree_level='diploma', status='active')
+        
+        spec = Specialization.objects.create(provider=provider, title='Spec B', slug='spec-b')
+        SpecializationCourse.objects.create(specialization=spec, course=c1, order=1)
+        SpecializationCourse.objects.create(specialization=spec, course=c2, order=2)
+        
+        SpecializationEnrollment.objects.create(user=self.user, specialization=spec, status='enrolled')
+        
+        url = reverse('learnnov_certificates:generate-certificate')
+        self.client.post(url, {'course_id': 'c1', 'course_name': 'Course 1', 'grade': '90'}, format='json')
+        
+        self.assertFalse(SpecializationCertificate.objects.filter(user=self.user, specialization=spec).exists())
+        
+        self.client.post(url, {'course_id': 'c2', 'course_name': 'Course 2', 'grade': '95'}, format='json')
+        
+        self.assertTrue(SpecializationCertificate.objects.filter(user=self.user, specialization=spec).exists())
+        spec_cert = SpecializationCertificate.objects.get(user=self.user, specialization=spec)
+        self.assertEqual(spec_cert.status, 'downloadable')
+        
+        enroll = SpecializationEnrollment.objects.get(user=self.user, specialization=spec)
+        self.assertEqual(enroll.status, 'completed')
+        
+        url_verify = reverse('learnnov_certificates:verify_api', kwargs={'verify_uuid': spec_cert.verify_uuid})
+        response_verify = self.client.get(url_verify)
+        self.assertEqual(response_verify.status_code, status.HTTP_200_OK)
+        self.assertTrue(response_verify.data['is_specialization'])
+        self.assertEqual(response_verify.data['specialization_title'], 'Spec B')
+

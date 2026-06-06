@@ -172,16 +172,8 @@ class ProgramLessonSerializer(serializers.ModelSerializer):
 
         if not instance.is_preview:
             # Check enrollment
-            is_enrolled = False
-            if user and user.is_authenticated:
-                if user.is_staff or user.groups.filter(name='Instructors').exists():
-                    is_enrolled = True
-                else:
-                    is_enrolled = ProgramApplication.objects.filter(
-                        applicant=user,
-                        program=instance.module.program,
-                        status__in=['approved', 'enrolled', 'completed']
-                    ).exists()
+            from apps.core.permissions import has_active_enrollment
+            is_enrolled = has_active_enrollment(user, instance.module.program)
             
             if not is_enrolled:
                 ret.pop('media_file', None)
@@ -219,3 +211,100 @@ class AcademicProgramCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicProgram
         fields = '__all__'
+
+
+from .models import Specialization, SpecializationCourse, SpecializationEnrollment
+from apps.learnnov_certificates.models import SpecializationCertificate
+from apps.learnnov_exams.models import ExamAttempt
+
+class SpecializationListSerializer(serializers.ModelSerializer):
+    provider_name = serializers.CharField(source='provider.name', read_only=True)
+    courses_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Specialization
+        fields = ['id', 'title', 'title_en', 'slug', 'description', 'cover_image', 'provider_name', 'courses_count']
+
+    def get_courses_count(self, obj):
+        return obj.courses.count()
+
+
+class SpecializationDetailSerializer(serializers.ModelSerializer):
+    provider_name = serializers.CharField(source='provider.name', read_only=True)
+    provider_logo = serializers.SerializerMethodField()
+    courses = serializers.SerializerMethodField()
+    is_enrolled = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+    is_completed = serializers.SerializerMethodField()
+    certificate_uuid = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Specialization
+        fields = [
+            'id', 'title', 'title_en', 'slug', 'description', 'cover_image',
+            'provider_name', 'provider_logo', 'courses', 'is_enrolled',
+            'progress_percentage', 'is_completed', 'certificate_uuid'
+        ]
+
+    def get_provider_logo(self, obj):
+        request = self.context.get('request')
+        if obj.provider.logo and request:
+            return request.build_absolute_uri(obj.provider.logo.url)
+        return None
+
+    def get_courses(self, obj):
+        specialization_courses = SpecializationCourse.objects.filter(specialization=obj).select_related('course', 'course__provider', 'course__field_of_study')
+        request = self.context.get('request')
+        courses_data = []
+        for sc in specialization_courses:
+            ser = AcademicProgramListSerializer(sc.course, context={'request': request})
+            courses_data.append(ser.data)
+        return courses_data
+
+    def get_is_enrolled(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_staff or user.is_superuser:
+            return True
+        return SpecializationEnrollment.objects.filter(user=user, specialization=obj).exists()
+
+    def get_progress_percentage(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if not user or not user.is_authenticated:
+            return 0
+            
+        courses = obj.courses.all()
+        total_courses = courses.count()
+        if total_courses == 0:
+            return 100
+            
+        completed_count = 0
+        from apps.learnnov_certificates.models import GeneratedCertificate
+        for course in courses:
+            has_cert = GeneratedCertificate.objects.filter(user=user, course_id=course.slug, status='downloadable').exists()
+            if has_cert:
+                completed_count += 1
+                continue
+            has_exam = ExamAttempt.objects.filter(user=user, exam__course_id=course.slug, is_completed=True, score__gte=50).exists()
+            if has_exam:
+                completed_count += 1
+                
+        return int((completed_count / total_courses) * 100) if total_courses > 0 else 100
+
+    def get_is_completed(self, obj):
+        return self.get_progress_percentage(obj) == 100
+
+    def get_certificate_uuid(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if not user or not user.is_authenticated:
+            return None
+        try:
+            cert = SpecializationCertificate.objects.get(user=user, specialization=obj, status='downloadable')
+            return cert.verify_uuid
+        except SpecializationCertificate.DoesNotExist:
+            return None
+

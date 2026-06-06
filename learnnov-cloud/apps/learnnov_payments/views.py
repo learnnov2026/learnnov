@@ -154,6 +154,68 @@ class StripeWebhookView(APIView):
             except StripePayment.DoesNotExist:
                 pass
 
+        elif event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            if session.get('mode') == 'subscription':
+                user_id = session.get('client_reference_id')
+                subscription_id = session.get('subscription')
+                metadata = session.get('metadata', {})
+                plan_id = metadata.get('plan_id')
+                
+                if user_id and plan_id:
+                    from django.contrib.auth import get_user_model
+                    from django.utils import timezone
+                    from datetime import timedelta
+                    from .models import UserSubscription, SubscriptionPlan
+                    
+                    User = get_user_model()
+                    try:
+                        user = User.objects.get(id=user_id)
+                        plan = SubscriptionPlan.objects.get(id=plan_id)
+                        
+                        UserSubscription.objects.update_or_create(
+                            user=user,
+                            defaults={
+                                'plan': plan,
+                                'stripe_subscription_id': subscription_id,
+                                'status': 'active',
+                                'current_period_start': timezone.now(),
+                                'current_period_end': timezone.now() + timedelta(days=30 if plan.billing_cycle == 'monthly' else 365),
+                                'cancel_at_period_end': False
+                            }
+                        )
+                    except Exception:
+                        pass
+
+        elif event['type'] == 'invoice.payment_succeeded':
+            invoice = event['data']['object']
+            subscription_id = invoice.get('subscription')
+            if subscription_id:
+                from django.utils import timezone
+                from datetime import timedelta
+                from .models import UserSubscription
+                try:
+                    user_sub = UserSubscription.objects.get(stripe_subscription_id=subscription_id)
+                    user_sub.status = 'active'
+                    user_sub.current_period_start = timezone.now()
+                    days = 30 if (user_sub.plan and user_sub.plan.billing_cycle == 'monthly') else 365
+                    user_sub.current_period_end = timezone.now() + timedelta(days=days)
+                    user_sub.save()
+                except UserSubscription.DoesNotExist:
+                    pass
+
+        elif event['type'] == 'customer.subscription.deleted':
+            subscription = event['data']['object']
+            subscription_id = subscription.get('id')
+            if subscription_id:
+                from .models import UserSubscription
+                try:
+                    user_sub = UserSubscription.objects.get(stripe_subscription_id=subscription_id)
+                    user_sub.status = 'expired'
+                    user_sub.save()
+                except UserSubscription.DoesNotExist:
+                    pass
+
         return Response(status=status.HTTP_200_OK)
 
 class VerifyPaymentView(APIView):
@@ -281,3 +343,127 @@ class StudentOrderListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+import uuid
+from django.shortcuts import get_object_or_404
+from .models import SubscriptionPlan, UserSubscription
+from .serializers import SubscriptionPlanSerializer, UserSubscriptionSerializer
+
+class SubscriptionPlanListView(generics.ListAPIView):
+    queryset = SubscriptionPlan.objects.filter(is_active=True)
+    serializer_class = SubscriptionPlanSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class UserSubscriptionDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            sub = UserSubscription.objects.filter(user=request.user).latest('created_at')
+            serializer = UserSubscriptionSerializer(sub)
+            return Response(serializer.data)
+        except UserSubscription.DoesNotExist:
+            return Response({'status': 'none', 'message': 'لا يوجد اشتراك نشط حالياً.'}, status=status.HTTP_200_OK)
+
+
+class CreateSubscriptionCheckoutSessionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        plan_id = request.data.get('plan_id')
+        if not plan_id:
+            return Response({'error': 'Missing plan_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
+        user = request.user
+
+        import stripe
+        stripe.api_key = getattr(settings, 'LEARNNOV_STRIPE_SECRET_KEY', '')
+
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': plan.stripe_price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=settings.LEARNNOV_SITE_URL + '/payments?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=settings.LEARNNOV_SITE_URL + '/payments',
+                client_reference_id=str(user.id),
+                metadata={'plan_id': str(plan.id)}
+            )
+            return Response({'checkout_url': session.url})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SimulateSubscriptionCheckoutView(APIView):
+    """
+    سيموليشن تجريبي لتفعيل الاشتراكات دون الحاجة للاتصال بـ Stripe الفعلي.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        plan_id = request.data.get('plan_id')
+        action = request.data.get('action', 'activate')
+        
+        user = request.user
+        
+        if action == 'deactivate':
+            UserSubscription.objects.filter(user=user).update(status='expired')
+            return Response({'message': 'تم إلغاء الاشتراك التجريبي بنجاح.', 'status': 'expired'})
+
+        if not plan_id:
+            return Response({'error': 'Missing plan_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
+        from django.utils import timezone
+        from datetime import timedelta
+
+        sub, created = UserSubscription.objects.update_or_create(
+            user=user,
+            defaults={
+                'plan': plan,
+                'stripe_subscription_id': f"sub_sim_{uuid.uuid4().hex[:12]}",
+                'status': 'active',
+                'current_period_start': timezone.now(),
+                'current_period_end': timezone.now() + timedelta(days=30 if plan.billing_cycle == 'monthly' else 365),
+                'cancel_at_period_end': False
+            }
+        )
+
+        return Response({
+            'message': 'تم تفعيل الاشتراك التجريبي بنجاح!',
+            'status': sub.status,
+            'current_period_end': sub.current_period_end
+        })
+
+
+class CancelSubscriptionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        try:
+            sub = UserSubscription.objects.filter(user=user, status='active').latest('created_at')
+            
+            if sub.stripe_subscription_id and not sub.stripe_subscription_id.startswith('sub_sim_'):
+                import stripe
+                stripe.api_key = getattr(settings, 'LEARNNOV_STRIPE_SECRET_KEY', '')
+                try:
+                    stripe.Subscription.modify(
+                        sub.stripe_subscription_id,
+                        cancel_at_period_end=True
+                    )
+                except Exception:
+                    pass
+            
+            sub.cancel_at_period_end = True
+            sub.save()
+            return Response({'message': 'تم إلغاء التجديد التلقائي للاشتراك بنجاح.', 'cancel_at_period_end': True})
+        except UserSubscription.DoesNotExist:
+            return Response({'error': 'لا يوجد اشتراك نشط للالغاء.'}, status=status.HTTP_400_BAD_REQUEST)
+

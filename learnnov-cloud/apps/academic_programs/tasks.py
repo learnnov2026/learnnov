@@ -13,6 +13,10 @@ class DelayableTask:
         self.func = func
 
     def delay(self, *args, **kwargs):
+        import sys
+        if 'test' in sys.argv:
+            self._run_safe(*args, **kwargs)
+            return None
         thread = threading.Thread(target=self._run_safe, args=args, kwargs=kwargs)
         thread.daemon = True
         thread.start()

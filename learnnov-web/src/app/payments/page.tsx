@@ -14,15 +14,44 @@ interface Invoice {
   txn_ref?: string;
 }
 
+interface Plan {
+  id: number;
+  name: string;
+  name_en: string;
+  slug: string;
+  description: string;
+  price: number | string;
+  currency: string;
+  billing_cycle: 'monthly' | 'yearly';
+}
+
+interface OrderApiResponse {
+  id: number;
+  course_name?: string;
+  course_id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  transaction_reference?: string;
+}
+
+function getFutureDateISO(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export default function PaymentsPage() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
   // Discount Code States
   const [couponCode, setCouponCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState(0);
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
@@ -35,6 +64,19 @@ export default function PaymentsPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [paySuccess, setPaySuccess] = useState(false);
 
+  // Subscription States
+  interface UserSubscriptionType {
+    plan_name?: string;
+    plan_name_en?: string;
+    price?: number | string;
+    status?: string;
+    current_period_end?: string;
+    cancel_at_period_end?: boolean;
+  }
+  const [activeSubscription, setActiveSubscription] = useState<UserSubscriptionType | null>(null);
+  const [subPlans, setSubPlans] = useState<Plan[]>([]);
+  const [subSuccess, setSubSuccess] = useState<string | null>(null);
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
 
   useEffect(() => {
@@ -46,16 +88,13 @@ export default function PaymentsPage() {
       return;
     }
 
-    const role = localStorage.getItem('userRole') || 'student';
-    setUserRole(role);
-
     // Initial query to discount check
     fetch(`${apiUrl}/api/payments/discount/apply/`, { 
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     }).catch(() => {});
 
-    // Fetch invoices from database with fallback to premium templates
+    // Fetch invoices
     fetch(`${apiUrl}/api/payments/orders/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -66,7 +105,7 @@ export default function PaymentsPage() {
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
-          const mappedInvoices = results.map((order: any) => ({
+          const mappedInvoices = results.map((order: OrderApiResponse) => ({
             id: order.id,
             item_name: order.course_name || `رسوم برنامج ${order.course_id}`,
             original_amount: order.amount,
@@ -104,7 +143,6 @@ export default function PaymentsPage() {
         setLoading(false);
       })
       .catch(() => {
-        // Fallback to premium template on error
         setInvoices([
           {
             id: 901,
@@ -128,6 +166,38 @@ export default function PaymentsPage() {
         ]);
         setLoading(false);
       });
+
+    // Fetch active user subscription
+    fetch(`${apiUrl}/api/payments/subscriptions/my/`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.status === 'active' || json.status === 'trialing') {
+          setActiveSubscription(json);
+        } else {
+          setActiveSubscription(null);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch subscription plans
+    fetch(`${apiUrl}/api/payments/subscriptions/plans/`)
+      .then(res => res.json())
+      .then(json => {
+        const results = json.results || json;
+        if (Array.isArray(results) && results.length > 0) {
+          setSubPlans(results);
+        } else {
+          throw new Error("Empty plans");
+        }
+      })
+      .catch(() => {
+        setSubPlans([
+          { id: 1, name: 'الاشتراك الشهري المميز', name_en: 'Premium Monthly', slug: 'monthly', description: 'وصول كامل لجميع الكورسات والاختبارات القصيرة والمناقشات الأكاديمية.', price: '299.00', currency: 'SAR', billing_cycle: 'monthly' },
+          { id: 2, name: 'الاشتراك السنوي الشامل', name_en: 'Premium Annual', slug: 'yearly', description: 'وصول شامل لجميع الكورسات والتخصصات والشهادات المهنية طوال العام ووفر 20%.', price: '2499.00', currency: 'SAR', billing_cycle: 'yearly' }
+        ]);
+      });
   }, []);
 
   // Handle Apply Discount Code
@@ -139,7 +209,8 @@ export default function PaymentsPage() {
     setCouponError(null);
 
     const payload = {
-      code: couponCode
+      code: couponCode,
+      course_id: invoices.find(inv => inv.status === 'unpaid')?.item_name || 'prog-a'
     };
 
     try {
@@ -156,10 +227,8 @@ export default function PaymentsPage() {
       if (!res.ok) throw new Error("Invalid coupon");
       const json = await res.json();
       
-      setDiscountPercent(json.discount_percent || 15);
       setCouponSuccess(`تم تطبيق كوبون الخصم بنجاح! تم خصم ${json.discount_percent || 15}% من إجمالي الرسوم.`);
       
-      // Update outstanding invoices
       setInvoices(prev => prev.map(inv => {
         if (inv.status === 'unpaid') {
           const discountAmt = Math.round(inv.original_amount * ((json.discount_percent || 15) / 100));
@@ -172,11 +241,10 @@ export default function PaymentsPage() {
         return inv;
       }));
     } catch {
-      // Local robust simulation verification
+      // Local simulation verification
       const codeUpper = couponCode.trim().toUpperCase();
       if (codeUpper === 'LEARNNOV2026' || codeUpper === 'DEMO20') {
         const pct = codeUpper === 'LEARNNOV2026' ? 20 : 10;
-        setDiscountPercent(pct);
         setCouponSuccess(`تم تطبيق الكود الترويجي ${codeUpper} بنجاح! تم خصم ${pct}% إضافية من الرسوم.`);
         
         setInvoices(prev => prev.map(inv => {
@@ -204,7 +272,6 @@ export default function PaymentsPage() {
     setIsPaying(true);
     setPaySuccess(false);
 
-    // Call Stripe Intent endpoint in backend
     const payload = {
       invoice_id: activeCheckoutInvoice.id,
       amount: activeCheckoutInvoice.net_amount
@@ -225,7 +292,6 @@ export default function PaymentsPage() {
     }
 
     setTimeout(() => {
-      // Complete transaction locally
       setInvoices(prev => prev.map(inv => {
         if (inv.id === activeCheckoutInvoice.id) {
           return {
@@ -243,7 +309,6 @@ export default function PaymentsPage() {
       setTimeout(() => {
         setActiveCheckoutInvoice(null);
         setPaySuccess(false);
-        // Clear card fields
         setCardNumber('');
         setExpiry('');
         setCvv('');
@@ -252,19 +317,89 @@ export default function PaymentsPage() {
     }, 2000);
   };
 
+  // Simulate subscription activation
+  const handleSimulateSubscription = async (planId: number, action: 'activate' | 'deactivate' = 'activate') => {
+    setSubSuccess(null);
+    const token = localStorage.getItem('accessToken');
+
+    try {
+      const res = await fetch(`${apiUrl}/api/payments/subscriptions/simulate/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ plan_id: planId, action: action })
+      });
+
+      if (!res.ok) throw new Error("Subscription simulation failed");
+      const json = await res.json();
+
+      if (action === 'deactivate') {
+        setActiveSubscription(null);
+        setSubSuccess('تم إلغاء تفعيل العضوية والاشتراك بنجاح.');
+      } else {
+        const plan = subPlans.find(p => p.id === planId);
+        setActiveSubscription({
+          plan_name: plan?.name,
+          plan_name_en: plan?.name_en,
+          price: plan?.price,
+          status: json.status,
+          current_period_end: json.current_period_end
+        });
+        setSubSuccess('🎉 تم تفعيل العضوية السنوية/الشهرية بنجاح! يمكنك الآن بدء دراسة جميع المقررات الأكاديمية مجاناً.');
+      }
+    } catch {
+      // Fallback
+      if (action === 'deactivate') {
+        setActiveSubscription(null);
+        setSubSuccess('تم إلغاء تفعيل العضوية.');
+      } else {
+        const plan = subPlans.find(p => p.id === planId);
+        setActiveSubscription({
+          plan_name: plan?.name,
+          plan_name_en: plan?.name_en,
+          price: plan?.price,
+          status: 'active',
+          current_period_end: getFutureDateISO(30)
+        });
+        setSubSuccess('🎉 تم تفعيل العضوية بنجاح (محاكاة سحابية محلية).');
+      }
+    }
+  };
+
+  // Cancel renewal
+  const handleCancelRenewal = async () => {
+    const token = localStorage.getItem('accessToken');
+    try {
+      const res = await fetch(`${apiUrl}/api/payments/subscriptions/cancel/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setSubSuccess('تم إلغاء التجديد التلقائي للاشتراك بنجاح.');
+        setActiveSubscription(prev => prev ? { ...prev, cancel_at_period_end: true } : null);
+      }
+    } catch {
+      setSubSuccess('تم إلغاء التجديد التلقائي (محاكاة سحابية محلية).');
+      setActiveSubscription(prev => prev ? { ...prev, cancel_at_period_end: true } : null);
+    }
+  };
+
   return (
     <main className="dashboard-container" dir="rtl">
-      {/* Navigation bar Header */}
+      {/* Navigation Header */}
       <header className="glass-panel main-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div className="profile-avatar logo-avatar">🎓</div>
           <div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }} className="text-gradient">منصة ليرنوف الأكاديمية</h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة المدفوعات والمنح الأكاديمية</p>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>بوابة المدفوعات والاشتراكات</p>
           </div>
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link">المناقشات</Link>
           <Link href="/exams" className="nav-link">الاختبارات</Link>
           <Link href="/certificates" className="nav-link">الشهادات</Link>
@@ -275,20 +410,92 @@ export default function PaymentsPage() {
         </nav>
       </header>
 
-      {/* Profile Header */}
+      {/* Header Banner */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2rem' }}>
         <div className="profile-avatar">💵</div>
         <div className="profile-info">
-          <h1>المدفوعات <span className="text-gradient">والمنح الأكاديمية</span></h1>
-          <p>تابع مستحقاتك، طبق أكواد الخصم، وسدد رسوم المساقات بأمان عبر بوابات الدفع المشفرة</p>
+          <h1>المدفوعات <span className="text-gradient">والعضويات المميزة</span></h1>
+          <p>أدر اشتراكاتك الدورية، وسدد مستحقاتك بأمان، واحصل على وصول غير محدود لجميع التخصصات</p>
         </div>
       </div>
 
-      {/* Main Billing and Discount Split Screen */}
+      {subSuccess && <div className="success-msg-box" style={{ marginBottom: '2rem' }}>{subSuccess}</div>}
+
+      {/* Subscribed User Card */}
+      {activeSubscription ? (
+        <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem', border: '1px solid rgba(212, 175, 55, 0.3)', background: 'rgba(212, 175, 55, 0.02)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '3rem' }}>✨</span>
+              <div>
+                <span className="badge" style={{ background: '#d4af37', color: 'black', fontWeight: 800, fontSize: '0.75rem', marginBottom: '0.4rem' }}>عضوية نشطة</span>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white' }}>{activeSubscription.plan_name || 'اشتراك ليرنوف المميز'}</h2>
+                <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginTop: '0.2rem' }}>
+                  تاريخ انتهاء الفترة: {new Date(activeSubscription.current_period_end || '').toISOString().split('T')[0]} 
+                  {activeSubscription.cancel_at_period_end && <span style={{ color: '#fbbf24' }}> (سيتم إلغاء التجديد)</span>}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              {!activeSubscription.cancel_at_period_end && (
+                <button 
+                  onClick={handleCancelRenewal} 
+                  className="cancel-btn"
+                  style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                >
+                  🚫 إلغاء التجديد التلقائي
+                </button>
+              )}
+              <button 
+                onClick={() => handleSimulateSubscription(1, 'deactivate')} 
+                className="cancel-btn"
+              >
+                تعطيل العضوية بالكامل 🔒
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Subscriptions pricing grid */
+        <section style={{ marginBottom: '3.5rem' }}>
+          <h2 className="section-title">اشترك الآن للوصول الكامل (Coursera Plus)</h2>
+          <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+            {subPlans.map(plan => (
+              <div key={plan.id} className="glass-panel course-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.005)' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{plan.name}</h3>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{plan.name_en}</span>
+
+                  <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                    <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#3b82f6' }}>{plan.price}</span>
+                    <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>{plan.currency} / {plan.billing_cycle === 'monthly' ? 'شهرياً' : 'سنوياً'}</span>
+                  </div>
+
+                  <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '1.5rem' }}>{plan.description}</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
+                  {/* Stripe direct checkout */}
+                  <button 
+                    onClick={() => handleSimulateSubscription(plan.id)}
+                    className="verify-action-btn"
+                    style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
+                  >
+                    💳 تفعيل العضوية التجريبية فوراً
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Main Billing split pane */}
       <div className="forum-split-layout">
-        {/* Left Column: Invoice List */}
+        {/* Left pane: Invoices */}
         <div className="threads-list-pane glass-panel" style={{ flex: 1.5 }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem' }}>فواتيرك والمستحقات الأكاديمية</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem' }}>فواتيرك والمستحقات الفردية</h3>
 
           {loading ? (
             <div className="spinner-container" style={{ minHeight: '20vh' }}>
@@ -335,7 +542,7 @@ export default function PaymentsPage() {
           )}
         </div>
 
-        {/* Right Column: Scholarship & Discount applications */}
+        {/* Right pane: Coupon Code */}
         <div className="active-thread-pane glass-panel" style={{ flex: 1, padding: '2rem' }}>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>المنح وأكواد التخفيض الأكاديمي</h3>
           <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.5', marginBottom: '1.5rem' }}>
@@ -447,7 +654,7 @@ export default function PaymentsPage() {
         </div>
       )}
 
-      {/* Styled JSX for payments */}
+      {/* Styled JSX */}
       <style jsx global>{`
         .invoices-list-vertical {
           display: flex;
@@ -501,8 +708,6 @@ export default function PaymentsPage() {
           transform: translateY(-1px);
           box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
         }
-
-        /* Checkout summary */
         .checkout-total-billing {
           display: flex;
           justify-content: space-between;

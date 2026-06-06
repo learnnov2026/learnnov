@@ -93,3 +93,57 @@ class DiscountCodeUsage(models.Model):
 
     def __str__(self):
         return f"{self.user.username} used {self.discount_code.code}"
+
+
+class SubscriptionPlan(models.Model):
+    """خطة اشتراك دوري (شهري / سنوي)."""
+    BILLING_CYCLES = [
+        ('monthly', _('شهري')),
+        ('yearly', _('سنوي')),
+    ]
+    name = models.CharField(_('الاسم'), max_length=100)
+    name_en = models.CharField(_('الاسم بالإنجليزية'), max_length=100, blank=True)
+    slug = models.SlugField(_('المعرف'), max_length=50, unique=True)
+    description = models.TextField(_('الوصف'), blank=True)
+    stripe_price_id = models.CharField(_('معرف السعر في Stripe'), max_length=200, blank=True)
+    price = models.DecimalField(_('السعر'), max_digits=10, decimal_places=2)
+    currency = models.CharField(_('العملة'), max_length=5, default='SAR')
+    billing_cycle = models.CharField(_('دورة الفوترة'), max_length=20, choices=BILLING_CYCLES, default='monthly')
+    is_active = models.BooleanField(_('نشط'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('خطة اشتراك')
+        verbose_name_plural = _('خطط الاشتراكات')
+
+    def __str__(self):
+        return f"{self.name} - {self.price} {self.currency}"
+
+
+class UserSubscription(models.Model):
+    """حالة اشتراك المستخدم الحالي المربوط بـ Stripe."""
+    STATUS_CHOICES = [
+        ('active', _('نشط')),
+        ('trialing', _('تجريبي')),
+        ('past_due', _('متأخر السداد')),
+        ('canceled', _('ملغي')),
+        ('unpaid', _('غير مدفوع')),
+        ('expired', _('منتهي الصلاحية')),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, related_name='user_subscriptions')
+    stripe_subscription_id = models.CharField(_('معرف الاشتراك في Stripe'), max_length=200, blank=True, null=True, unique=True, db_index=True)
+    status = models.CharField(_('الحالة'), max_length=20, choices=STATUS_CHOICES, default='expired', db_index=True)
+    current_period_start = models.DateTimeField(_('بداية الفترة الحالية'), null=True, blank=True)
+    current_period_end = models.DateTimeField(_('نهاية الفترة الحالية'), null=True, blank=True)
+    cancel_at_period_end = models.BooleanField(_('إلغاء عند نهاية الفترة'), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('اشتراك مستخدم')
+        verbose_name_plural = _('اشتراكات المستخدمين')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.plan.name if self.plan else 'None'} ({self.status})"
+

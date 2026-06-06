@@ -1,4 +1,5 @@
 import os
+import datetime
 from rest_framework.views import APIView
 from django.views.generic import TemplateView
 from rest_framework.response import Response
@@ -6,6 +7,53 @@ from rest_framework import status
 from rest_framework import permissions
 from openai import OpenAI
 from .models import ChatMessage
+from apps.core.mongodb import get_mongodb_database
+
+def save_chat_message(user, role, content):
+    """حفظ الرسالة باستخدام MongoDB إذا كانت مهيأة، أو التراجع لـ SQL."""
+    db = get_mongodb_database()
+    if db is not None:
+        try:
+            db.chat_messages.insert_one({
+                "user_id": user.id if user else None,
+                "role": role,
+                "content": content,
+                "created_at": datetime.datetime.utcnow()
+            })
+            return True
+        except Exception:
+            pass
+    # التراجع لقاعدة البيانات العلاقية
+    ChatMessage.objects.create(user=user, role=role, content=content)
+    return False
+
+def get_chat_history(user, limit=10, reverse_order=False):
+    """جلب سجل المحادثات من MongoDB أو التراجع لـ SQL."""
+    db = get_mongodb_database()
+    if db is not None:
+        try:
+            cursor = db.chat_messages.find({"user_id": user.id if user else None}).sort("created_at", -1 if reverse_order else 1).limit(limit)
+            history = list(cursor)
+            res = []
+            for doc in history:
+                res.append({
+                    "role": doc.get("role"),
+                    "content": doc.get("content"),
+                    "timestamp": doc.get("created_at")
+                })
+            return res
+        except Exception:
+            pass
+    # التراجع لقاعدة البيانات العلاقية
+    history_msgs = ChatMessage.objects.filter(user=user).order_by('-created_at' if reverse_order else 'created_at')[:limit]
+    res = []
+    for msg in history_msgs:
+        res.append({
+            "role": msg.role,
+            "content": msg.content,
+            "timestamp": msg.created_at
+        })
+    return res
 
 class ChatbotView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -54,14 +102,14 @@ class ChatbotView(APIView):
                   "اطرح سؤالك وسأجيبك فوراً!"
                 )
             if user:
-                ChatMessage.objects.create(user=user, role='user', content=user_message)
-                ChatMessage.objects.create(user=user, role='assistant', content=reply)
+                save_chat_message(user, 'user', user_message)
+                save_chat_message(user, 'assistant', reply)
             return Response({"reply": reply}, status=status.HTTP_200_OK)
 
         try:
             # 1. حفظ رسالة المستخدم في قاعدة البيانات
             if user:
-                ChatMessage.objects.create(user=user, role='user', content=user_message)
+                save_chat_message(user, 'user', user_message)
 
             client = OpenAI(api_key=api_key, timeout=10.0)
             
@@ -97,11 +145,9 @@ class ChatbotView(APIView):
             # 2. تحميل آخر 10 رسائل من سجل المحادثة كـ Context لـ OpenAI
             openai_messages = [{"role": "system", "content": system_prompt}]
             if user:
-                history_msgs = ChatMessage.objects.filter(user=user).order_by('-created_at')[:10]
-                # إعادتها للترتيب التاريخي الصحيح (الأقدم فالأحدث)
-                history_msgs = list(reversed(history_msgs))
+                history_msgs = get_chat_history(user, limit=10)
                 for msg in history_msgs[:-1]:  # نستثني الرسالة الأخيرة المضافة للتو
-                    openai_messages.append({"role": msg.role, "content": msg.content})
+                    openai_messages.append({"role": msg["role"], "content": msg["content"]})
 
             # إضافة الرسالة الحالية
             openai_messages.append({"role": "user", "content": user_message})
@@ -114,7 +160,7 @@ class ChatbotView(APIView):
 
             # 3. حفظ إجابة المساعد الذكي في قاعدة البيانات
             if user:
-                ChatMessage.objects.create(user=user, role='assistant', content=reply)
+                save_chat_message(user, 'assistant', reply)
 
             return Response({"reply": reply}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -182,14 +228,20 @@ class ChatHistoryView(APIView):
 
     def get(self, request):
         user = request.user
-
-        messages = ChatMessage.objects.filter(user=user).order_by('created_at')[:50]
+        history_msgs = get_chat_history(user, limit=50)
         data = []
-        for msg in messages:
+        for msg in history_msgs:
+            ts = msg.get("timestamp")
+            if isinstance(ts, datetime.datetime):
+                ts_str = ts.strftime('%Y-%m-%d %H:%M:%S')
+            elif ts:
+                ts_str = str(ts)
+            else:
+                ts_str = ""
             data.append({
-                'role': msg.role,
-                'content': msg.content,
-                'timestamp': msg.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                'role': msg.get("role"),
+                'content': msg.get("content"),
+                'timestamp': ts_str
             })
         return Response(data)
 

@@ -2,11 +2,11 @@ import uuid
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from apps.academic_programs.models import FieldOfStudy, ProgramProvider, AcademicProgram, ProgramModule, ProgramLesson, ProgramApplication
+from apps.academic_programs.models import FieldOfStudy, ProgramProvider, AcademicProgram, ProgramModule, ProgramLesson, ProgramApplication, Specialization, SpecializationCourse
 from apps.learnnov_exams.models import MockExam, Question, Choice
 from apps.course_discussions.models import DiscussionThread, DiscussionPost
 from apps.learnnov_certificates.models import GeneratedCertificate
-from apps.learnnov_payments.models import DiscountCode, Order, OrderStatus, PaymentGateway
+from apps.learnnov_payments.models import DiscountCode, Order, OrderStatus, PaymentGateway, SubscriptionPlan
 
 class Command(BaseCommand):
     help = "Populate the database with dynamic realistic seed data for the LearnNov platform"
@@ -341,5 +341,50 @@ class Command(BaseCommand):
                 "status": OrderStatus.PAID,
             }
         )
+
+        # 12. Subscription Plans
+        sub_monthly, _ = SubscriptionPlan.objects.get_or_create(
+            slug="monthly",
+            defaults={
+                "name": "اشتراك ليرنوف الشهري المميز",
+                "name_en": "LearnNov Premium Monthly",
+                "price": 199.00,
+                "billing_cycle": "monthly",
+                "stripe_price_id": "price_monthly_mock",
+                "description": "وصول كامل وغير محدود لكافة المقررات الأكاديمية والدروس والمناقشات المهنية مع ميزات المراجعة والدردشة مع المستشار الذكي بشكل دوري متكرر.",
+                "is_active": True,
+            }
+        )
+        sub_yearly, _ = SubscriptionPlan.objects.get_or_create(
+            slug="yearly",
+            defaults={
+                "name": "اشتراك ليرنوف السنوي المميز",
+                "name_en": "LearnNov Premium Yearly",
+                "price": 1499.00,
+                "billing_cycle": "yearly",
+                "stripe_price_id": "price_yearly_mock",
+                "description": "وصول كامل وغير محدود لكافة المساقات والشهادات المهنية والتخصصات مع توفير ضخم بنسبة تزيد عن 35% مقارنة بالاشتراك الشهري.",
+                "is_active": True,
+            }
+        )
+        self.stdout.write("Created Subscription Plans (Monthly/Yearly)")
+
+        # 13. Specialization (AI & Data Engineering Track)
+        spec, _ = Specialization.objects.get_or_create(
+            slug="ai-data-engineering-specialization",
+            defaults={
+                "provider": ksu,
+                "title": "تخصص هندسة البيانات والذكاء الاصطناعي المتكامل",
+                "title_en": "Integrated AI & Data Engineering Specialization",
+                "description": "مسار مهني متكامل يغطي أساسيات الذكاء الاصطناعي وبناء وتدريب الشبكات العصبية العميقة وتطوير تطبيقات الويب المتكاملة مع نماذج التعلم الآلي.",
+                "is_active": True,
+            }
+        )
+
+        # Sequence of courses in the specialization
+        SpecializationCourse.objects.get_or_create(specialization=spec, course=ai_program, defaults={"order": 1})
+        SpecializationCourse.objects.get_or_create(specialization=spec, course=cyber_program, defaults={"order": 2})
+        SpecializationCourse.objects.get_or_create(specialization=spec, course=fullstack_program, defaults={"order": 3})
+        self.stdout.write("Created AI & Data Engineering Specialization track and course mappings")
 
         self.stdout.write(self.style.SUCCESS("Database seeded successfully!"))

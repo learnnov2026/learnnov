@@ -110,6 +110,12 @@ else:
     }
 
 
+
+# ── MongoDB (NoSQL Document Store for Chat/Logs) ──────────────────────────────
+MONGODB_URI = config('MONGODB_URI', default='mongodb://localhost:27017/learnnov')
+MONGODB_DB_NAME = config('MONGODB_DB_NAME', default='learnnov')
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

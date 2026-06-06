@@ -332,3 +332,63 @@ class ProgramLesson(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Specialization(models.Model):
+    """تجميعة من المقررات/البرامج الأكاديمية تحت مسار تخصصي متكامل."""
+    provider = models.ForeignKey(ProgramProvider, on_delete=models.CASCADE, related_name='specializations', verbose_name=_('المؤسسة المانحة'))
+    title = models.CharField(_('العنوان'), max_length=300)
+    title_en = models.CharField(_('العنوان بالإنجليزية'), max_length=300, blank=True)
+    slug = models.SlugField(_('المعرف'), max_length=200, unique=True, db_index=True)
+    description = models.TextField(_('الوصف'))
+    cover_image = models.ImageField(_('صورة الغلاف'), upload_to='specializations/covers/', blank=True, null=True, validators=[FileExtensionValidator(['png', 'jpg', 'jpeg']), validate_file_type, validate_file_infection])
+    courses = models.ManyToManyField(AcademicProgram, through='SpecializationCourse', related_name='specializations', verbose_name=_('المساقات'))
+    is_active = models.BooleanField(_('نشط'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('تخصص مهني')
+        verbose_name_plural = _('التخصصات المهنية')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class SpecializationCourse(models.Model):
+    """مساق داخل تخصص مهني بترتيب محدد."""
+    specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE)
+    course = models.ForeignKey(AcademicProgram, on_delete=models.CASCADE)
+    order = models.PositiveSmallIntegerField(_('الترتيب'), default=0)
+
+    class Meta:
+        verbose_name = _('مساق التخصص')
+        verbose_name_plural = _('مساقات التخصص')
+        ordering = ['order']
+        unique_together = [['specialization', 'course']]
+
+    def __str__(self):
+        return f"{self.specialization.title} -> {self.course.title} ({self.order})"
+
+
+class SpecializationEnrollment(models.Model):
+    """التحاق طالب بمسار تخصص مهني."""
+    STATUS_CHOICES = [
+        ('enrolled', _('ملتحق')),
+        ('completed', _('مكتمل')),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='specialization_enrollments')
+    specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE, related_name='enrollments')
+    status = models.CharField(_('الحالة'), max_length=20, choices=STATUS_CHOICES, default='enrolled', db_index=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('التحاق بمسار')
+        verbose_name_plural = _('التحاقات المسارات')
+        unique_together = [['user', 'specialization']]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.specialization.title} ({self.status})"
+

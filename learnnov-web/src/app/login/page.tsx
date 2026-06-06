@@ -1,7 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,14 +9,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('••••••••');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (role === 'student') {
-      setUsername('student_demo');
-    } else {
-      setUsername('dr_ali');
-    }
-  }, [role]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +42,9 @@ export default function LoginPage() {
       } else {
         router.push('/instructor');
       }
-    } catch (err: any) {
-      setError(err.message || 'حدث خطأ في الاتصال بالخادم');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'حدث خطأ في الاتصال بالخادم');
     } finally {
       setLoading(false);
     }
@@ -73,14 +65,20 @@ export default function LoginPage() {
             <div className="role-selector">
               <div 
                 className={`role-option ${role === 'student' ? 'active' : ''}`}
-                onClick={() => setRole('student')}
+                onClick={() => {
+                  setRole('student');
+                  setUsername('student_demo');
+                }}
               >
                 <div className="role-icon">👨‍🎓</div>
                 <div className="role-label">حساب طالب</div>
               </div>
               <div 
                 className={`role-option ${role === 'instructor' ? 'active' : ''}`}
-                onClick={() => setRole('instructor')}
+                onClick={() => {
+                  setRole('instructor');
+                  setUsername('dr_ali');
+                }}
               >
                 <div className="role-icon">👨‍🏫</div>
                 <div className="role-label">حساب مشرف</div>

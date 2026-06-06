@@ -31,7 +31,12 @@ export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
   // Live Exam Testing Engine States
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
@@ -53,9 +58,6 @@ export default function ExamsPage() {
       router.push('/login');
       return;
     }
-
-    const role = localStorage.getItem('userRole') || 'student';
-    setUserRole(role);
 
     // Fetch exams list from database
     fetch(`${apiUrl}/api/exams/`, {
@@ -240,7 +242,7 @@ export default function ExamsPage() {
   };
 
   // Evaluate responses and Submit
-  const evaluateAndSubmitExam = async () => {
+  async function evaluateAndSubmitExam() {
     if (!activeExam) return;
 
     let correctCount = 0;

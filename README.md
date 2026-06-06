@@ -48,6 +48,16 @@ flowchart TB
 
 ## Quick Start (local development)
 
+### Windows Automated Runner (Recommended)
+Simply double-click the **[run_platform.bat](file:///b:/LEARNNOV%20PLATFORM/run_platform.bat)** script in the project root folder. It will:
+- Initialize the Python virtual environment and update packages (including `pymongo`, `stripe`, etc.).
+- Auto-generate and apply all database migrations.
+- Seed database with mock courses, exams, plans, and specialization tracks.
+- Optionally run the full 25-Test Suite.
+- Launch the backend (8000) and frontend (3000) dev servers in separate console windows.
+
+### Manual local setup:
+
 ```bash
 # Clone the repo
 git clone <repo-url>

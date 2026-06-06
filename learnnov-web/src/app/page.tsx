@@ -419,6 +419,7 @@ export default function StudentDashboard() {
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link active">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link">المناقشات</Link>
           <Link href="/exams" className="nav-link">الاختبارات</Link>
           <Link href="/certificates" className="nav-link">الشهادات</Link>

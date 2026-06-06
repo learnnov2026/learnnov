@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مستشار الأمان التفاعلي — LearnNov</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Load Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.15);
+            --accent: #a855f7;
+            --dark-bg: #090d16;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(9, 13, 22, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .advisor-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .advisor-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(135deg, #ffffff 30%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .advisor-hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 968px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .templates-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .template-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .template-card:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #ffffff;
+            transform: translateX(-3px);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: #ffffff;
+            border: none;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Pane */
+        .results-pane {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Markdown Output Styles */
+        .markdown-body {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #e2e8f0;
+            display: none;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.4rem;
+        }
+
+        .markdown-body h4 {
+            font-size: 1.1rem;
+            color: #3b82f6;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1rem;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 1rem;
+            padding-right: 1.5rem;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.4rem;
+        }
+
+        .markdown-body code {
+            font-family: 'Courier New', Courier, monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #f472b6;
+        }
+
+        .markdown-body pre {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin: 1.2rem 0;
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            color: #38bdf8;
+            font-size: 0.85rem;
+        }
+
+        .markdown-body blockquote {
+            border-right: 4px solid var(--accent);
+            background: rgba(168, 85, 247, 0.05);
+            margin: 1rem 0;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            color: #cbd5e1;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-logo">
+            <span>🛡️</span>
+            <span>مستشار الأمان الذكي — LearnNov</span>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/admin/" class="nav-btn">لوحة الإدارة ⚙️</a>
+            <a href="http://localhost:3000" class="nav-btn" target="_blank">بوابة الطلاب 🎓</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="advisor-hero">
+            <h1>مستشار الأمان التفاعلي</h1>
+            <p>أداة ذكية مخصصة لمدراء النظام لتحليل المخاطر، والتحقق من سلامة الأكواد والعمليات المالية والتعليمية في المنصة.</p>
+        </div>
+
+        <div class="split-layout">
+            <!-- Left panel: Input -->
+            <div class="panel">
+                <h2 class="panel-title">🛡️ تحليل سيناريو أمني</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">اختر سيناريو جاهز للاختبار السريع:</label>
+                    <div class="templates-container">
+                        <div class="template-card" onclick="loadTemplate('payment')">
+                            <span>💳</span>
+                            <span>أمان عمليات الفوترة وتفادي هجوم السباق (Stripe Concurrency Check)</span>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('upload')">
+                            <span>📂</span>
+                            <span>رفع الملفات التنفيذية والتحقق من خلوها من البرمجيات الخبيثة (ClamAV Setup)</span>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('exam')">
+                            <span>📝</span>
+                            <span>حماية نزاهة الاختبارات ومنع التلاعب وحساب الدرجات في الخلفية (Exam Proctoring)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="advisorForm" onsubmit="analyzeScenario(event)">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="scenarioInput">اكتب أو عدل السيناريو الأمني المراد تحليله:</label>
+                        <textarea id="scenarioInput" placeholder="اكتب سيناريو أمني هنا، على سبيل المثال: كيف يمكننا منع الطالب من الحصول على اشتراكين أو إكمال الدفع المزدوج في نفس الوقت؟" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span>⚡</span>
+                        <span>بدء التحليل الأمني</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right panel: Results -->
+            <div class="panel results-pane">
+                <h2 class="panel-title">🔬 تقرير تحليل المخاطر والتوصيات</h2>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <div class="spinner" id="spinner"></div>
+
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">🧬</div>
+                    <p>أدخل سيناريو أمنياً أو اختر أحد النماذج الجاهزة على اليمين لبدء التحليل الهندسي الشامل.</p>
+                </div>
+
+                <div class="markdown-body" id="markdownOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 LearnNov Platform — جميع الحقوق محفوظة لمدراء النظام.</p>
+    </footer>
+
+    <script>
+        const templates = {
+            payment: "كيف تحمي المنصة عمليات الدفع وتفادي هجمات السباق التزامني (Race Conditions) وتزييف الأسعار في بوابة Stripe؟",
+            upload: "كيف نضمن عدم قدرة الطلاب أو المحاضرين على رفع برمجيات خبيثة أو ملفات تنفيذية باسم مستعار (MIME Spoofing)؟",
+            exam: "كيف نمنع الطلاب من التلاعب بوقت المحاولة في الاختبار أو إرسال درجات معدلة للفرونت-إند مباشرة؟"
+        };
+
+        function loadTemplate(key) {
+            document.getElementById('scenarioInput').value = templates[key];
+        }
+
+        async function analyzeScenario(e) {
+            e.preventDefault();
+            
+            const scenario = document.getElementById('scenarioInput').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const emptyState = document.getElementById('emptyState');
+            const markdownOutput = document.getElementById('markdownOutput');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Reset UI
+            errorMessage.style.display = 'none';
+            emptyState.style.display = 'none';
+            markdownOutput.style.display = 'none';
+            spinner.style.display = 'block';
+            submitBtn.disabled = true;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            try {
+                const response = await fetch('/api/ai-assistant/security-advisor/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ scenario })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'فشلت عملية التحليل الأمني.');
+                }
+
+                // Render Markdown output
+                markdownOutput.innerHTML = marked.parse(data.analysis);
+                markdownOutput.style.display = 'block';
+            } catch (error) {
+                errorMessage.innerText = error.message;
+                errorMessage.style.display = 'block';
+                emptyState.style.display = 'flex';
+            } finally {
+                spinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

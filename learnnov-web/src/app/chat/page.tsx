@@ -108,6 +108,12 @@ export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const [userRole] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'student';
+    }
+    return 'student';
+  });
 
   useEffect(() => {
     // Check Authentication
@@ -198,11 +204,13 @@ export default function ChatbotPage() {
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link">المناقشات</Link>
           <Link href="/exams" className="nav-link">الاختبارات</Link>
           <Link href="/certificates" className="nav-link">الشهادات</Link>
           <Link href="/payments" className="nav-link">المدفوعات</Link>
           <Link href="/chat" className="nav-link active">المساعد الذكي</Link>
+          {userRole === 'instructor' && <Link href="/instructor" className="nav-link">لوحة المشرف</Link>}
           <Link href="/login" className="nav-link logout-btn">خروج</Link>
         </nav>
       </header>

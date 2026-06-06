@@ -305,6 +305,7 @@ export default function ExamsPage() {
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link">المناقشات</Link>
           <Link href="/exams" className="nav-link active">الاختبارات</Link>
           <Link href="/certificates" className="nav-link">الشهادات</Link>

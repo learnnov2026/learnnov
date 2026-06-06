@@ -249,7 +249,27 @@ export default function InstructorDashboard() {
           <h1>مرحباً بك، <span className="text-gradient">د. علي البراك</span></h1>
           <p>لوحة التحكم الإشرافية وإدارة طلبات الالتحاق الأكاديمية بقاعدة البيانات الحية</p>
         </div>
-        <div>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <a 
+            href={`${apiUrl}/ai/security-advisor/ui/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="action-btn"
+            style={{ 
+              padding: '0.9rem 1.8rem', 
+              fontSize: '1.05rem', 
+              borderRadius: '12px', 
+              background: 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)', 
+              color: 'white',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)'
+            }}
+          >
+            🛡️ مستشار الأمان الذكي
+          </a>
           <button 
             className="action-btn approve" 
             onClick={() => {

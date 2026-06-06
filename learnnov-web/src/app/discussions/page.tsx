@@ -341,6 +341,7 @@ export default function DiscussionsPage() {
         </div>
         <nav className="nav-links">
           <Link href="/" className="nav-link">لوحة الطالب</Link>
+          <Link href="/specializations" className="nav-link">التخصصات</Link>
           <Link href="/discussions" className="nav-link active">المناقشات</Link>
           <Link href="/exams" className="nav-link">الاختبارات</Link>
           <Link href="/certificates" className="nav-link">الشهادات</Link>

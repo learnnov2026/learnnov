@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { isLoggedIn, userRole, logout } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // If not logged in or on login page, don't show the navigation bar
@@ -16,22 +18,26 @@ export const Navbar: React.FC = () => {
   }
 
   const navLinks = [
-    { name: 'لوحة الطالب', href: '/' },
-    { name: 'التخصصات', href: '/specializations' },
-    { name: 'المناقشات', href: '/discussions' },
-    { name: 'الاختبارات', href: '/exams' },
-    { name: 'الشهادات', href: '/certificates' },
-    { name: 'المدفوعات', href: '/payments' },
-    { name: 'المساعد الذكي', href: '/chat' },
+    { name: t('navDashboard'), href: '/' },
+    { name: t('navSpecializations'), href: '/specializations' },
+    { name: t('navDiscussions'), href: '/discussions' },
+    { name: t('navExams'), href: '/exams' },
+    { name: t('navCertificates'), href: '/certificates' },
+    { name: t('navPayments'), href: '/payments' },
+    { name: t('navChat'), href: '/chat' },
   ];
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'ar' ? 'en' : 'ar');
+  };
 
   return (
     <header className="glass-panel main-header-shared">
       <div className="header-brand">
         <div className="profile-avatar logo-avatar-shared">🎓</div>
         <div>
-          <h2 className="header-title-shared text-gradient">منصة ليرنوف الأكاديمية</h2>
-          <p className="header-subtitle-shared">التعلم الذكي المستقبلي</p>
+          <h2 className="header-title-shared text-gradient">{t('platformTitle')}</h2>
+          <p className="header-subtitle-shared">{t('platformSubtitle')}</p>
         </div>
       </div>
 
@@ -54,11 +60,14 @@ export const Navbar: React.FC = () => {
             href="/instructor"
             className={`nav-link-shared ${pathname === '/instructor' ? 'active' : ''}`}
           >
-            لوحة المشرف
+            {t('navInstructor')}
           </Link>
         )}
+        <button onClick={toggleLanguage} className="nav-link-shared lang-switch-btn-shared">
+          {t('langSwitchLabel')}
+        </button>
         <button onClick={logout} className="nav-link-shared logout-btn-shared">
-          خروج
+          {t('logout')}
         </button>
       </nav>
 
@@ -95,9 +104,18 @@ export const Navbar: React.FC = () => {
               className={`mobile-nav-link ${pathname === '/instructor' ? 'active' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              لوحة المشرف
+              {t('navInstructor')}
             </Link>
           )}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              toggleLanguage();
+            }}
+            className="mobile-nav-link mobile-lang-switch-btn"
+          >
+            {t('langSwitchLabel')}
+          </button>
           <button
             onClick={() => {
               setMobileMenuOpen(false);
@@ -105,7 +123,7 @@ export const Navbar: React.FC = () => {
             }}
             className="mobile-nav-link mobile-logout-btn"
           >
-            خروج
+            {t('logout')}
           </button>
         </nav>
       </div>
@@ -122,8 +140,8 @@ export const Navbar: React.FC = () => {
           z-index: 1000;
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(11, 15, 25, 0.7);
+          border-bottom: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.7);
         }
         .header-brand {
           display: flex;
@@ -138,8 +156,8 @@ export const Navbar: React.FC = () => {
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(14, 165, 233, 0.05);
+          border: 1px solid rgba(14, 165, 233, 0.15);
         }
         .header-title-shared {
           font-size: 1.2rem;
@@ -148,7 +166,7 @@ export const Navbar: React.FC = () => {
         }
         .header-subtitle-shared {
           font-size: 0.75rem;
-          color: #94a3b8;
+          color: #64748b;
           margin: 0;
         }
         .desktop-nav {
@@ -157,7 +175,7 @@ export const Navbar: React.FC = () => {
           align-items: center;
         }
         .nav-link-shared {
-          color: #94a3b8;
+          color: #64748b;
           text-decoration: none;
           font-weight: 500;
           padding: 0.5rem 1rem;
@@ -169,17 +187,25 @@ export const Navbar: React.FC = () => {
           cursor: pointer;
         }
         .nav-link-shared:hover, .nav-link-shared.active {
-          color: #fff;
-          background: rgba(59, 130, 246, 0.15);
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+          color: var(--accent);
+          background: rgba(14, 165, 233, 0.08);
+          box-shadow: 0 0 10px rgba(14, 165, 233, 0.1);
+        }
+        .lang-switch-btn-shared {
+          color: var(--accent) !important;
+          background: rgba(14, 165, 233, 0.06) !important;
+        }
+        .lang-switch-btn-shared:hover {
+          background: rgba(14, 165, 233, 0.12) !important;
+          box-shadow: 0 0 10px rgba(14, 165, 233, 0.15) !important;
         }
         .logout-btn-shared {
-          color: #f87171 !important;
-          background: rgba(239, 68, 68, 0.08) !important;
+          color: #ef4444 !important;
+          background: rgba(239, 68, 68, 0.06) !important;
         }
         .logout-btn-shared:hover {
-          background: rgba(239, 68, 68, 0.2) !important;
-          box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
+          background: rgba(239, 68, 68, 0.15) !important;
+          box-shadow: 0 0 10px rgba(239, 68, 68, 0.15) !important;
         }
 
         /* Mobile Styles */
@@ -198,7 +224,7 @@ export const Navbar: React.FC = () => {
         .hamburger-bar {
           width: 100%;
           height: 2px;
-          background-color: #cbd5e1;
+          background-color: #64748b;
           transition: all 0.3s ease;
         }
         .hamburger-bar.open:nth-child(1) {
@@ -218,7 +244,7 @@ export const Navbar: React.FC = () => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(11, 15, 25, 0.95);
+          background: rgba(255, 255, 255, 0.96);
           backdrop-filter: blur(20px);
           z-index: 999;
           transform: translateY(-100%);
@@ -237,7 +263,7 @@ export const Navbar: React.FC = () => {
           padding: 2rem;
         }
         .mobile-nav-link {
-          color: #cbd5e1;
+          color: #475569;
           text-decoration: none;
           font-size: 1.3rem;
           font-weight: 600;
@@ -247,10 +273,14 @@ export const Navbar: React.FC = () => {
           cursor: pointer;
         }
         .mobile-nav-link:hover, .mobile-nav-link.active {
-          color: #3b82f6;
+          color: var(--accent);
+        }
+        .mobile-lang-switch-btn {
+          color: var(--accent) !important;
+          margin-top: 1rem;
         }
         .mobile-logout-btn {
-          color: #f87171 !important;
+          color: #ef4444 !important;
           margin-top: 1rem;
         }
 

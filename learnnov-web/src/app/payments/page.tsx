@@ -383,7 +383,7 @@ export default function PaymentsPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
@@ -411,8 +411,8 @@ export default function PaymentsPage() {
               <span style={{ fontSize: '3rem' }}>✨</span>
               <div>
                 <span className="badge" style={{ background: '#d4af37', color: 'black', fontWeight: 800, fontSize: '0.75rem', marginBottom: '0.4rem' }}>عضوية نشطة</span>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white' }}>{activeSubscription.plan_name || 'اشتراك ليرنوف المميز'}</h2>
-                <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginTop: '0.2rem' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-color)' }}>{activeSubscription.plan_name || 'اشتراك ليرنوف المميز'}</h2>
+                <p style={{ fontSize: '0.85rem', color: '#475569', marginTop: '0.2rem' }}>
                   تاريخ انتهاء الفترة: {new Date(activeSubscription.current_period_end || '').toISOString().split('T')[0]} 
                   {activeSubscription.cancel_at_period_end && <span style={{ color: '#fbbf24' }}> (سيتم إلغاء التجديد)</span>}
                 </p>
@@ -444,17 +444,17 @@ export default function PaymentsPage() {
           <h2 className="section-title">اشترك الآن للوصول الكامل (Coursera Plus)</h2>
           <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
             {subPlans.map(plan => (
-              <div key={plan.id} className="glass-panel course-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.005)' }}>
+              <div key={plan.id} className="glass-panel course-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid var(--glass-border)', background: 'rgba(255, 255, 255, 0.5)' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{plan.name}</h3>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-color)' }}>{plan.name}</h3>
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{plan.name_en}</span>
 
                   <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 900, color: '#3b82f6' }}>{plan.price}</span>
-                    <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>{plan.currency} / {plan.billing_cycle === 'monthly' ? 'شهرياً' : 'سنوياً'}</span>
+                    <span style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent)' }}>{plan.price}</span>
+                    <span style={{ fontSize: '0.9rem', color: '#475569' }}>{plan.currency} / {plan.billing_cycle === 'monthly' ? 'شهرياً' : 'سنوياً'}</span>
                   </div>
 
-                  <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '1.5rem' }}>{plan.description}</p>
+                  <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.6', marginBottom: '1.5rem' }}>{plan.description}</p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
@@ -462,7 +462,7 @@ export default function PaymentsPage() {
                   <button 
                     onClick={() => handleSimulateSubscription(plan.id)}
                     className="verify-action-btn"
-                    style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
+                    style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%)', boxShadow: '0 4px 12px var(--accent-glow)' }}
                   >
                     💳 تفعيل العضوية التجريبية فوراً
                   </button>
@@ -491,7 +491,7 @@ export default function PaymentsPage() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                       <span style={{ fontSize: '2.5rem' }}>🧾</span>
                       <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>{inv.item_name}</h4>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-color)' }}>{inv.item_name}</h4>
                         <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.15rem' }}>
                           تاريخ الفاتورة: {inv.date} {inv.txn_ref && `• الرقم المرجعي: ${inv.txn_ref}`}
                         </p>
@@ -645,8 +645,16 @@ export default function PaymentsPage() {
         }
         .invoice-card-item {
           padding: 1.5rem 2rem;
-          border-color: rgba(255,255,255,0.04);
-          background: rgba(255,255,255,0.005);
+          border-color: var(--glass-border);
+          background: rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(10px);
+          border-radius: 12px;
+          border: 1px solid var(--glass-border);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .invoice-card-item:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--card-shadow);
         }
         .invoice-pricing-area {
           display: flex;
@@ -662,7 +670,7 @@ export default function PaymentsPage() {
         .net-price {
           font-size: 1.25rem;
           font-weight: 700;
-          color: white;
+          color: var(--text-color);
         }
         .payment-status-badge {
           display: inline-block;
@@ -675,36 +683,168 @@ export default function PaymentsPage() {
           white-space: nowrap;
         }
         .payment-status-badge.paid {
-          background: rgba(16, 185, 129, 0.15);
-          color: #34d399;
-          border: 1px solid rgba(16, 185, 129, 0.3);
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.2);
         }
         .payment-status-badge.unpaid {
-          background: #3b82f6;
+          background: var(--accent);
           color: white;
           cursor: pointer;
           transition: all 0.3s;
         }
         .payment-status-badge.unpaid:hover {
-          background: #2563eb;
+          background: var(--accent);
           transform: translateY(-1px);
-          box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 10px var(--accent-glow);
         }
         .checkout-total-billing {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 1rem;
-          background: rgba(255,255,255,0.02);
-          border-color: rgba(255,255,255,0.06);
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 10px;
+          border: 1px solid var(--glass-border);
           font-size: 0.95rem;
-          color: #cbd5e1;
+          color: var(--text-color);
           margin: 0.5rem 0;
         }
         .total-val {
           font-size: 1.3rem;
           font-weight: 800;
-          color: #3b82f6;
+          color: var(--accent);
+        }
+        .verify-input {
+          padding: 0.9rem 1.25rem;
+          border-radius: 12px;
+          border: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.85);
+          color: var(--text-color);
+          font-size: 1rem;
+          outline: none;
+          font-family: inherit;
+          transition: all 0.3s;
+        }
+        .verify-input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .verify-action-btn {
+          background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+          color: white;
+          font-weight: 700;
+          border: none;
+          padding: 0.9rem;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .verify-action-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px var(--accent-glow);
+        }
+        .modal-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.3);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 2rem;
+          overflow-y: auto;
+        }
+        .modal-card {
+          animation: fadeInUp 0.4s ease-out;
+        }
+        .form-row {
+          display: flex;
+          gap: 1rem;
+        }
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .form-group label {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #475569;
+        }
+        .form-group input {
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          border: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.85);
+          color: var(--text-color);
+          font-size: 0.95rem;
+          outline: none;
+          font-family: inherit;
+          transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .confirm-btn {
+          flex: 1.5;
+          background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+          color: white;
+          border: none;
+          padding: 0.85rem 1.5rem;
+          border-radius: 10px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .confirm-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px var(--accent-glow);
+        }
+        .confirm-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .cancel-btn {
+          flex: 1;
+          background: rgba(255,255,255,0.8);
+          border: 1px solid var(--glass-border);
+          color: var(--text-color);
+          padding: 0.85rem 1.5rem;
+          border-radius: 10px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .cancel-btn:hover {
+          background: rgba(255,255,255,1);
+          border-color: var(--accent);
+        }
+        .success-msg-box {
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          padding: 0.75rem;
+          border-radius: 8px;
+          text-align: center;
+          font-weight: 600;
+        }
+        .error-msg-box {
+          background: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          padding: 0.75rem;
+          border-radius: 8px;
+          text-align: center;
+          font-weight: 600;
         }
       `}</style>
     </main>

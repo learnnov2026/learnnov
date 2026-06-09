@@ -187,7 +187,7 @@ export default function ChatbotPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
@@ -208,9 +208,9 @@ export default function ChatbotPage() {
           {messages.map(msg => (
             <div key={msg.id} style={{ 
               alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
-              backgroundColor: msg.role === 'user' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+              backgroundColor: msg.role === 'user' ? 'rgba(14, 165, 233, 0.12)' : 'rgba(255, 255, 255, 0.85)',
               border: '1px solid',
-              borderColor: msg.role === 'user' ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+              borderColor: msg.role === 'user' ? 'rgba(14, 165, 233, 0.25)' : 'var(--glass-border)',
               padding: '1rem 1.5rem',
               borderRadius: '16px',
               borderBottomRightRadius: msg.role === 'user' ? '0' : '16px',
@@ -224,8 +224,8 @@ export default function ChatbotPage() {
           {isTyping && (
             <div style={{ 
               alignSelf: 'flex-end', 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backgroundColor: 'rgba(255, 255, 255, 0.85)', 
+              border: '1px solid var(--glass-border)',
               padding: '1rem 1.5rem', 
               borderRadius: '16px', 
               borderBottomLeftRadius: '0',
@@ -241,7 +241,7 @@ export default function ChatbotPage() {
           <div ref={endRef} />
         </div>
         
-        <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '1rem', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ padding: '1.5rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '1rem', background: 'rgba(255, 255, 255, 0.4)' }}>
           <input 
             type="text" 
             value={input}
@@ -252,9 +252,9 @@ export default function ChatbotPage() {
               flex: 1, 
               padding: '1rem 1.5rem', 
               borderRadius: '12px', 
-              border: '1px solid rgba(255,255,255,0.2)', 
-              background: 'rgba(0,0,0,0.5)', 
-              color: 'white',
+              border: '1px solid var(--glass-border)', 
+              background: 'rgba(255, 255, 255, 0.85)', 
+              color: 'var(--text-color)',
               fontSize: '1rem',
               outline: 'none',
               fontFamily: 'inherit'
@@ -266,7 +266,7 @@ export default function ChatbotPage() {
             style={{
               padding: '0 2rem',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-secondary))',
               border: 'none',
               color: 'white',
               fontWeight: 'bold',
@@ -289,7 +289,7 @@ export default function ChatbotPage() {
         .dot {
           width: 8px;
           height: 8px;
-          background-color: #3b82f6;
+          background-color: var(--accent);
           border-radius: 50%;
           display: inline-block;
           animation: bounce 1.2s infinite ease-in-out;

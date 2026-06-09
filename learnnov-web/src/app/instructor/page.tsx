@@ -223,7 +223,7 @@ export default function InstructorDashboard() {
 
   if (isLoading || !isLoggedIn || userRole !== 'instructor') {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
@@ -249,13 +249,13 @@ export default function InstructorDashboard() {
               padding: '0.9rem 1.8rem', 
               fontSize: '1.05rem', 
               borderRadius: '12px', 
-              background: 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)', 
+              background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%)', 
               color: 'white',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)'
+              boxShadow: '0 4px 15px var(--accent-glow)'
             }}
           >
             🛡️ مستشار الأمان الذكي
@@ -277,24 +277,24 @@ export default function InstructorDashboard() {
       {/* Stats Summary Grid */}
       <h2 style={{ marginBottom: '1rem', fontSize: '1.8rem', fontWeight: 600 }}>نظرة عامة على المقررات والطلاب</h2>
       <div className="stats-grid">
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent)' }}>
           <div className="stat-icon">👥</div>
           <div className="stat-value">{applications.length + 137}</div>
           <div className="stat-label">إجمالي الطلاب المسجلين</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent-secondary)' }}>
           <div className="stat-icon">📚</div>
           <div className="stat-value">{activeCoursesCount}</div>
           <div className="stat-label">المقررات النشطة بقاعدة البيانات</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <div className="stat-value" style={{ color: '#f59e0b' }}>{applications.filter(a => ['submitted', 'under_review', 'waitlisted'].includes(a.status)).length}</div>
+        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent)' }}>
+          <div className="stat-value" style={{ color: 'var(--accent)' }}>{applications.filter(a => ['submitted', 'under_review', 'waitlisted'].includes(a.status)).length}</div>
           <div className="stat-label">طلبات معلقة بحاجة لمراجعة داتابيز</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent-secondary)' }}>
           <div className="stat-icon">📈</div>
           <div className="stat-value">87.4%</div>
           <div className="stat-label">نسبة نجاح الطلاب</div>
@@ -339,7 +339,7 @@ export default function InstructorDashboard() {
         <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
+              <tr style={{ borderBottom: '1px solid var(--glass-border)', color: '#64748b' }}>
                 <th style={{ padding: '1rem 0.5rem' }}>اسم الطالب</th>
                 <th style={{ padding: '1rem 0.5rem' }}>المقرر المطلوب</th>
                 <th style={{ padding: '1rem 0.5rem' }}>تاريخ التقديم</th>
@@ -358,10 +358,10 @@ export default function InstructorDashboard() {
                 filteredApps.map(app => {
                   const mappedStatus = getMappedStatus(app.status);
                   return (
-                    <tr key={app.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
+                    <tr key={app.id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background-color 0.2s' }}>
                       <td style={{ padding: '1.25rem 0.5rem', fontWeight: 600 }}>{app.full_name || 'طالب زائر'}</td>
                       <td style={{ padding: '1.25rem 0.5rem' }}>{app.program_title}</td>
-                      <td style={{ padding: '1.25rem 0.5rem', color: '#94a3b8' }}>{formatDate(app.submitted_at)}</td>
+                      <td style={{ padding: '1.25rem 0.5rem', color: '#64748b' }}>{formatDate(app.submitted_at)}</td>
                       <td style={{ padding: '1.25rem 0.5rem' }}>
                         <span className={`status-badge ${mappedStatus}`}>
                           {mappedStatus === 'pending' && 'قيد المراجعة ⏳'}
@@ -531,7 +531,7 @@ export default function InstructorDashboard() {
         .filter-btn {
           background: transparent;
           border: none;
-          color: #94a3b8;
+          color: #64748b;
           padding: 0.5rem 1.25rem;
           border-radius: 10px;
           cursor: pointer;
@@ -540,10 +540,10 @@ export default function InstructorDashboard() {
           transition: all 0.3s;
         }
         .filter-btn:hover {
-          color: #fff;
+          color: var(--accent);
         }
         .filter-btn.active {
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           color: #fff;
         }
         .status-badge {
@@ -554,9 +554,9 @@ export default function InstructorDashboard() {
           font-weight: 600;
         }
         .status-badge.pending {
-          background: rgba(245, 158, 11, 0.15);
-          color: #fbbf24;
-          border: 1px solid rgba(245, 158, 11, 0.3);
+          background: rgba(14, 165, 233, 0.08);
+          color: var(--accent);
+          border: 1px solid var(--glass-border);
         }
         .status-badge.approved {
           background: rgba(16, 185, 129, 0.15);
@@ -578,7 +578,7 @@ export default function InstructorDashboard() {
           transition: all 0.3s;
         }
         .action-btn.approve {
-          background: #10b981;
+          background: var(--accent-secondary);
           color: white;
         }
         .action-btn.approve:hover {
@@ -599,7 +599,7 @@ export default function InstructorDashboard() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0,0,0,0.6);
+          background: rgba(0,0,0,0.65);
           backdrop-filter: blur(10px);
           display: flex;
           align-items: center;
@@ -623,25 +623,25 @@ export default function InstructorDashboard() {
         .form-group label {
           font-weight: 600;
           font-size: 0.9rem;
-          color: #cbd5e1;
+          color: #475569;
         }
         .form-group input, .form-group select, .form-group textarea {
           padding: 0.75rem 1rem;
           border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(0,0,0,0.4);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.85);
+          color: var(--text-color);
           font-size: 0.95rem;
           outline: none;
           font-family: inherit;
           transition: border-color 0.3s;
         }
         .form-group select option {
-          background: #0f172a;
-          color: white;
+          background: var(--bg-color);
+          color: var(--text-color);
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
       `}</style>
     </main>

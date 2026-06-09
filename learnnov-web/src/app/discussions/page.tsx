@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Course {
   id: number;
@@ -62,6 +63,7 @@ interface CourseApiResponse {
 
 export default function DiscussionsPage() {
   const router = useRouter();
+  const { t, isRtl } = useLanguage();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -77,18 +79,20 @@ export default function DiscussionsPage() {
   const [loading, setLoading] = useState(true);
 
   const mapPost = (p: PostApiResponse): Reply => {
-    const authorName = `${p.author?.first_name || ''} ${p.author?.last_name || ''}`.trim() || p.author?.username || 'مستعمل ليرنوف';
+    const defaultName = isRtl ? 'مستعمل ليرنوف' : 'LearnNov User';
+    const authorName = `${p.author?.first_name || ''} ${p.author?.last_name || ''}`.trim() || p.author?.username || defaultName;
     return {
       id: p.id,
       author_name: authorName,
-      author_avatar: p.is_instructor_reply ? 'د' : authorName.charAt(0),
+      author_avatar: p.is_instructor_reply ? (isRtl ? 'د' : 'Dr') : authorName.charAt(0),
       content: p.body,
-      submitted_at: p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : 'الآن'
+      submitted_at: p.created_at ? new Date(p.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : (isRtl ? 'الآن' : 'now')
     };
   };
 
   const mapThread = (t: ThreadApiResponse): Thread => {
-    const authorName = `${t.author?.first_name || ''} ${t.author?.last_name || ''}`.trim() || t.author?.username || 'مستعمل ليرنوف';
+    const defaultName = isRtl ? 'مستعمل ليرنوف' : 'LearnNov User';
+    const authorName = `${t.author?.first_name || ''} ${t.author?.last_name || ''}`.trim() || t.author?.username || defaultName;
     return {
       id: t.id,
       title: t.title,
@@ -96,7 +100,7 @@ export default function DiscussionsPage() {
       author_avatar: authorName.charAt(0),
       content: t.body,
       replies_count: t.reply_count || 0,
-      submitted_at: t.created_at ? new Date(t.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : 'الآن',
+      submitted_at: t.created_at ? new Date(t.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : (isRtl ? 'الآن' : 'now'),
       replies: Array.isArray(t.posts) ? t.posts.map(mapPost) : []
     };
   };
@@ -140,15 +144,19 @@ export default function DiscussionsPage() {
       })
       .catch(err => {
         console.warn("Could not fetch database courses, using local premium fallbacks:", err);
-        const fallbacks: Course[] = [
+        const fallbacks: Course[] = isRtl ? [
           { id: 1, title: "ماجستير الذكاء الاصطناعي السحابي المتقدم", slug: "advanced-cloud-ai-master" },
           { id: 2, title: "ماجستير الأمن السيبراني وهندسة الشبكات", slug: "cybersecurity-network-engineering-master" },
           { id: 3, title: "دبلوم تطوير تطبيقات الويب المتكاملة (Full Stack)", slug: "diploma-full-stack-web" }
+        ] : [
+          { id: 1, title: "MSc in Advanced Cloud AI", slug: "advanced-cloud-ai-master" },
+          { id: 2, title: "MSc in Cybersecurity & Network Engineering", slug: "cybersecurity-network-engineering-master" },
+          { id: 3, title: "Full Stack Web Development Diploma", slug: "diploma-full-stack-web" }
         ];
         setCourses(fallbacks);
         setSelectedCourse(fallbacks[0]);
       });
-  }, [isLoggedIn, accessToken, apiUrl, router]);
+  }, [isLoggedIn, accessToken, apiUrl, router, isRtl]);
 
   // Fetch threads when course changes
   useEffect(() => {
@@ -179,7 +187,7 @@ export default function DiscussionsPage() {
       })
       .catch(() => {
         // Dynamic curated fallback threads for academic immersion
-        const fallbackThreads: Thread[] = [
+        const fallbackThreads: Thread[] = isRtl ? [
           {
             id: 501,
             title: "استفسار بخصوص تدريب الشبكات العصبية العميقة (Deep Learning RNNs)",
@@ -205,11 +213,37 @@ export default function DiscussionsPage() {
               { id: 603, author_name: "عبدالرحمن الدوسري", author_avatar: "ع", content: "يُفضل استخدام أنظمة إدارة المفاتيح السحابية مثل AWS KMS أو HashiCorp Vault. إنها توفر تدوينًا تلقائيًا مدمجًا مع سرعات وصول ضئيلة بفضل التخزين المؤقت المشفر.", submitted_at: "أمس" }
             ]
           }
+        ] : [
+          {
+            id: 501,
+            title: "Inquiry regarding Deep Learning RNNs training",
+            author_name: "Ahmed Al-Otaibi",
+            author_avatar: "A",
+            content: "Hello, I encountered a Vanishing Gradient issue during simple RNN model training on long sequence datasets. Do you recommend migrating to LSTM directly or are there learning rate tuning parameters that help overcome it?",
+            replies_count: 2,
+            submitted_at: "2 hours ago",
+            replies: [
+              { id: 601, author_name: "Dr. Ali Al-Barrak", author_avatar: "D", content: "Hello Ahmed. Absolutely, LSTM or GRU layers are the standard to solve vanishing gradients in text and long sequential data due to forget gates. As a workaround, you can try Gradient Clipping with a value between 1.0 and 5.0.", submitted_at: "1 hour ago" },
+              { id: 602, author_name: "Sarah Al-Qahtani", author_avatar: "S", content: "I agree with Dr. Ali. Testing GRU gave me much faster performance results and completely overcame the gradient dispersion.", submitted_at: "45 mins ago" }
+            ]
+          },
+          {
+            id: 502,
+            title: "Implementing AES-256 encryption standards in application servers",
+            author_name: "Khaled Al-Harbi",
+            author_avatar: "K",
+            content: "What is the best way to handle Key Rotation securely and in compliance with cybersecurity protocols without damaging system uptime and response times?",
+            replies_count: 1,
+            submitted_at: "Yesterday",
+            replies: [
+              { id: 603, author_name: "Abdulrahman Al-Dawsari", author_avatar: "A", content: "It is preferred to use cloud key management systems like AWS KMS or HashiCorp Vault. They provide built-in automatic rotation with minimal access speeds thanks to encrypted caching.", submitted_at: "Yesterday" }
+            ]
+          }
         ];
         setThreads(fallbackThreads);
         setLoading(false);
       });
-  }, [selectedCourse, apiUrl, router]);
+  }, [selectedCourse, apiUrl, router, isRtl]);
 
   // Handle Reply submission
   const handleReplySubmit = async (e: React.FormEvent) => {
@@ -263,10 +297,10 @@ export default function DiscussionsPage() {
           replies_count: prev.replies_count + 1,
           replies: [...prev.replies, {
             id: Date.now(),
-            author_name: userRole === 'student' ? 'طالب ليرنوف المتميز' : 'د. علي البراك',
-            author_avatar: userRole === 'student' ? 'أ' : 'د',
+            author_name: userRole === 'student' ? (isRtl ? 'طالب ليرنوف المتميز' : 'Distinguished Student') : (isRtl ? 'د. علي البراك' : 'Dr. Ali Al-Barrak'),
+            author_avatar: userRole === 'student' ? (isRtl ? 'أ' : 'S') : (isRtl ? 'د' : 'Dr'),
             content: replyContent,
-            submitted_at: 'الآن'
+            submitted_at: isRtl ? 'الآن' : 'now'
           }]
         };
       });
@@ -325,24 +359,24 @@ export default function DiscussionsPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
   }
 
   return (
-    <main className="dashboard-container" dir="rtl">
+    <main className="dashboard-container" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Forums Selector and Info */}
       <div className="glass-panel profile-header" style={{ marginBottom: '2rem' }}>
         <div className="profile-avatar">💬</div>
         <div className="profile-info" style={{ flex: 1 }}>
-          <h1>قنوات النقاش <span className="text-gradient">والتفاعل العلمي</span></h1>
-          <p>تواصل، اسأل زملائك، وتلقى الحلول من أعضاء هيئة التدريس مباشرة</p>
+          <h1>{t('discussionsTitle')}</h1>
+          <p>{t('discussionsSubtitle')}</p>
         </div>
         <div className="course-select-wrapper">
-          <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 600 }}>المقرر الدراسي النشط:</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 600 }}>{t('activeCourse')}</label>
           <select 
             value={selectedCourse?.slug || ''} 
             onChange={(e) => {
@@ -355,7 +389,7 @@ export default function DiscussionsPage() {
             }}
             className="forum-select"
           >
-            {courses.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
+            {courses.map(c => <option key={c.slug} value={c.slug}>{t(c.slug) || c.title}</option>)}
           </select>
         </div>
       </div>
@@ -365,12 +399,12 @@ export default function DiscussionsPage() {
         {/* Left Side: Threads List */}
         <div className="threads-list-pane glass-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>المواضيع المطروحة النقاشية</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('discussionTopics')}</h3>
             <button 
               onClick={() => setShowNewThreadModal(true)}
               className="new-thread-btn"
             >
-              ➕ طرح موضوع جديد
+              {t('newTopic')}
             </button>
           </div>
 
@@ -380,7 +414,7 @@ export default function DiscussionsPage() {
             </div>
           ) : threads.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
-              لا توجد مناقشات مطروحة لهذا المقرر حالياً. كن أول من يطرح موضوعاً!
+              {t('noThreads')}
             </div>
           ) : (
             <div className="threads-container">
@@ -396,9 +430,9 @@ export default function DiscussionsPage() {
                       <div className="mini-avatar">{th.author_avatar}</div>
                       <div style={{ flex: 1 }}>
                         <h4>{th.title}</h4>
-                        <p className="thread-meta-desc">بواسطة {th.author_name} • {th.submitted_at}</p>
+                        <p className="thread-meta-desc">{t('byAuthor', { author: th.author_name })} • {th.submitted_at}</p>
                       </div>
-                      <span className="reply-count-badge">💬 {th.replies_count} ردود</span>
+                      <span className="reply-count-badge">💬 {t('repliesCount', { count: th.replies_count })}</span>
                     </div>
                   </div>
                 );
@@ -412,8 +446,8 @@ export default function DiscussionsPage() {
           {!activeThread ? (
             <div className="no-thread-selected">
               <span style={{ fontSize: '4.5rem' }}>💬</span>
-              <h3>تصفح الأسئلة وحلقات الحوار</h3>
-              <p>اختر أحد المواضيع النقاشية المعروضة من القائمة الجانبية لقراءة تفاصيل الموضوع، الإجابات المعتمدة، والمشاركة في الحوار الأكاديمي.</p>
+              <h3>{t('browseForumsTitle')}</h3>
+              <p>{t('browseForumsDesc')}</p>
             </div>
           ) : (
             <div className="thread-content-workspace">
@@ -425,7 +459,7 @@ export default function DiscussionsPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>{activeThread.title}</h3>
-                    <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>كاتب الموضوع: {activeThread.author_name} • {activeThread.submitted_at}</p>
+                    <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('byAuthor', { author: activeThread.author_name })} • {activeThread.submitted_at}</p>
                   </div>
                 </div>
                 <div className="prose-content">{activeThread.content}</div>
@@ -433,21 +467,21 @@ export default function DiscussionsPage() {
 
               {/* Replies Section */}
               <div className="replies-section">
-                <h4 className="replies-title">الردود الأكاديمية ({activeThread.replies.length})</h4>
+                <h4 className="replies-title">{t('replies')} ({activeThread.replies.length})</h4>
                 
                 <div className="replies-list-container">
                   {activeThread.replies.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>
-                      لا توجد ردود بعد. شارك في النقاش وأضف ردك الأول!
+                      {t('noRepliesYet')}
                     </div>
                   ) : (
                     activeThread.replies.map(rep => (
                       <div key={rep.id} className="reply-item-card">
                         <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <div className="mini-avatar" style={{ background: rep.author_avatar === 'د' ? 'linear-gradient(135deg, #10b981, #059669)' : '' }}>{rep.author_avatar}</div>
+                          <div className="mini-avatar" style={{ background: rep.author_avatar === 'د' || rep.author_avatar === 'Dr' ? 'linear-gradient(135deg, #10b981, #059669)' : '' }}>{rep.author_avatar}</div>
                           <div>
                             <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f1f5f9' }}>{rep.author_name}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '0.75rem' }}>{rep.submitted_at}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '0.75rem', marginLeft: '0.75rem' }}>{rep.submitted_at}</span>
                           </div>
                         </div>
                         <p className="reply-content-prose">{rep.content}</p>
@@ -462,11 +496,11 @@ export default function DiscussionsPage() {
                 <textarea 
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder="اكتب ردك الأكاديمي أو إجابتك التوضيحية لزملائك هنا..."
+                  placeholder={t('replyComposePlaceholder')}
                   rows={2}
                   required
                 />
-                <button type="submit" className="send-reply-btn">إرسال الرد 💾</button>
+                <button type="submit" className="send-reply-btn">{t('postReply')} 💾</button>
               </form>
             </div>
           )}
@@ -477,34 +511,34 @@ export default function DiscussionsPage() {
       {showNewThreadModal && (
         <div className="modal-backdrop">
           <div className="glass-panel modal-card" style={{ maxWidth: '580px', width: '100%', padding: '2.5rem' }}>
-            <h2 className="text-gradient" style={{ marginBottom: '1.5rem', fontSize: '1.6rem', fontWeight: 700 }}>طرح موضوع نقاشي جديد بالمساق</h2>
+            <h2 className="text-gradient" style={{ marginBottom: '1.5rem', fontSize: '1.6rem', fontWeight: 700 }}>{t('newThreadTitle')}</h2>
             
             <form onSubmit={handleCreateThread} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group">
-                <label>عنوان الموضوع (سؤالك أو موضوعك)</label>
+                <label>{t('newThreadTitleLabel')}</label>
                 <input 
                   type="text" 
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   required
-                  placeholder="مثال: استفسار عن خوارزميات التصنيف"
+                  placeholder={t('newThreadTitlePlaceholder')}
                 />
               </div>
 
               <div className="form-group">
-                <label>تفاصيل الموضوع وشرح الاستفسار</label>
+                <label>{t('newThreadContentLabel')}</label>
                 <textarea 
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   required
                   rows={5}
-                  placeholder="اكتب بالتفصيل سؤالك البرمجي أو الأكاديمي مع ذكر تفاصيل المشكلة لتسهل على الآخرين مساعدتك..."
+                  placeholder={t('newThreadContentPlaceholder')}
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button type="submit" className="confirm-btn">💾 طرح ونشر الموضوع بالمساق</button>
-                <button type="button" onClick={() => setShowNewThreadModal(false)} className="cancel-btn">إلغاء</button>
+                <button type="submit" className="confirm-btn">{t('postNewThread')}</button>
+                <button type="button" onClick={() => setShowNewThreadModal(false)} className="cancel-btn">{t('cancel')}</button>
               </div>
             </form>
           </div>
@@ -517,9 +551,9 @@ export default function DiscussionsPage() {
         .forum-select {
           padding: 0.6rem 1rem;
           border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(0,0,0,0.5);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255,255,255,0.85);
+          color: var(--text-color);
           font-size: 0.9rem;
           font-family: inherit;
           outline: none;
@@ -537,10 +571,10 @@ export default function DiscussionsPage() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          border-color: rgba(255,255,255,0.05);
+          border-color: var(--glass-border);
         }
         .new-thread-btn {
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           color: white;
           border: none;
           padding: 0.5rem 1rem;
@@ -553,7 +587,7 @@ export default function DiscussionsPage() {
         }
         .new-thread-btn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 10px var(--accent-glow);
         }
         .threads-container {
           display: flex;
@@ -564,22 +598,22 @@ export default function DiscussionsPage() {
           padding-left: 0.5rem;
         }
         .thread-item-card {
-          background: rgba(255,255,255,0.01);
-          border: 1px solid rgba(255,255,255,0.04);
+          background: rgba(255,255,255,0.4);
+          border: 1px solid var(--glass-border);
           padding: 1rem 1.25rem;
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.2s;
         }
         .thread-item-card:hover, .thread-item-card.active {
-          background: rgba(59, 130, 246, 0.08);
-          border-color: rgba(59, 130, 246, 0.3);
+          background: rgba(14, 165, 233, 0.08);
+          border-color: var(--accent-glow);
         }
         .mini-avatar {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           color: white;
           display: flex;
           align-items: center;
@@ -590,7 +624,7 @@ export default function DiscussionsPage() {
         .thread-item-card h4 {
           font-size: 0.95rem;
           font-weight: 600;
-          color: white;
+          color: var(--text-color);
           line-height: 1.4;
         }
         .thread-meta-desc {
@@ -611,7 +645,7 @@ export default function DiscussionsPage() {
         .active-thread-pane {
           flex: 1.5;
           padding: 2rem;
-          border-color: rgba(255,255,255,0.05);
+          border-color: var(--glass-border);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -630,11 +664,11 @@ export default function DiscussionsPage() {
         .no-thread-selected h3 {
           font-size: 1.4rem;
           font-weight: 700;
-          color: white;
+          color: var(--text-color);
         }
         .no-thread-selected p {
           font-size: 0.9rem;
-          color: #94a3b8;
+          color: #64748b;
           line-height: 1.6;
         }
         .thread-content-workspace {
@@ -644,14 +678,14 @@ export default function DiscussionsPage() {
           overflow: hidden;
         }
         .original-post-card {
-          border-bottom: 1px dashed rgba(255,255,255,0.1);
+          border-bottom: 1px dashed var(--glass-border);
           padding-bottom: 1.5rem;
           margin-bottom: 1.25rem;
         }
         .prose-content {
           font-size: 0.95rem;
           line-height: 1.6;
-          color: #cbd5e1;
+          color: var(--text-color);
           text-align: justify;
           margin-top: 0.5rem;
         }
@@ -664,7 +698,7 @@ export default function DiscussionsPage() {
         .replies-title {
           font-size: 1.05rem;
           font-weight: 700;
-          color: white;
+          color: var(--text-color);
           margin-bottom: 0.85rem;
         }
         .replies-list-container {
@@ -677,40 +711,40 @@ export default function DiscussionsPage() {
           margin-bottom: 1rem;
         }
         .reply-item-card {
-          background: rgba(255,255,255,0.01);
+          background: rgba(255,255,255,0.4);
           border: 1px solid rgba(255,255,255,0.03);
           padding: 1rem;
           border-radius: 10px;
         }
         .reply-content-prose {
           font-size: 0.9rem;
-          color: #cbd5e1;
+          color: var(--text-color);
           line-height: 1.5;
         }
         .reply-compose-form {
           display: flex;
           gap: 0.75rem;
           align-items: center;
-          border-top: 1px solid rgba(255,255,255,0.08);
+          border-top: 1px solid var(--glass-border);
           padding-top: 1rem;
         }
         .reply-compose-form textarea {
           flex: 1;
           padding: 0.6rem 1rem;
           border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(0,0,0,0.4);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255,255,255,0.85);
+          color: var(--text-color);
           font-family: inherit;
           font-size: 0.9rem;
           outline: none;
           resize: none;
         }
         .reply-compose-form textarea:focus {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
         .send-reply-btn {
-          background: #10b981;
+          background: var(--accent-secondary);
           color: white;
           border: none;
           padding: 0.75rem 1.25rem;
@@ -723,8 +757,8 @@ export default function DiscussionsPage() {
           white-space: nowrap;
         }
         .send-reply-btn:hover {
-          background: #059669;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+          background: var(--accent-secondary);
+          box-shadow: 0 4px 10px var(--accent-glow);
         }
       `}</style>
     </main>

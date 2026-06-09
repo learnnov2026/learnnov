@@ -159,7 +159,7 @@ export default function CertificatesPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
@@ -222,10 +222,10 @@ export default function CertificatesPage() {
                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '3rem' }}>📜</span>
                     <div style={{ flex: 1 }}>
-                      <span className="badge" style={{ background: '#3b82f6', color: 'white', fontWeight: 700, fontSize: '0.7rem', marginBottom: '0.3rem' }}>شهادة إتمام مقرر</span>
+                      <span className="badge" style={{ background: 'var(--accent)', color: 'white', fontWeight: 700, fontSize: '0.7rem', marginBottom: '0.3rem' }}>شهادة إتمام مقرر</span>
                       <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white', marginBottom: '0.2rem' }}>{c.course_title}</h4>
                       <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>جهة الاعتماد: {c.provider_name} • التقدير: {c.grade}</p>
-                      <p style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '0.5rem', fontFamily: 'monospace', fontWeight: 'bold' }}>رقم التوثيق: {c.verify_uuid}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.5rem', fontFamily: 'monospace', fontWeight: 'bold' }}>رقم التوثيق: {c.verify_uuid}</p>
                     </div>
                     
                     <button 
@@ -288,7 +288,7 @@ export default function CertificatesPage() {
                 </div>
                 <div className="v-meta-row">
                   <span className="v-lbl">النوع:</span>
-                  <span className="v-val" style={{ color: verifiedResult.is_specialization ? '#d4af37' : '#3b82f6', fontWeight: 600 }}>
+                  <span className="v-val" style={{ color: verifiedResult.is_specialization ? '#d4af37' : 'var(--accent)', fontWeight: 600 }}>
                     {verifiedResult.is_specialization ? 'تخصص مهني كامل' : 'مقرر فردي'}
                   </span>
                 </div>
@@ -297,8 +297,8 @@ export default function CertificatesPage() {
                   <span className="v-val">{verifiedResult.date_earned}</span>
                 </div>
                 <div className="v-meta-row" style={{ border: 'none', padding: 0, marginTop: '0.5rem' }}>
-                  <span className="v-lbl" style={{ color: '#3b82f6' }}>معرف التحقق:</span>
-                  <span className="v-val" style={{ color: '#3b82f6', fontFamily: 'monospace', fontWeight: 'bold' }}>{verifiedResult.verify_uuid}</span>
+                  <span className="v-lbl" style={{ color: 'var(--accent)' }}>معرف التحقق:</span>
+                  <span className="v-val" style={{ color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 'bold' }}>{verifiedResult.verify_uuid}</span>
                 </div>
               </div>
             </div>
@@ -417,12 +417,12 @@ export default function CertificatesPage() {
       <style jsx global>{`
         .cert-card-item {
           padding: 1.5rem 2rem;
-          border-color: rgba(255,255,255,0.04);
-          background: rgba(255,255,255,0.005);
+          border-color: var(--glass-border);
+          background: rgba(255,255,255,0.4);
           transition: border-color 0.3s;
         }
         .cert-card-item:hover {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
         .print-preview-btn {
           background: linear-gradient(135deg, #fbbf24, #f59e0b);
@@ -449,9 +449,9 @@ export default function CertificatesPage() {
         .verify-input {
           padding: 0.85rem 1.25rem;
           border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(0,0,0,0.4);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255,255,255,0.85);
+          color: var(--text-color);
           font-family: monospace;
           font-size: 1rem;
           outline: none;
@@ -460,10 +460,10 @@ export default function CertificatesPage() {
           transition: border-color 0.3s;
         }
         .verify-input:focus {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
         .verify-action-btn {
-          background: #3b82f6;
+          background: var(--accent);
           border: none;
           color: white;
           padding: 0.85rem;
@@ -474,8 +474,8 @@ export default function CertificatesPage() {
           transition: all 0.3s;
         }
         .verify-action-btn:hover {
-          background: #2563eb;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          background: var(--accent);
+          box-shadow: 0 4px 12px var(--accent-glow);
         }
         .verification-success-card {
           padding: 1.5rem;
@@ -491,11 +491,11 @@ export default function CertificatesPage() {
         .v-meta-row {
           display: flex;
           justify-content: space-between;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
+          border-bottom: 1px solid var(--glass-border);
           padding-bottom: 0.4rem;
         }
-        .v-lbl { color: #94a3b8; }
-        .v-val { color: #f1f5f9; font-weight: 500; }
+        .v-lbl { color: #64748b; }
+        .v-val { color: var(--text-color); font-weight: 500; }
         .verification-failure-card {
           background: rgba(239, 68, 68, 0.12);
           color: #f87171;

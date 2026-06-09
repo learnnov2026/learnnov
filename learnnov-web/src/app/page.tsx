@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 
 interface StudentData {
@@ -111,9 +112,41 @@ export default function StudentDashboard() {
   const [quizAnswer, setQuizAnswer] = useState('');
   const [quizChecked, setQuizChecked] = useState(false);
   const [quizIsCorrect, setQuizIsCorrect] = useState<boolean | null>(null);
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, accessToken, userRole, userName, isLoading } = useAuth();
+  const { language, t, isRtl } = useLanguage();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
+  const translateSyllabusText = (text: string) => {
+    if (language === 'ar') return text;
+    const mappings: Record<string, string> = {
+      "الوحدة الأولى: المفاهيم التأسيسية والمقدمة الشاملة": "Module 1: Foundational Concepts & Comprehensive Introduction",
+      "تأسيس المبادئ والتعريفات وبنية الأدوات المطلوبة.": "Establishing principles, definitions, and required tools architecture.",
+      "مقدمة عامة واستعراض الخطة الأكاديمية للمقرر": "General Introduction & Course Syllabus Review",
+      "المفاهيم والنظريات الأساسية لعلم التخصص": "Basic Concepts & Theories of the Specialization Field",
+      "استقصاء الفهم: اختبار قصير لقياس المخرجات الأساسية": "Understanding Check: Short Quiz on Basic Outcomes",
+      "الوحدة الثانية: التطبيق العملي المتقدم وورش العمل": "Module 2: Advanced Practical Application & Workshops",
+      "أمثلة تطبيقية تفصيلية خطوة بخطوة بالشيفرات والمشاريع.": "Detailed step-by-step practical examples with code and projects.",
+      "جلسة تطبيقية تفاعلية: معالجة البيانات وبناء النموذج الأول": "Interactive Applied Session: Data Processing & First Model",
+      "الدليل الشامل لأفضل الممارسات والأخطاء الشائعة": "Comprehensive Guide to Best Practices & Common Errors",
+      "تقييم الوحدة الثانية: اختبار شامل في هندسة وتطبيق الأنظمة": "Module 2 Evaluation: Comprehensive Exam on Systems Engineering"
+    };
+    return mappings[text] || text;
+  };
+
+  const getProviderName = (name: string) => {
+    if (language === 'ar') return name;
+    if (name.includes('ليرنوف')) return 'LearnNov Cloud University';
+    return name;
+  };
+
+  const getFieldName = (name: string) => {
+    if (language === 'ar') return name;
+    if (name.includes('ذكاء') || name.includes('الذكاء')) return 'AI & Data Engineering';
+    if (name.includes('أمن') || name.includes('الأمن')) return 'Cybersecurity';
+    if (name.includes('برمجيات') || name.includes('البرمجيات')) return 'Software Engineering';
+    return name;
+  };
 
   // Fetch applications list from database
   const fetchDbApplications = () => {
@@ -404,73 +437,73 @@ export default function StudentDashboard() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );
   }
 
   return (
-    <main className="dashboard-container" dir="rtl">
+    <main className="dashboard-container" dir={isRtl ? "rtl" : "ltr"}>
       {/* Profile Header section */}
       <div className="glass-panel profile-header">
-        <div className="profile-avatar">أ</div>
+        <div className="profile-avatar">{userName ? userName.charAt(0) : 'A'}</div>
         <div className="profile-info">
-          <h1>مرحباً بك، <span className="text-gradient">طالب ليرنوف المتميز</span></h1>
-          <p>أهلاً بك في فضاء التعلم الذكي المتصل بقواعد البيانات السحابية الحية</p>
+          <h1>{t('welcomeStudent', { name: userName || (userRole === 'instructor' ? 'د. علي البراك' : 'طالب ليرنوف المتميز') })}</h1>
+          <p>{language === 'ar' ? 'أهلاً بك في فضاء التعلم الذكي المتصل بقواعد البيانات السحابية الحية' : 'Welcome to the smart learning environment connected to the live cloud database'}</p>
         </div>
       </div>
 
       {/* Stats Summary Grid */}
-      <h2 className="section-title">إحصائياتك الأكاديمية الحية</h2>
+      <h2 className="section-title">{language === 'ar' ? 'إحصائياتك الأكاديمية الحية' : 'Your Live Academic Statistics'}</h2>
       {statsError && (
         <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', color: '#f87171', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-          ⚠️ {statsError}
+          ⚠️ {language === 'ar' ? 'فشل تحميل البيانات الأكاديمية الحية من الخادم.' : 'Failed to load live academic data from server.'}
         </div>
       )}
       <div className="stats-grid">
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: isRtl ? '4px solid var(--accent)' : 'none', borderRight: !isRtl ? '4px solid var(--accent)' : 'none' }}>
           <div className="stat-icon">🎓</div>
           <div className="stat-value">{data.certificates_earned}</div>
-          <div className="stat-label">الشهادات المكتسبة</div>
+          <div className="stat-label">{language === 'ar' ? 'الشهادات المكتسبة' : 'Certificates Earned'}</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: isRtl ? '4px solid var(--accent-secondary)' : 'none', borderRight: !isRtl ? '4px solid var(--accent-secondary)' : 'none' }}>
           <div className="stat-icon">📝</div>
           <div className="stat-value">{data.exams_passed}</div>
-          <div className="stat-label">الاختبارات المجتازة</div>
+          <div className="stat-label">{language === 'ar' ? 'الاختبارات المجتازة' : 'Exams Passed'}</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: isRtl ? '4px solid var(--accent)' : 'none', borderRight: !isRtl ? '4px solid var(--accent)' : 'none' }}>
           <div className="stat-icon">📚</div>
           <div className="stat-value">{dbApplications.filter(a => ['accepted', 'approved', 'enrolled', 'completed'].includes(a.status)).length}</div>
-          <div className="stat-label">البرامج النشطة بالداتابيز</div>
+          <div className="stat-label">{language === 'ar' ? 'البرامج النشطة بالداتابيز' : 'Active Programs in DB'}</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: isRtl ? '4px solid var(--accent-secondary)' : 'none', borderRight: !isRtl ? '4px solid var(--accent-secondary)' : 'none' }}>
           <div className="stat-icon">💬</div>
           <div className="stat-value">{data.discussions_started}</div>
-          <div className="stat-label">النقاشات المطروحة</div>
+          <div className="stat-label">{language === 'ar' ? 'النقاشات المطروحة' : 'Discussions Started'}</div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #ec4899', gridColumn: 'span 1' }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: isRtl ? '4px solid var(--accent)' : 'none', borderRight: !isRtl ? '4px solid var(--accent)' : 'none', gridColumn: 'span 1' }}>
           <div className="stat-icon">🌟</div>
           <div className="stat-value">{data.referral_points}</div>
-          <div className="stat-label">رمز الإحالة: <span style={{ color: '#ec4899', fontWeight: 'bold' }}>{data.referral_code}</span></div>
+          <div className="stat-label">{language === 'ar' ? 'رمز الإحالة: ' : 'Referral Code: '}<span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{data.referral_code}</span></div>
         </div>
       </div>
 
       {/* Search and Filters for catalog */}
       <section style={{ marginTop: '3.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
-          <h2 className="section-title" style={{ margin: 0 }}>تصفح المقررات والبرامج الأكاديمية الحية</h2>
+          <h2 className="section-title" style={{ margin: 0 }}>{language === 'ar' ? 'تصفح المقررات والبرامج الأكاديمية الحية' : 'Browse Live Academic Programs & Courses'}</h2>
           
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1, justifyContent: isRtl ? 'flex-end' : 'flex-start' }}>
             {/* Search Input */}
             <div className="search-wrapper">
               <input 
                 type="text" 
-                placeholder="🔍 ابحث عن تخصص، جهة مانحة أو مقرر..." 
+                placeholder={language === 'ar' ? '🔍 ابحث عن تخصص، جهة مانحة أو مقرر...' : '🔍 Search for program, provider or course...'} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
@@ -479,9 +512,9 @@ export default function StudentDashboard() {
 
             {/* Level Filters */}
             <div className="glass-panel filters-container">
-              <button onClick={() => setSelectedDegree('all')} className={`filter-btn ${selectedDegree === 'all' ? 'active' : ''}`}>الكل</button>
-              <button onClick={() => setSelectedDegree('master')} className={`filter-btn ${selectedDegree === 'master' ? 'active' : ''}`}>ماجستير</button>
-              <button onClick={() => setSelectedDegree('diploma')} className={`filter-btn ${selectedDegree === 'diploma' ? 'active' : ''}`}>دبلوم</button>
+              <button onClick={() => setSelectedDegree('all')} className={`filter-btn ${selectedDegree === 'all' ? 'active' : ''}`}>{language === 'ar' ? 'الكل' : 'All'}</button>
+              <button onClick={() => setSelectedDegree('master')} className={`filter-btn ${selectedDegree === 'master' ? 'active' : ''}`}>{language === 'ar' ? 'ماجستير' : 'Master'}</button>
+              <button onClick={() => setSelectedDegree('diploma')} className={`filter-btn ${selectedDegree === 'diploma' ? 'active' : ''}`}>{language === 'ar' ? 'دبلوم' : 'Diploma'}</button>
             </div>
           </div>
         </div>
@@ -493,11 +526,11 @@ export default function StudentDashboard() {
           </div>
         ) : coursesError ? (
           <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171' }}>
-            ⚠️ {coursesError}
+            ⚠️ {language === 'ar' ? 'فشل الاتصال بالخادم السحابي. يرجى التأكد من تشغيل السيرفر الخلفي وتغذية قاعدة البيانات.' : 'Cloud connection failed. Please ensure the backend server is running and seeded.'}
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-            لا توجد برامج تطابق معايير البحث الحالية في قاعدة البيانات.
+            {language === 'ar' ? 'لا توجد برامج تطابق معايير البحث الحالية في قاعدة البيانات.' : 'No programs matching the search criteria found in the database.'}
           </div>
         ) : (
           <div className="courses-grid">
@@ -508,65 +541,65 @@ export default function StudentDashboard() {
               const hasRejected = enrollRec && enrollRec.status === 'rejected';
 
               return (
-                <div key={course.id} className="glass-panel course-card">
+                <div key={course.id} className="glass-panel course-card" style={{ borderLeft: isRtl ? '2px solid rgba(255, 255, 255, 0.05)' : 'none', borderRight: !isRtl ? '2px solid rgba(255, 255, 255, 0.05)' : 'none' }}>
                   <div className="course-badge-container">
-                    <span className="badge level">{course.degree_level_display}</span>
-                    <span className="badge mode">{course.study_mode_display}</span>
+                    <span className="badge level">{language === 'en' ? (course.degree_level === 'master' ? 'Master' : 'Diploma') : course.degree_level_display}</span>
+                    <span className="badge mode">{language === 'en' ? (course.study_mode === 'online' ? 'Online' : 'On-campus') : course.study_mode_display}</span>
                   </div>
 
-                  <h3 className="course-title-text">{course.title}</h3>
-                  <p className="course-en-title">{course.title_en}</p>
+                  <h3 className="course-title-text">{language === 'en' && course.title_en ? course.title_en : course.title}</h3>
+                  <p className="course-en-title">{language === 'ar' ? course.title_en : course.title}</p>
                   
                   <div className="course-meta">
                     <div className="meta-item">
                       <span className="meta-icon">🏫</span>
-                      <span>{course.provider_name}</span>
+                      <span>{getProviderName(course.provider_name)}</span>
                     </div>
                     <div className="meta-item">
                       <span className="meta-icon">🏷️</span>
-                      <span>{course.field_name}</span>
+                      <span>{getFieldName(course.field_name)}</span>
                     </div>
                     <div className="meta-item">
                       <span className="meta-icon">📅</span>
-                      <span>المدة: {course.duration_months} أشهر</span>
+                      <span>{language === 'ar' ? `المدة: ${course.duration_months} أشهر` : `Duration: ${course.duration_months} Months`}</span>
                     </div>
                     <div className="meta-item">
                       <span className="meta-icon">🌐</span>
-                      <span>اللغة: {course.language === 'ar' ? 'العربية' : course.language === 'en' ? 'الإنجليزية' : 'ثنائي اللغة'}</span>
+                      <span>{language === 'ar' ? `اللغة: ${course.language === 'ar' ? 'العربية' : 'الإنجليزية'}` : `Language: ${course.language === 'ar' ? 'Arabic' : 'English'}`}</span>
                     </div>
                     <div className="meta-item cost">
                       <span className="meta-icon">💵</span>
-                      <span>الرسوم: {course.tuition_fee} {course.currency || 'SAR'}</span>
+                      <span>{language === 'ar' ? `الرسوم: ${course.tuition_fee} ${course.currency || 'SAR'}` : `Tuition: ${course.tuition_fee} ${course.currency || 'SAR'}`}</span>
                     </div>
                   </div>
 
-                  {course.description && <p className="course-desc-preview">{course.description}</p>}
+                  {course.description && <p className="course-desc-preview">{t(course.slug + '-desc') || course.description}</p>}
 
                   <div className="course-actions">
                     {hasEnrolled ? (
                       <>
-                        <span className="enroll-status-badge">ملتحق بنجاح ✅</span>
+                        <span className="enroll-status-badge">{language === 'ar' ? 'ملتحق بنجاح ✅' : 'Enrolled Successfully ✅'}</span>
                         <button 
                           onClick={() => openStudySyllabus(course)}
                           className="study-btn primary-glow-btn"
                         >
-                          📖 بدء الدراسة والتفاعل
+                          {language === 'ar' ? '📖 بدء الدراسة والتفاعل' : '📖 Start Study & Interact'}
                         </button>
                       </>
                     ) : hasSubmitted ? (
                       <>
-                        <span className="enroll-status-badge" style={{ color: '#fbbf24' }}>قيد المراجعة والقبول ⏳</span>
+                        <span className="enroll-status-badge" style={{ color: '#fbbf24' }}>{language === 'ar' ? 'قيد المراجعة والقبول ⏳' : 'Under Review & Approval ⏳'}</span>
                         <button 
                           disabled
                           style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', cursor: 'not-allowed' }}
                           className="study-btn"
                         >
-                          ⌛ طلبك قيد المعاينة الإدارية
+                          {language === 'ar' ? '⌛ طلبك قيد المعاينة الإدارية' : '⌛ Your application is under admin review'}
                         </button>
                       </>
                     ) : hasRejected ? (
                       <>
-                        <span className="enroll-status-badge" style={{ color: '#f87171' }}>طلب الالتحاق مرفوض ❌</span>
+                        <span className="enroll-status-badge" style={{ color: '#f87171' }}>{language === 'ar' ? 'طلب الالتحاق مرفوض ❌' : 'Application Rejected ❌'}</span>
                         <button 
                           onClick={() => {
                             setEnrollingProgram(course);
@@ -575,7 +608,7 @@ export default function StudentDashboard() {
                           className="enroll-action-btn"
                           style={{ background: '#ef4444' }}
                         >
-                          ✍️ إعادة المحاولة والتقديم مجدداً
+                          {language === 'ar' ? '✍️ إعادة المحاولة والتقديم مجدداً' : '✍️ Retry & Apply Again'}
                         </button>
                       </>
                     ) : (
@@ -586,7 +619,7 @@ export default function StudentDashboard() {
                         }}
                         className="enroll-action-btn"
                       >
-                        ✍️ الالتحاق وتعبئة الطلب
+                        {language === 'ar' ? '✍️ الالتحاق وتعبئة الطلب' : '✍️ Apply & Enroll'}
                       </button>
                     )}
                   </div>
@@ -601,26 +634,26 @@ export default function StudentDashboard() {
       {showEnrollModal && enrollingProgram && (
         <div className="modal-backdrop">
           <div className="glass-panel modal-card" style={{ maxWidth: '600px', width: '100%', padding: '2.5rem' }}>
-            <h2 className="text-gradient modal-header-text">استمارة الالتحاق ببرنامج</h2>
-            <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 600 }}>{enrollingProgram.title}</h4>
+            <h2 className="text-gradient modal-header-text">{language === 'ar' ? 'استمارة الالتحاق ببرنامج' : 'Program Enrollment Form'}</h2>
+            <h4 style={{ color: 'var(--text-color)', fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 600 }}>{language === 'en' && enrollingProgram.title_en ? enrollingProgram.title_en : enrollingProgram.title}</h4>
             
             <form onSubmit={handleEnrollSubmit} className="enroll-form">
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>الاسم الكامل (ثنائي على الأقل)</label>
+                  <label>{language === 'ar' ? 'الاسم الكامل (ثنائي على الأقل)' : 'Full Name (at least first & last)'}</label>
                   <input 
                     type="text" 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    placeholder="مثال: أحمد الدوسري"
+                    placeholder={language === 'ar' ? 'مثال: أحمد الدوسري' : 'e.g. Ahmed Al-Dossari'}
                   />
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>البريد الإلكتروني</label>
+                  <label>{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</label>
                   <input 
                     type="email" 
                     value={email}
@@ -630,7 +663,7 @@ export default function StudentDashboard() {
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>رقم الهاتف الجوال</label>
+                  <label>{language === 'ar' ? 'رقم الهاتف الجوال' : 'Phone Number'}</label>
                   <input 
                     type="tel" 
                     value={phone}
@@ -643,16 +676,16 @@ export default function StudentDashboard() {
 
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>أعلى مؤهل علمي حاصل عليه</label>
+                  <label>{language === 'ar' ? 'أعلى مؤهل علمي حاصل عليه' : 'Highest Qualification'}</label>
                   <select value={highestQualification} onChange={(e) => setHighestQualification(e.target.value)}>
-                    <option value="high_school">ثانوية عامة</option>
-                    <option value="diploma">دبلوم</option>
-                    <option value="bachelor">بكالوريوس</option>
-                    <option value="master">ماجستير</option>
+                    <option value="high_school">{language === 'ar' ? 'ثانوية عامة' : 'High School'}</option>
+                    <option value="diploma">{language === 'ar' ? 'دبلوم' : 'Diploma'}</option>
+                    <option value="bachelor">{language === 'ar' ? 'بكالوريوس' : 'Bachelor'}</option>
+                    <option value="master">{language === 'ar' ? 'ماجستير' : 'Master'}</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>سنة التخرج</label>
+                  <label>{language === 'ar' ? 'سنة التخرج' : 'Graduation Year'}</label>
                   <input 
                     type="number" 
                     value={graduationYear}
@@ -664,17 +697,17 @@ export default function StudentDashboard() {
 
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>المعدل التراكمي (GPA)</label>
+                  <label>{language === 'ar' ? 'المعدل التراكمي (GPA)' : 'GPA'}</label>
                   <input 
                     type="text" 
                     value={gpa}
                     onChange={(e) => setGpa(e.target.value)}
                     required
-                    placeholder="مثال: 4.80 أو 3.80"
+                    placeholder="e.g. 4.80 or 3.80"
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>سنوات الخبرة المهنية</label>
+                  <label>{language === 'ar' ? 'سنوات الخبرة المهنية' : 'Years of Experience'}</label>
                   <input 
                     type="number" 
                     value={experienceYears}
@@ -685,11 +718,11 @@ export default function StudentDashboard() {
               </div>
 
               <div className="form-group">
-                <label>الخطة الشخصية والدافع للالتحاق</label>
+                <label>{language === 'ar' ? 'الخطة الشخصية والدافع للالتحاق' : 'Personal Statement & Motivation'}</label>
                 <textarea 
                   value={personalStatement}
                   onChange={(e) => setPersonalStatement(e.target.value)}
-                  placeholder="اكتب أسباب التحاقك بالبرنامج وأهدافك المهنية المستقبلية..."
+                  placeholder={language === 'ar' ? 'اكتب أسباب التحاقك بالبرنامج وأهدافك المهنية المستقبلية...' : 'Describe your motivation for applying and future career goals...'}
                   rows={3}
                   required
                 />
@@ -700,10 +733,12 @@ export default function StudentDashboard() {
 
               <div className="form-actions-row">
                 <button type="submit" disabled={isEnrolling} className="confirm-btn">
-                  {isEnrolling ? 'جاري توثيق طلب الالتحاق...' : '💾 تأكيد وتفعيل الدراسة الفورية'}
+                  {isEnrolling 
+                    ? (language === 'ar' ? 'جاري توثيق طلب الالتحاق...' : 'Submitting enrollment...') 
+                    : (language === 'ar' ? '💾 تأكيد وتفعيل الدراسة الفورية' : '💾 Confirm & Unlock Study')}
                 </button>
                 <button type="button" onClick={() => setShowEnrollModal(false)} className="cancel-btn">
-                  إلغاء
+                  {t('cancel')}
                 </button>
               </div>
             </form>
@@ -720,15 +755,15 @@ export default function StudentDashboard() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ fontSize: '2rem' }}>📖</span>
                 <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }} className="text-gradient">{studyingProgram.title}</h2>
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>المحاضرات التفاعلية والتقدم المنجز</p>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }} className="text-gradient">{language === 'en' && studyingProgram.title_en ? studyingProgram.title_en : studyingProgram.title}</h2>
+                  <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{language === 'ar' ? 'المحاضرات التفاعلية والتقدم المنجز' : 'Interactive lectures & completed progress'}</p>
                 </div>
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                 {/* Progress bar */}
                 <div className="progress-container-hdr">
-                  <div className="progress-bar-label">التقدم الكلي للمقرر:</div>
+                  <div className="progress-bar-label">{language === 'ar' ? 'التقدم الكلي للمقرر:' : 'Total Course Progress:'}</div>
                   <div className="progress-track">
                     <div 
                       className="progress-fill" 
@@ -750,7 +785,7 @@ export default function StudentDashboard() {
                   onClick={() => setShowSyllabusDrawer(false)}
                   className="close-drawer-btn"
                 >
-                  إغلاق ❌
+                  {language === 'ar' ? 'إغلاق ❌' : 'Close ❌'}
                 </button>
               </div>
             </div>
@@ -766,24 +801,24 @@ export default function StudentDashboard() {
                 ) : !selectedLesson ? (
                   <div className="welcome-study-screen">
                     <div className="welcome-study-icon">🚀</div>
-                    <h3>مرحباً بك في الصف الدراسي التفاعلي!</h3>
-                    <p>الرجاء اختيار أحد الدروس أو الاختبارات القصيرة من القائمة الجانبية للبدء في تلقي المادة العلمية واحتساب تقدمك الأكاديمي.</p>
+                    <h3>{language === 'ar' ? 'مرحباً بك في الصف الدراسي التفاعلي!' : 'Welcome to the Interactive Classroom!'}</h3>
+                    <p>{language === 'ar' ? 'الرجاء اختيار أحد الدروس أو الاختبارات القصيرة من القائمة الجانبية للبدء في تلقي المادة العلمية واحتساب تقدمك الأكاديمي.' : 'Please select a lesson or quiz from the sidebar to begin learning and track your academic progress.'}</p>
                     
                     <div className="study-guideline-grid">
                       <div className="guide-card">
                         <span>🎥</span>
-                        <h4>شاهد الفيديوهات التفاعلية</h4>
-                        <p>شاهد المحاضرات كاملة ليتم احتساب الدرس كدرس مكتمل تلقائياً.</p>
+                        <h4>{language === 'ar' ? 'شاهد الفيديوهات التفاعلية' : 'Watch Videos'}</h4>
+                        <p>{language === 'ar' ? 'شاهد المحاضرات كاملة ليتم احتساب الدرس كدرس مكتمل تلقائياً.' : 'Watch lectures fully to automatically mark the lesson as completed.'}</p>
                       </div>
                       <div className="guide-card">
                         <span>📝</span>
-                        <h4>اقرأ المقالات المنهجية</h4>
-                        <p>تصفح الدليل الأكاديمي واضغط علامة الاكتمال بعد الفهم.</p>
+                        <h4>{language === 'ar' ? 'اقرأ المقالات المنهجية' : 'Read Articles'}</h4>
+                        <p>{language === 'ar' ? 'تصفح الدليل الأكاديمي واضغط علامة الاكتمال بعد الفهم.' : 'Browse the academic guide and click mark completed after understanding.'}</p>
                       </div>
                       <div className="guide-card">
                         <span>❓</span>
-                        <h4>أجب عن الاختبارات القصيرة</h4>
-                        <p>اختبر مخرجات التعليم واحصل على العلامة الكاملة مباشرة.</p>
+                        <h4>{language === 'ar' ? 'أجب عن الاختبارات القصيرة' : 'Complete Quizzes'}</h4>
+                        <p>{language === 'ar' ? 'اختبر مخرجات التعليم واحصل على العلامة الكاملة مباشرة.' : 'Test your learning outcomes and get full marks directly.'}</p>
                       </div>
                     </div>
                   </div>
@@ -791,13 +826,13 @@ export default function StudentDashboard() {
                   <div className="lesson-display-workspace">
                     <div className="lesson-workspace-header">
                       <span className={`lesson-type-badge ${selectedLesson.lesson_type}`}>
-                        {selectedLesson.lesson_type === 'video' && '🎥 محاضرة فيديو'}
-                        {selectedLesson.lesson_type === 'text' && '📝 مقال دراسي'}
-                        {selectedLesson.lesson_type === 'quiz' && '❓ اختبار قصير'}
-                        {selectedLesson.lesson_type === 'pdf' && '📄 مستند دراسي'}
+                        {selectedLesson.lesson_type === 'video' && (language === 'ar' ? '🎥 محاضرة فيديو' : '🎥 Video Lecture')}
+                        {selectedLesson.lesson_type === 'text' && (language === 'ar' ? '📝 مقال دراسي' : '📝 Study Article')}
+                        {selectedLesson.lesson_type === 'quiz' && (language === 'ar' ? '❓ اختبار قصير' : '❓ Short Quiz')}
+                        {selectedLesson.lesson_type === 'pdf' && (language === 'ar' ? '📄 مستند دراسي' : '📄 Study Document')}
                       </span>
-                      <h3>{selectedLesson.title}</h3>
-                      <span className="lesson-duration">⏱️ مدة التفاعل: {selectedLesson.duration_minutes} دقائق</span>
+                      <h3>{translateSyllabusText(selectedLesson.title)}</h3>
+                      <span className="lesson-duration">{language === 'ar' ? `⏱️ مدة التفاعل: ${selectedLesson.duration_minutes} دقائق` : `⏱️ Interaction: ${selectedLesson.duration_minutes} Mins`}</span>
                     </div>
 
                     {/* Lesson Content Renderers */}
@@ -806,18 +841,18 @@ export default function StudentDashboard() {
                       {selectedLesson.lesson_type === 'video' && (
                         <div className="interactive-video-player glass-panel">
                           <div className="video-viewport">
-                            <span className="viewport-watermark">{studyingProgram.title}</span>
+                            <span className="viewport-watermark">{language === 'en' && studyingProgram.title_en ? studyingProgram.title_en : studyingProgram.title}</span>
                             {videoPlaying ? (
                               <div className="video-playing-animation">
                                 <div className="bar anim-bar-1"></div>
                                 <div className="bar anim-bar-2"></div>
                                 <div className="bar anim-bar-3"></div>
-                                <p style={{ color: '#fff', fontWeight: 500 }}>جاري بث المحاضرة الأكاديمية بنجاح...</p>
+                                <p style={{ color: '#fff', fontWeight: 500 }}>{language === 'ar' ? 'جاري بث المحاضرة الأكاديمية بنجاح...' : 'Streaming academic lecture successfully...'}</p>
                               </div>
                             ) : (
                               <div className="video-paused-state" onClick={() => setVideoPlaying(true)}>
                                 <div className="play-button-glow">▶</div>
-                                <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>انقر لتشغيل المحاضرة التفاعلية</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>{language === 'ar' ? 'انقر لتشغيل المحاضرة التفاعلية' : 'Click to play interactive lecture'}</p>
                               </div>
                             )}
                           </div>
@@ -826,7 +861,7 @@ export default function StudentDashboard() {
                               onClick={() => setVideoPlaying(!videoPlaying)} 
                               className={`video-play-toggle-btn ${videoPlaying ? 'playing' : ''}`}
                             >
-                              {videoPlaying ? '⏸️ إيقاف مؤقت' : '▶️ تشغيل المحاضرة'}
+                              {videoPlaying ? (language === 'ar' ? '⏸️ إيقاف مؤقت' : '⏸️ Pause') : (language === 'ar' ? '▶️ تشغيل المحاضرة' : '▶️ Play Lecture')}
                             </button>
                             
                             <div className="video-progress-slider-container">
@@ -837,7 +872,7 @@ export default function StudentDashboard() {
                             </div>
                           </div>
                           {videoProgress >= 100 && (
-                            <div className="video-completed-banner">🎉 تم حضور المحاضرة بالكامل وتسجيل تقدمك!</div>
+                            <div className="video-completed-banner">{language === 'ar' ? '🎉 تم حضور المحاضرة بالكامل وتسجيل تقدمك!' : '🎉 Lecture watched completely and progress saved!'}</div>
                           )}
                         </div>
                       )}
@@ -846,13 +881,13 @@ export default function StudentDashboard() {
                       {selectedLesson.lesson_type === 'text' && (
                         <div className="text-lesson-article glass-panel">
                           <div className="article-prose">
-                            <p>{selectedLesson.content || 'يحتوي هذا الدرس على المادة العلمية التأسيسية للمقرر. يُنصح بمذاكرة المفاهيم ومراجعتها عدة مرات لاستيعاب تطبيقاتها العملية.'}</p>
-                            <p style={{ marginTop: '1.5rem' }}>يعتبر هذا الدرس ركيزة أساسية للدخول في تفاصيل ورش العمل والتدريبات التطبيقية المتقدمة التي تليها، لذا احرص على تدوين ملاحظاتك.</p>
+                            <p>{selectedLesson.content ? translateSyllabusText(selectedLesson.content) : (language === 'ar' ? 'يحتوي هذا الدرس على المادة العلمية التأسيسية للمقرر. يُنصح بمذاكرة المفاهيم ومراجعتها عدة مرات لاستيعاب تطبيقاتها العملية.' : 'This lesson contains the foundational course concepts. It is recommended to study and review them multiple times.')}</p>
+                            <p style={{ marginTop: '1.5rem' }}>{language === 'ar' ? 'يعتبر هذا الدرس ركيزة أساسية للدخول في تفاصيل ورش العمل والتدريبات التطبيقية المتقدمة التي تليها، لذا احرص على تدوين ملاحظاتك.' : 'This lesson is a key pillar for entering the details of advanced practical workshops that follow, so make sure to take notes.'}</p>
                           </div>
                           
                           <div className="article-actions">
                             {completedLessons.includes(selectedLesson.id) ? (
-                              <div className="article-completed-status">☑️ تم إكمال قراءة وفهم الدرس</div>
+                              <div className="article-completed-status">{language === 'ar' ? '☑️ تم إكمال قراءة وفهم الدرس' : '☑️ Completed read and understood'}</div>
                             ) : (
                               <button 
                                 onClick={() => {
@@ -862,7 +897,7 @@ export default function StudentDashboard() {
                                 }} 
                                 className="complete-article-btn"
                               >
-                                ☑️ أكملت قراءة وفهم المحاضرة
+                                {language === 'ar' ? '☑️ أكملت قراءة وفهم المحاضرة' : '☑️ I read and understood the lecture'}
                               </button>
                             )}
                           </div>
@@ -873,8 +908,8 @@ export default function StudentDashboard() {
                       {selectedLesson.lesson_type === 'quiz' && (
                         <div className="interactive-quiz-workspace glass-panel">
                           <div className="quiz-question-container">
-                            <span className="quiz-badge">السؤال الأول والأهم</span>
-                            <p className="question-text">ما هي القيمة المحورية التي يضيفها التخصص الأكاديمي والمقرر الجاري دراسته للتطبيقات التقنية الحديثة؟</p>
+                            <span className="quiz-badge">{language === 'ar' ? 'السؤال الأول والأهم' : 'First & Most Important Question'}</span>
+                            <p className="question-text">{language === 'ar' ? 'ما هي القيمة المحورية التي يضيفها التخصص الأكاديمي والمقرر الجاري دراسته للتطبيقات التقنية الحديثة؟' : 'What is the core value that the academic specialization and this course add to modern technical applications?'}</p>
                             
                             <div className="choices-list">
                               <label className={`choice-item ${quizAnswer === 'wrong1' ? 'selected' : ''}`}>
@@ -889,7 +924,7 @@ export default function StudentDashboard() {
                                   }} 
                                   disabled={quizChecked && quizIsCorrect === true}
                                 />
-                                <span>أ) يهدف فقط للاستعراض النظري دون مساهمة عملية في المشاريع السحابية.</span>
+                                <span>{language === 'ar' ? 'أ) يهدف فقط للاستعراض النظري دون مساهمة عملية في المشاريع السحابية.' : 'A) It only aims for theoretical review without practical contribution to cloud projects.'}</span>
                               </label>
 
                               <label className={`choice-item ${quizAnswer === 'correct' ? 'selected' : ''}`}>
@@ -904,7 +939,7 @@ export default function StudentDashboard() {
                                   }} 
                                   disabled={quizChecked && quizIsCorrect === true}
                                 />
-                                <span>ب) يمكن من بناء أنظمة مرنة وحلول تطبيقية معالجة للبيانات تحل مشكلات واقعية. (الإجابة الأصح)</span>
+                                <span>{language === 'ar' ? 'ب) يمكن من بناء أنظمة مرنة وحلول تطبيقية معالجة للبيانات تحل مشكلات واقعية. (الإجابة الأصح)' : 'B) Enables building resilient systems and data-processing applied solutions that solve real-world problems. (Correct)'}</span>
                               </label>
 
                               <label className={`choice-item ${quizAnswer === 'wrong2' ? 'selected' : ''}`}>
@@ -919,21 +954,21 @@ export default function StudentDashboard() {
                                   }} 
                                   disabled={quizChecked && quizIsCorrect === true}
                                 />
-                                <span>ج) يقتصر تطبيقه على الهواة ولا يصلح للمؤسسات الكبرى والشركاء الأكاديميين.</span>
+                                <span>{language === 'ar' ? 'ج) يقتصر تطبيقه على الهواة ولا يصلح للمؤسسات الكبرى والشركاء الأكاديميين.' : 'C) Its application is limited to amateurs and is not suitable for large enterprises and academic partners.'}</span>
                               </label>
                             </div>
 
                             <div className="quiz-action-bar">
                               {quizChecked ? (
                                 quizIsCorrect ? (
-                                  <div className="quiz-feedback success">🎉 إجابة صحيحة نموذجية! لقد تم احتساب تقدمك واجتيازك بنجاح!</div>
+                                  <div className="quiz-feedback success">{language === 'ar' ? '🎉 إجابة صحيحة نموذجية! لقد تم احتساب تقدمك واجتيازك بنجاح!' : '🎉 Correct model answer! Your progress and completion have been successfully saved!'}</div>
                                 ) : (
-                                  <div className="quiz-feedback failure">❌ إجابة غير دقيقة. يرجى مراجعة الدرس التأسيسي السابق والمحاولة مجدداً.</div>
+                                  <div className="quiz-feedback failure">{language === 'ar' ? '❌ إجابة غير دقيقة. يرجى مراجعة الدرس التأسيسي السابق والمحاولة مجدداً.' : '❌ Incorrect answer. Please review the previous foundational lesson and try again.'}</div>
                                 )
                               ) : null}
 
                               {!quizChecked && quizAnswer && (
-                                <button onClick={checkQuizAnswer} className="check-quiz-btn">تحقق من صحة الإجابة 🔍</button>
+                                <button onClick={checkQuizAnswer} className="check-quiz-btn">{language === 'ar' ? 'تحقق من صحة الإجابة 🔍' : 'Verify Answer 🔍'}</button>
                               )}
                             </div>
                           </div>
@@ -945,21 +980,21 @@ export default function StudentDashboard() {
                         <div className="pdf-lesson-viewer glass-panel">
                           <div className="pdf-mock-frame">
                             <span className="pdf-icon-huge">📄</span>
-                            <h4>الدليل التعليمي والحقيبة الدراسية الكاملة</h4>
-                            <p>يحتوي هذا المستند على الملخص الأكاديمي، أسئلة المراجعة، ومراجع إضافية موثقة ومعتمدة.</p>
+                            <h4>{language === 'ar' ? 'الدليل التعليمي والحقيبة الدراسية الكاملة' : 'Complete Study Packet & Guide'}</h4>
+                            <p>{language === 'ar' ? 'يحتوي هذا المستند على الملخص الأكاديمي، أسئلة المراجعة، ومراجع إضافية موثقة ومعتمدة.' : 'This document contains the academic summary, review questions, and additional certified references.'}</p>
                             
                             <a 
                               href="#" 
                               onClick={(e) => {
                                 e.preventDefault();
-                                alert('جاري تحميل الملف التعليمي PDF إلى جهازك...');
+                                alert(language === 'ar' ? 'جاري تحميل الملف التعليمي PDF إلى جهازك...' : 'Downloading the study PDF onto your device...');
                                 if (!completedLessons.includes(selectedLesson.id)) {
                                   setCompletedLessons([...completedLessons, selectedLesson.id]);
                                 }
                               }}
                               className="pdf-download-action-btn"
                             >
-                              📥 تحميل الكتيب الدراسي الفوري (PDF)
+                              {language === 'ar' ? '📥 تحميل الكتيب الدراسي الفوري (PDF)' : '📥 Download Study Guide (PDF)'}
                             </a>
                           </div>
                         </div>
@@ -971,8 +1006,8 @@ export default function StudentDashboard() {
 
               {/* Right Side: Modules and Lessons Navigation Tree */}
               <div className="syllabus-tree-sidebar glass-panel">
-                <h3 className="sidebar-title-text">مفردات المنهج الدراسي</h3>
-                <p className="sidebar-subtitle-text">انقر على أي درس للبدء في تحصيله:</p>
+                <h3 className="sidebar-title-text">{language === 'ar' ? 'مفردات المنهج الدراسي' : 'Syllabus & Course Outline'}</h3>
+                <p className="sidebar-subtitle-text">{language === 'ar' ? 'انقر على أي درس للبدء في تحصيله:' : 'Click on any lesson to start learning:'}</p>
 
                 <div className="modules-list">
                   {syllabusModules.map((mod, mIndex) => (
@@ -980,12 +1015,12 @@ export default function StudentDashboard() {
                       <div className="module-header-row">
                         <span className="module-number-circle">{mIndex + 1}</span>
                         <div>
-                          <h4>{mod.title}</h4>
-                          <p>{mod.description}</p>
+                          <h4>{translateSyllabusText(mod.title)}</h4>
+                          <p>{translateSyllabusText(mod.description)}</p>
                         </div>
                       </div>
 
-                      <div className="lessons-under-module">
+                      <div className="lessons-under-module" style={{ borderRight: isRtl ? '1px dashed rgba(255,255,255,0.08)' : 'none', borderLeft: !isRtl ? '1px dashed rgba(255,255,255,0.08)' : 'none', paddingRight: isRtl ? '1.25rem' : '0', paddingLeft: !isRtl ? '1.25rem' : '0' }}>
                         {mod.lessons.map(less => {
                           const isCompleted = completedLessons.includes(less.id);
                           const isSelected = selectedLesson?.id === less.id;
@@ -1001,6 +1036,7 @@ export default function StudentDashboard() {
                                 setQuizIsCorrect(null);
                               }}
                               className={`lesson-list-item-btn ${isSelected ? 'selected' : ''} ${isCompleted ? 'completed' : ''}`}
+                              style={{ textAlign: isRtl ? 'right' : 'left' }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                 <span className="lesson-type-icon-emoji">
@@ -1009,15 +1045,15 @@ export default function StudentDashboard() {
                                   {less.lesson_type === 'quiz' && '❓'}
                                   {less.lesson_type === 'pdf' && '📄'}
                                 </span>
-                                <span className="lesson-title-label-text">{less.title}</span>
+                                <span className="lesson-title-label-text">{translateSyllabusText(less.title)}</span>
                               </div>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span className="lesson-dur-label">{less.duration_minutes} د</span>
+                                <span className="lesson-dur-label">{less.duration_minutes} {language === 'ar' ? 'د' : 'm'}</span>
                                 {isCompleted ? (
                                   <span className="completed-check-icon">✅</span>
                                 ) : less.is_preview ? (
-                                  <span className="preview-badge-pill">معاينة مجانية</span>
+                                  <span className="preview-badge-pill">{language === 'ar' ? 'معاينة مجانية' : 'Free Preview'}</span>
                                 ) : (
                                   <span className="locked-lesson-icon">🔑</span>
                                 )}
@@ -1052,17 +1088,17 @@ export default function StudentDashboard() {
           width: 100%;
           padding: 0.75rem 1.25rem;
           border-radius: 12px;
-          border: 1px solid rgba(255,255,255,0.1);
-          background: rgba(0,0,0,0.3);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.85);
+          color: var(--text-color);
           font-family: inherit;
           font-size: 0.95rem;
           outline: none;
           transition: all 0.3s;
         }
         .search-input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+          border-color: var(--accent);
+          box-shadow: 0 0 12px var(--accent-glow);
         }
         .filters-container {
           display: flex;
@@ -1085,7 +1121,7 @@ export default function StudentDashboard() {
           color: #fff;
         }
         .filter-btn.active {
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           color: #fff;
         }
 
@@ -1104,7 +1140,7 @@ export default function StudentDashboard() {
           border-left: 2px solid rgba(255, 255, 255, 0.05);
         }
         .course-card:hover {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
         .course-badge-container {
           display: flex;
@@ -1129,12 +1165,12 @@ export default function StudentDashboard() {
         .course-title-text {
           font-size: 1.35rem;
           font-weight: 700;
-          color: white;
+          color: var(--text-color);
           line-height: 1.4;
         }
         .course-en-title {
           font-size: 0.85rem;
-          color: #94a3b8;
+          color: #64748b;
           margin-top: -0.5rem;
         }
         .course-meta {
@@ -1143,7 +1179,7 @@ export default function StudentDashboard() {
           gap: 0.85rem;
           margin: 0.5rem 0;
           font-size: 0.85rem;
-          color: #cbd5e1;
+          color: #475569;
         }
         .meta-item {
           display: flex;
@@ -1155,16 +1191,16 @@ export default function StudentDashboard() {
         }
         .meta-item.cost {
           grid-column: span 2;
-          background: rgba(255,255,255,0.02);
+          background: rgba(14, 165, 233, 0.05);
           padding: 0.5rem;
           border-radius: 8px;
           font-weight: 600;
-          color: #3b82f6;
-          border: 1px dashed rgba(59, 130, 246, 0.2);
+          color: var(--accent);
+          border: 1px dashed var(--accent);
         }
         .course-desc-preview {
           font-size: 0.9rem;
-          color: #94a3b8;
+          color: #475569;
           line-height: 1.6;
           display: -webkit-box;
           -webkit-line-clamp: 3;
@@ -1181,7 +1217,7 @@ export default function StudentDashboard() {
         .enroll-action-btn {
           width: 100%;
           border: none;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           color: white;
           padding: 0.85rem;
           border-radius: 12px;
@@ -1192,7 +1228,7 @@ export default function StudentDashboard() {
         }
         .enroll-action-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+          box-shadow: 0 4px 15px var(--accent-glow);
         }
         .study-btn {
           width: 100%;
@@ -1259,25 +1295,25 @@ export default function StudentDashboard() {
         .form-group label {
           font-weight: 600;
           font-size: 0.85rem;
-          color: #cbd5e1;
+          color: #475569;
         }
         .form-group input, .form-group select, .form-group textarea {
           padding: 0.75rem 1rem;
           border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.15);
-          background: rgba(0,0,0,0.4);
-          color: white;
+          border: 1px solid var(--glass-border);
+          background: rgba(255, 255, 255, 0.85);
+          color: var(--text-color);
           font-size: 0.95rem;
           outline: none;
           font-family: inherit;
           transition: border-color 0.3s;
         }
         .form-group select option {
-          background: #0f172a;
-          color: white;
+          background: var(--bg-color);
+          color: var(--text-color);
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
         .success-msg-box {
           background: rgba(16, 185, 129, 0.15);
@@ -1690,19 +1726,19 @@ export default function StudentDashboard() {
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-size: 1.5rem;
           padding-right: 4px;
-          box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 0 20px var(--accent-glow);
           transition: all 0.3s;
         }
         .video-paused-state:hover .play-button-glow {
           transform: scale(1.1);
-          box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+          box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
         }
         .video-playing-animation {
           display: flex;
@@ -1713,7 +1749,7 @@ export default function StudentDashboard() {
         .video-playing-animation .bar {
           width: 4px;
           height: 30px;
-          background: #3b82f6;
+          background: var(--accent);
           display: inline-block;
           border-radius: 2px;
           margin: 0 2px;
@@ -1733,7 +1769,7 @@ export default function StudentDashboard() {
           gap: 1.5rem;
         }
         .video-play-toggle-btn {
-          background: #3b82f6;
+          background: var(--accent);
           border: none;
           color: white;
           padding: 0.6rem 1.2rem;
@@ -1761,7 +1797,7 @@ export default function StudentDashboard() {
         }
         .progress-slider-fill {
           height: 100%;
-          background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
           transition: width 0.2s linear;
         }
         .video-progress-percentage {

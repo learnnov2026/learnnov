@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "LearnNov | لوحة الطالب",
-  description: "المنصة الأكاديمية الذكية الأولى",
+  title: "LearnNov Platform",
+  description: "منصة التعليم التفاعلي المتقدمة ليرنوف | LearnNov Advanced Interactive Education Platform",
 };
 
 export default function RootLayout({
@@ -16,13 +17,13 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body>
-        <AuthProvider>
-          <Navbar />
-          {children}
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Navbar />
+            {children}
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
 }
-
-

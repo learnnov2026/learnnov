@@ -72,7 +72,7 @@
     "js-cookie": "^3",
     "moment": "^2",
     "moment-timezone": "^0.5",
-    "node-gyp": "^11",
+    "node-gyp": "^13",
     "popper.js": "^1",
     "prop-types": "^15",
     "raw-loader": "^0.5",

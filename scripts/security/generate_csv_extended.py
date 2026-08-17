@@ -6,7 +6,7 @@ import json
 import csv
 import os
 
-search_root = r"b:/LEARNNOV PLATFORM/openedx-platform-master"
+search_root = r"b:/LEARNNOV PLATFORM/learnnov-lms"
 json_path = os.path.join(search_root, "scan_results_extended.json")
 csv_path = os.path.join(search_root, "security_audit_report_extended.csv")
 

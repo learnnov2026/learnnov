@@ -60,3 +60,38 @@ class AIAssistantTests(TestCase):
         self.assertEqual(response.data[0]['content'], 'سؤالي الأول')
         self.assertEqual(response.data[1]['role'], 'assistant')
         self.assertEqual(response.data[1]['content'], 'إجابتي الأولى')
+
+    @patch('apps.ai_assistant.views.OpenAI')
+    def test_chatbot_view_with_lesson_id(self, mock_openai):
+        from apps.academic_programs.models import AcademicProgram, ProgramProvider, ProgramModule, ProgramLesson
+        
+        provider = ProgramProvider.objects.create(name='Provider A', slug='prov-a')
+        program = AcademicProgram.objects.create(
+            provider=provider, title='Program A', slug='prog-a', tuition_fee=100.00,
+            degree_level='diploma', status='active', is_active=True
+        )
+        module = ProgramModule.objects.create(program=program, title='Module A', order=1)
+        lesson = ProgramLesson.objects.create(
+            module=module, title='Lesson A', lesson_type='text', content='This is lesson A content', order=1
+        )
+
+        mock_client = MagicMock()
+        mock_openai.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "هذا رد يعتمد على سياق الدرس"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        url = reverse('ai-chat')
+        data = {'message': 'اشرح لي هذا الدرس', 'lesson_id': lesson.id}
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['reply'], "هذا رد يعتمد على سياق الدرس")
+        
+        mock_client.chat.completions.create.assert_called_once()
+        call_args = mock_client.chat.completions.create.call_args[1]
+        system_content = call_args['messages'][0]['content']
+        self.assertIn('Lesson A', system_content)
+        self.assertIn('This is lesson A content', system_content)
+

@@ -19,8 +19,9 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # M-13: Redis لا يحتاج port خارجي — الاتصال داخلي فقط عبر Docker network
+    # لإضافة كلمة مرور في الإنتاج: command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -29,8 +30,8 @@ services:
 
   mongodb:
     image: mongo:6.0
-    ports:
-      - "27017:27017"
+    # M-12: MongoDB لا يحتاج port خارجي — الاتصال داخلي فقط عبر Docker network
+    # إزالة port mapping يمنع الوصول المباشر من خارج الحاوية
     volumes:
       - mongodata:/data/db
     healthcheck:
@@ -44,8 +45,9 @@ services:
       context: .
       dockerfile: Dockerfile
     command: python manage.py runserver 0.0.0.0:8000
+    # M-11: استخدام .env الفعلي وليس .env.example
     env_file:
-      - ./learnnov-cloud/.env.example
+      - ./learnnov-cloud/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
       DATABASE_URL: postgres://learnnov:${POSTGRES_PASSWORD}@db:5432/learnnov_db
@@ -64,7 +66,54 @@ services:
     ports:
       - "8000:8000"
 
-  openedx-platform:
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config worker -l info --concurrency=2
+    # M-11: استخدام .env الفعلي
+    env_file:
+      - ./learnnov-cloud/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: postgres://learnnov:${POSTGRES_PASSWORD}@db:5432/learnnov_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      MONGODB_URI: mongodb://mongodb:27017/
+      MONGODB_DB_NAME: learnnov
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./learnnov-cloud:/app
+    restart: on-failure
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    # M-11: استخدام .env الفعلي
+    env_file:
+      - ./learnnov-cloud/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: postgres://learnnov:${POSTGRES_PASSWORD}@db:5432/learnnov_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./learnnov-cloud:/app
+    restart: on-failure
+
+
+  learnnov-lms:
     # Official Open edX image – customize tag as required
     image: edxops/edxapp:latest
     env_file:
@@ -91,7 +140,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./openedx-platform-master:/edx/app/edx-platform
+      - ./learnnov-lms:/edx/app/edx-platform
   clamav:
     image: clamav/clamav:latest
     ports:
@@ -108,7 +157,7 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - learnnov-cloud
-      - openedx-platform
+      - learnnov-lms
 
 volumes:
   pgdata:

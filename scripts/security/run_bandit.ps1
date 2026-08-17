@@ -2,7 +2,7 @@
 # File: run_bandit.ps1
 # Executes Bandit on the openedx platform codebase and writes a JSON report.
 
-$searchRoot = "b:/LEARNNOV PLATFORM/openedx-platform-master"
+$searchRoot = "b:/LEARNNOV PLATFORM/learnnov-lms"
 $reportPath = "b:/LEARNNOV PLATFORM/bandit_report.json"
 
 # Ensure Bandit is in PATH (installed via pip earlier)

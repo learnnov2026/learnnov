@@ -1,6 +1,6 @@
 import os
 from django.conf import settings
-from django.http import HttpResponse, Http404, HttpResponseForbidden
+from django.http import HttpResponse, Http404, HttpResponseForbidden, FileResponse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from apps.academic_programs.models import ProgramApplication
@@ -39,24 +39,20 @@ class SecureMediaView(LoginRequiredMixin, View):
             raise Http404("الملف غير موجود")
 
         # In production, use X-Sendfile (Apache) or X-Accel-Redirect (Nginx) for performance.
-        # Here we stream it directly for development purposes.
-        with open(fullpath, 'rb') as f:
-            response = HttpResponse(f.read())
-            # Basic attempt to guess mime type
-            if path.endswith('.pdf'):
-                response['Content-Type'] = 'application/pdf'
-            elif path.endswith('.mp4'):
-                response['Content-Type'] = 'video/mp4'
-            elif path.endswith('.jpg') or path.endswith('.jpeg'):
-                response['Content-Type'] = 'image/jpeg'
-            elif path.endswith('.png'):
-                response['Content-Type'] = 'image/png'
-            else:
-                response['Content-Type'] = 'application/octet-stream'
-                
-            # Content-Disposition: inline (display in browser) vs attachment (download)
-            response['Content-Disposition'] = f'inline; filename="{os.path.basename(fullpath)}"'
-            return response
+        # Use FileResponse for memory-efficient chunked streaming.
+        content_type = 'application/octet-stream'
+        if path.endswith('.pdf'):
+            content_type = 'application/pdf'
+        elif path.endswith('.mp4'):
+            content_type = 'video/mp4'
+        elif path.endswith('.jpg') or path.endswith('.jpeg'):
+            content_type = 'image/jpeg'
+        elif path.endswith('.png'):
+            content_type = 'image/png'
+
+        response = FileResponse(open(fullpath, 'rb'), content_type=content_type)
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(fullpath)}"'
+        return response
 
 from django.views.generic import TemplateView
 from apps.learnnov_exams.models import ExamAttempt
@@ -75,7 +71,7 @@ class StudentDashboardView(LoginRequiredMixin, TemplateView):
         ).select_related('program')
 
         exams = ExamAttempt.objects.filter(user=user).select_related('exam').order_by('-start_time')[:5]
-        certificates = GeneratedCertificate.objects.filter(user=user).select_related('program')
+        certificates = GeneratedCertificate.objects.filter(user=user)
 
         context['active_courses'] = active_apps
         context['exams'] = exams
@@ -86,7 +82,8 @@ class StudentDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 from django.core.exceptions import PermissionDenied
-from apps.academic_programs.models import ProgramModule
+from django.shortcuts import get_object_or_404
+from apps.academic_programs.models import AcademicProgram, ProgramModule
 
 class CourseViewerView(LoginRequiredMixin, TemplateView):
     template_name = "core/course_viewer.html"

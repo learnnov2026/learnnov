@@ -65,15 +65,15 @@ jobs:
           node-version: "20"
           cache: "npm"
       - name: Install JS dependencies
-        working-directory: openedx-platform-master
+        working-directory: learnnov-lms
         run: npm ci
       - name: Run Jest tests with coverage
-        working-directory: openedx-platform-master
+        working-directory: learnnov-lms
         run: npm run test-jest -- --coverage
       - name: Upload JS coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: openedx-platform-master/coverage/coverage-final.json
+          files: learnnov-lms/coverage/coverage-final.json
       - name: Run Karma tests
-        working-directory: openedx-platform-master
+        working-directory: learnnov-lms
         run: npm run test-karma

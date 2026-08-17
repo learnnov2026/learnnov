@@ -9,7 +9,10 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Security ──────────────────────────────────────────────────────────────────
-SECRET_KEY = config('SECRET_KEY', default='learnnov-dev-insecure-change-me-in-production')
+# SECRET_KEY يجب أن يُضبط دائماً عبر متغير البيئة.
+# إذا لم يوجد، سيرفع decouple استثناءً فورياً عند بدء التطبيق.
+# لا توجد قيمة افتراضية — هذا مقصود لحماية بيئة الإنتاج.
+SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default='False', cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
@@ -85,8 +88,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # ── Database ──────────────────────────────────────────────────────────────────
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+    'default': dj_database_url.parse(
+        config('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -109,16 +112,39 @@ else:
         }
     }
 
-
+# ── Celery Settings ───────────────────────────────────────────────────────────
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Riyadh'
 
 # ── MongoDB (NoSQL Document Store for Chat/Logs) ──────────────────────────────
-MONGODB_URI = config('MONGODB_URI', default='mongodb://localhost:27017/learnnov')
+import sys
+if 'test' in sys.argv:
+    MONGODB_URI = ''
+else:
+    MONGODB_URI = config('MONGODB_URI', default='mongodb://localhost:27017/learnnov')
 MONGODB_DB_NAME = config('MONGODB_DB_NAME', default='learnnov')
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {'user_attributes': ('username', 'email', 'first_name', 'last_name')},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 # ── i18n ──────────────────────────────────────────────────────────────────────
@@ -126,6 +152,7 @@ LANGUAGE_CODE = 'ar'
 TIME_ZONE = 'Asia/Riyadh'
 USE_I18N = True
 USE_TZ = True
+LOCALE_PATHS = [BASE_DIR / 'locale']
 LANGUAGES = [
     ('ar', 'العربية'),
     ('en', 'English'),
@@ -178,6 +205,8 @@ SIMPLE_JWT = {
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
+TESTING = 'test' in sys.argv or 'pytest' in sys.argv[0]
+
 if not DEBUG and not TESTING:
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = [
@@ -209,8 +238,7 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-import sys
-TESTING = 'test' in sys.argv or 'pytest' in sys.argv[0]
+# TESTING is defined above (before CORS block, line ~191)
 
 if not DEBUG and not TESTING:
     SECURE_SSL_REDIRECT = True
@@ -257,9 +285,11 @@ LOGGING = {
 }
 
 # ── CSP Settings (Content Security Policy) ────────────────────────────────────
+# ملاحظة: 'unsafe-eval' تم إزالتها لتقوية الحماية من XSS.
+# إذا احتاجت وحدة JavaScript لـ eval()، يجب استخدام nonce-based CSP بدلاً من ذلك.
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'")
+CSP_SCRIPT_SRC = ("'self'",)
 CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
 CSP_IMG_SRC = ("'self'", "data:", "https://storage.googleapis.com")
 CSP_FRAME_SRC = ("'self'", "https://www.youtube.com", "https://player.vimeo.com")
@@ -283,8 +313,10 @@ MFA_ENFORCE_MFA = mfa_is_required
 
 # ── Jazzmin Admin Dashboard Settings ──────────────────────────────────────────
 JAZZMIN_SETTINGS = {
+    "show_sidebar": False,
+    "show_ui_builder": True,
     # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "LearnNov Admin",
+    "site_title": "لوحة تحكم LearnNov",
 
     # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_header": "LearnNov",
@@ -292,29 +324,130 @@ JAZZMIN_SETTINGS = {
     # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_brand": "LearnNov",
 
+    # Logo to use for your site, must be present in static files, used for brand on top left
+    "site_logo": "logo.png",
+
+    # Logo to use for login page
+    "login_logo": "logo.png",
+
+    # Icon for your site (favicon)
+    "site_icon": "logo.png",
+
     # Welcome text on the login screen
     "welcome_sign": "مرحباً بك في لوحة تحكم LearnNov 🚀",
 
     # Copyright on the footer
-    "copyright": "LearnNov Platform",
+    "copyright": "منصة LearnNov التعليمية",
+
+    
+    # Order of apps and models in the sidebar & dashboard
+    "order_with_respect_to": [
+        # 1. البرامج الأكاديمية والمقررات
+        "academic_programs",
+        "academic_programs.AcademicProgram",
+        "academic_programs.ProgramProvider",
+        "academic_programs.FieldOfStudy",
+        "academic_programs.Specialization",
+        "academic_programs.SpecializationCourse",
+        "academic_programs.ProgramModule",
+        "academic_programs.ProgramLesson",
+        "academic_programs.ProgramApplication",
+        "academic_programs.UserReferral",
+        "academic_programs.ApplicationStatusHistory",
+        # 2. الاختبارات والتقييمات
+        "learnnov_exams",
+        "learnnov_exams.MockExam",
+        "learnnov_exams.Question",
+        "learnnov_exams.Choice",
+        "learnnov_exams.ExamAttempt",
+        "learnnov_exams.StudentAnswer",
+        # 3. الشهادات المعتمدة
+        "learnnov_certificates",
+        "learnnov_certificates.GeneratedCertificate",
+        "learnnov_certificates.SpecializationCertificate",
+        "learnnov_certificates.CertificateQRCode",
+        # 4. المدفوعات والاشتراكات
+        "learnnov_payments",
+        "learnnov_payments.Order",
+        "learnnov_payments.SubscriptionPlan",
+        "learnnov_payments.UserSubscription",
+        "learnnov_payments.DiscountCode",
+        "learnnov_payments.DiscountCodeUsage",
+        "learnnov_payments.StripePayment",
+        "learnnov_payments.HyperPayPayment",
+        # 5. إعلانات الجامعات والشركاء
+        "university_ads",
+        "university_ads.University",
+        "university_ads.UniversityAd",
+        "university_ads.AdImpression",
+        "university_ads.AdClick",
+        # 6. النقاشات والمساعد الذكي
+        "course_discussions",
+        "course_discussions.DiscussionThread",
+        "course_discussions.DiscussionPost",
+        "ai_assistant",
+        "ai_assistant.ChatMessage",
+        # 7. إدارة المستخدمين والأمان
+        "auth",
+        "auth.User",
+        "auth.Group",
+        "auditlog",
+        "auditlog.LogEntry",
+    ],
+
+    # Hide technical or redundant apps from the main sidebar
+    "hide_apps": ["sites", "program_ads"],
 
     # Custom icons for apps/models
     "icons": {
-        "auth": "fas fa-users-cog",
+        "auth": "fas fa-user-shield",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "sites.site": "fas fa-globe",
+        "auditlog.logentry": "fas fa-history",
+        "academic_programs": "fas fa-graduation-cap",
         "academic_programs.AcademicProgram": "fas fa-graduation-cap",
         "academic_programs.ProgramProvider": "fas fa-university",
+        "academic_programs.FieldOfStudy": "fas fa-book-open",
+        "academic_programs.ProgramModule": "fas fa-layer-group",
+        "academic_programs.ProgramLesson": "fas fa-chalkboard-teacher",
+        "academic_programs.Specialization": "fas fa-medal",
+        "academic_programs.SpecializationCourse": "fas fa-route",
         "academic_programs.ProgramApplication": "fas fa-file-signature",
+        "academic_programs.UserReferral": "fas fa-user-plus",
+        "academic_programs.ApplicationStatusHistory": "fas fa-stream",
+        "university_ads": "fas fa-bullhorn",
+        "university_ads.University": "fas fa-university",
+        "university_ads.UniversityAd": "fas fa-bullhorn",
+        "university_ads.AdImpression": "fas fa-eye",
+        "university_ads.AdClick": "fas fa-mouse-pointer",
+        "learnnov_payments": "fas fa-credit-card",
         "learnnov_payments.Order": "fas fa-shopping-cart",
         "learnnov_payments.StripePayment": "fab fa-stripe",
+        "learnnov_payments.HyperPayPayment": "fas fa-credit-card",
         "learnnov_payments.DiscountCode": "fas fa-tags",
-        "learnnov_exams.Exam": "fas fa-clipboard-list",
-        "university_ads.UniversityAd": "fas fa-bullhorn",
+        "learnnov_payments.DiscountCodeUsage": "fas fa-receipt",
+        "learnnov_payments.SubscriptionPlan": "fas fa-cubes",
+        "learnnov_payments.UserSubscription": "fas fa-id-card",
+        "learnnov_exams": "fas fa-clipboard-list",
+        "learnnov_exams.MockExam": "fas fa-clipboard-list",
+        "learnnov_exams.Question": "fas fa-question-circle",
+        "learnnov_exams.Choice": "fas fa-check-circle",
+        "learnnov_exams.ExamAttempt": "fas fa-user-clock",
+        "learnnov_exams.StudentAnswer": "fas fa-check-double",
+        "learnnov_certificates": "fas fa-certificate",
+        "learnnov_certificates.GeneratedCertificate": "fas fa-certificate",
+        "learnnov_certificates.SpecializationCertificate": "fas fa-award",
+        "learnnov_certificates.CertificateQRCode": "fas fa-qrcode",
+        "course_discussions": "fas fa-comments",
+        "course_discussions.DiscussionThread": "fas fa-comments",
+        "course_discussions.DiscussionPost": "fas fa-comment-dots",
+        "ai_assistant": "fas fa-robot",
+        "ai_assistant.ChatMessage": "fas fa-robot",
     },
     
     # Enable search in the UI
-    "search_model": ["auth.User", "academic_programs.AcademicProgram"],
+    "search_model": ["auth.User"],
 
     # Custom links
     "custom_links": {
@@ -325,6 +458,10 @@ JAZZMIN_SETTINGS = {
             "permissions": ["auth.view_user"]
         }]
     },
+
+    # Custom RTL stylesheet and scripts
+    "custom_css": "css/admin_rtl.css",
+    "custom_js": "js/admin_rtl.js",
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -332,11 +469,12 @@ JAZZMIN_UI_TWEAKS = {
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-dark",
+    "brand_colour": "navbar-light",
     "accent": "accent-primary",
-    "navbar": "navbar-dark",
+    "navbar": "navbar-white navbar-light",
     "no_navbar_border": False,
     "navbar_fixed": False,
+
     "layout_boxed": False,
     "footer_fixed": False,
     "sidebar_fixed": True,
@@ -347,15 +485,15 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
-    "theme": "darkly",
-    "dark_mode_theme": "darkly",
+    "theme": "litera",
+    "default_theme_mode": "light",
     "button_classes": {
-        "primary": "btn-outline-primary",
-        "secondary": "btn-outline-secondary",
-        "info": "btn-info",
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-primary",
         "warning": "btn-warning",
         "danger": "btn-danger",
-        "success": "btn-success"
+        "success": "btn-primary"
     }
 }
 

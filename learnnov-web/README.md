@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LearnNov Web — Modern Learning Frontend
 
-## Getting Started
+تطبيق الويب الحديث لمنصة **LearnNov Academic Platform** المبني باستخدام **Next.js (App Router)** و **TypeScript** و **Prisma**.
 
-First, run the development server:
+---
 
+## 🏗️ نظرة عامة على البنية المعمارية (Architecture)
+
+يعمل تطبيق `learnnov-web` كواجهة أمامية تفاعلية حديثة ترتبط مع كل من:
+1. **LearnNov Cloud (Django API Server - Port 8000):**
+   - إدارة المسارات الأكاديمية والتخصصات (`/specializations`).
+   - بوابات الدفع واشتراكات الطلاب عبر Stripe (`/payments`).
+   - نماذج وتصحيح الامتحانات الأكاديمية (`/exams`).
+   - التحليلات ولوحة تحكم المعلم / الإدارة (`/analytics`, `/instructor`, `/admin`).
+
+2. **LearnNov LMS (Open edX Core - Port 8001/Tutor):**
+   - تجربة استعراض مساقات الفيديو والمحتوى التفاعلي (XBlocks).
+   - استوديو تصميم الدورات (Studio / CMS).
+
+3. **Prisma ORM & Local Cache / State:**
+   - إدارة حالة الجلسة والتفضيلات السريعة للواجهة.
+
+---
+
+## 🚀 البدء والتشغيل (Getting Started)
+
+### 1. تثبيت الاعتماديات
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. توليد نماذج Prisma
+```bash
+npx prisma generate
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. تشغيل خادم التطوير
+```bash
+npm run dev
+```
+سيكون التطبيق متاحاً على: [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧪 الاختبارات (Testing)
 
-To learn more about Next.js, take a look at the following resources:
+- **تشغيل اختبارات الوحدة (Unit Tests via Vitest):**
+  ```bash
+  npm run test:run
+  ```
+- **تشغيل تقرير التغطية (Coverage):**
+  ```bash
+  npm run test:coverage
+  ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📁 هيكل المجلدات الرئيسي (Folder Structure)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/`: مسارات وتطبيقات Next.js App Router (الدورات، الاختبارات، المدفوعات، إلخ).
+- `src/components/`: المكونات التفاعلية القابلة لإعادة الاستخدام (UI Components).
+- `src/services/`: دوال استدعاء وتكامل الـ REST APIs مع سيرفر Django.
+- `src/context/`: مزودات الحالة العامة (State Management & Auth Context).
+- `src/lib/`: الدوال المساعدة وإعدادات Prisma Client.
+- `src/middleware.ts`: معالجة توجيه الحماية والجلسات للمسارات المحمية.

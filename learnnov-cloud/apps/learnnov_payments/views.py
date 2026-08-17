@@ -10,8 +10,14 @@ stripe.api_key = getattr(settings, 'LEARNNOV_STRIPE_SECRET_KEY', '')
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = '__all__'
-        read_only_fields = ['id', 'user', 'status', 'created_at']
+        # حقول صريحة بدلاً من '__all__' لمنع كشف حقول حساسة مستقبلاً
+        fields = [
+            'id', 'user', 'program', 'course_id', 'course_name',
+            'amount', 'currency', 'status', 'gateway',
+            'referral_code', 'discount_code',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'user', 'status', 'created_at', 'updated_at']
 
 class CreateStripePaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -61,9 +67,11 @@ class CreateStripePaymentView(APIView):
                     if user_uses >= discount_obj.max_uses_per_user:
                         return Response({'error': 'You have already used this discount code'}, status=status.HTTP_400_BAD_REQUEST)
                     
-                    # Apply discount
+                    # Apply discount with proper decimal rounding
                     import decimal
-                    amount = amount * decimal.Decimal(1 - (discount_obj.discount_percentage / 100))
+                    discount_ratio = discount_obj.discount_percentage / decimal.Decimal('100')
+                    amount = amount * (decimal.Decimal('1.00') - discount_ratio)
+                    amount = amount.quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_HALF_UP)
                     amount = max(amount, decimal.Decimal('0.00'))
                 except DiscountCode.DoesNotExist:
                     return Response({'error': 'Invalid discount code'}, status=status.HTTP_400_BAD_REQUEST)
@@ -87,11 +95,28 @@ class CreateStripePaymentView(APIView):
                     order.save()
 
             try:
+                if amount <= 0:
+                    # 100% Discount or Free course - bypass Stripe completely
+                    order.status = OrderStatus.PAID
+                    order.save()
+                    if discount_obj:
+                        DiscountCodeUsage.objects.create(
+                            discount_code=discount_obj,
+                            user=user,
+                            order=order
+                        )
+                    return Response({
+                        'client_secret': None,
+                        'order_id': order.id,
+                        'message': 'Free enrollment successful'
+                    })
+
                 from apps.core.circuit_breaker import circuit_breaker
                 
                 def create_intent(*args, **kwargs):
+                    amount_in_cents = int(amount * 100)
                     return stripe.PaymentIntent.create(
-                        amount=int(float(amount) * 100),
+                        amount=amount_in_cents,
                         currency='sar',
                         metadata={'order_id': str(order.id)},
                         request_timeout=8.0
@@ -403,10 +428,18 @@ class CreateSubscriptionCheckoutSessionView(APIView):
 class SimulateSubscriptionCheckoutView(APIView):
     """
     سيموليشن تجريبي لتفعيل الاشتراكات دون الحاجة للاتصال بـ Stripe الفعلي.
+    
+    ⚠️  تحذير: هذا الـ endpoint متاح فقط في بيئة التطوير (DEBUG=True).
+    في الإنتاج، يتم إخفاؤه تلقائياً وإعادة 404 لمنع التحايل على الدفع.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        # حماية من الاستخدام في بيئة الإنتاج
+        if not settings.DEBUG:
+            from rest_framework.exceptions import NotFound
+            raise NotFound()
+
         plan_id = request.data.get('plan_id')
         action = request.data.get('action', 'activate')
         
@@ -440,6 +473,7 @@ class SimulateSubscriptionCheckoutView(APIView):
             'status': sub.status,
             'current_period_end': sub.current_period_end
         })
+
 
 
 class CancelSubscriptionView(APIView):

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/services/api';
 
 interface Message {
   id: string;
@@ -104,7 +105,7 @@ interface ChatMessageResponse {
 
 export default function ChatbotPage() {
   const router = useRouter();
-  const { isLoggedIn, accessToken, isLoading } = useAuth();
+  const { isLoggedIn, isLoading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -117,17 +118,10 @@ export default function ChatbotPage() {
   }, [isLoggedIn, isLoading, router]);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) return;
+    if (!isLoggedIn) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
     // Fetch message history from database
-    fetch(`${apiUrl}/api/ai/chat/history/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Could not load history");
-        return res.json();
-      })
+    api.get<ChatMessageResponse[]>('/api/ai/chat/history')
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setMessages(data.map((msg: ChatMessageResponse, idx: number) => ({
@@ -146,14 +140,14 @@ export default function ChatbotPage() {
           { id: 'welcome', role: 'assistant', content: 'أهلاً بك! أنا مساعد ليرنوف الأكاديمي. كيف يمكنني مساعدتك في دراستك اليوم؟' }
         ]);
       });
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
   const sendMessage = async () => {
-    if (!input.trim() || !accessToken) return;
+    if (!input.trim() || !isLoggedIn) return;
     
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input };
     setMessages(prev => [...prev, userMsg]);
@@ -161,21 +155,14 @@ export default function ChatbotPage() {
     setIsTyping(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
-      const res = await fetch(`${apiUrl}/api/ai/chat/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ message: userMsg.content })
+      const data = await api.post<{ reply?: string; error?: string }>('/api/ai/chat', {
+        message: userMsg.content
       });
-      const data = await res.json();
       
       const assistantMsg: Message = { 
         id: (Date.now() + 1).toString(), 
         role: 'assistant', 
-        content: data.reply || data.error 
+        content: data.reply || data.error || ''
       };
       setMessages(prev => [...prev, assistantMsg]);
     } catch {

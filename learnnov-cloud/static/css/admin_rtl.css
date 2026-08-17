@@ -1,0 +1,68 @@
+body {
+    overflow-x: hidden;
+}
+.row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Custom Top Nav Colors: Blue, Green, White */
+.app-header.navbar {
+    background-color: #0b5ed7 !important; /* Blue background */
+    border-bottom: 2px solid #198754 !important; /* Green accent border */
+}
+
+/* Nav links in the main header */
+.app-header.navbar .nav-link, .app-header.navbar .brand-link {
+    color: #ffffff !important; /* White text */
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect on nav links */
+.app-header.navbar .nav-link:hover, 
+.app-header.navbar .nav-item.show .nav-link {
+    color: #20c997 !important; /* Green text on hover */
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Dropdown styling */
+.dropdown-menu {
+    background-color: #ffffff !important; /* White background */
+    border: 1px solid #198754 !important; /* Green border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    color: #0b5ed7 !important; /* Blue text */
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: #198754 !important; /* Green background on hover */
+    color: #ffffff !important; /* White text on hover */
+}
+
+/* Fix Huge Logo Issue in Top Navbar */
+.app-header .brand-image {
+    max-height: 40px !important;
+    width: auto !important;
+    margin-top: -5px;
+}
+
+/* Search bar styling in navbar */
+.form-control-navbar {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+}
+.form-control-navbar::placeholder {
+    color: #e0e0e0 !important;
+}
+.btn-navbar {
+    color: #ffffff !important;
+}
+.btn-navbar:hover {
+    color: #20c997 !important;
+}

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/services/api';
 
 interface Invoice {
   id: number;
@@ -40,7 +41,7 @@ function getFutureDateISO(days: number): string {
 }
 
 export default function PaymentsPage() {
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
 
   // Discount Code States
   const [couponCode, setCouponCode] = useState('');
@@ -69,7 +70,7 @@ export default function PaymentsPage() {
   const [subPlans, setSubPlans] = useState<Plan[]>([]);
   const [subSuccess, setSubSuccess] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
 
   const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -82,22 +83,25 @@ export default function PaymentsPage() {
   }, [isLoggedIn, isLoading, router]);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) return;
+    if (!isLoggedIn) return;
 
-    // Initial query to discount check
-    fetch(`${apiUrl}/api/payments/discount/apply/`, { 
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    }).catch(() => {});
+    // Initial query to discount check using centralized api client
+    api.post('/api/payments/discount/apply/', {}).catch(() => {});
 
-    // Fetch invoices
-    fetch(`${apiUrl}/api/payments/orders/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("API call failed");
-        return res.json();
-      })
+    const defaultInvoices: Invoice[] = [
+      { id: 981, item_name: 'رسوم التحاق: احتراف هندسة الأوامر والذكاء الاصطناعي', original_amount: 450, discount_applied: 50, net_amount: 400, status: 'paid', date: '2026-07-20', txn_ref: 'TXN-9821-LNOV' },
+      { id: 982, item_name: 'رسوم دراسية: بناء تطبيقات الويب الفائقة السرعة بـ Next.js', original_amount: 590, discount_applied: 0, net_amount: 590, status: 'unpaid', date: '2026-07-23' }
+    ];
+
+    const defaultPlans: Plan[] = [
+      { id: 1, name: 'الباقة الفردية المتقدمة', name_en: 'Advanced Individual Pass', slug: 'individual-pass', description: 'وصول لا محدود لكافة المقررات التخصصية والاختبارات المعتمدة', price: 190, currency: 'ر.س', billing_cycle: 'monthly' },
+      { id: 2, name: 'العضوية السنوية الخارقة', name_en: 'Enterprise Annual Membership', slug: 'annual-membership', description: 'وصول شامل مع إصدار الشهادات الرقمية المعتمدة مجاناً وبلا حدود', price: 1490, currency: 'ر.س', billing_cycle: 'yearly' }
+    ];
+
+    setSubPlans(defaultPlans);
+
+    // Fetch invoices using centralized api client
+    api.get<any>('/api/payments/orders/')
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
@@ -107,67 +111,23 @@ export default function PaymentsPage() {
             original_amount: order.amount,
             discount_applied: 0,
             net_amount: order.amount,
-            status: (order.status === 'PAID' ? 'paid' : order.status === 'PENDING' ? 'pending' : 'unpaid') as 'paid' | 'pending' | 'unpaid',
-            date: new Date(order.created_at).toISOString().split('T')[0],
-            txn_ref: order.transaction_reference || undefined
+            status: (order.status === 'completed' || order.status === 'paid' ? 'paid' : 'unpaid') as 'paid' | 'unpaid' | 'pending',
+            date: order.created_at ? order.created_at.split('T')[0] : '2026-07-24',
+            txn_ref: order.transaction_reference || `TXN-${order.id}`
           }));
           setInvoices(mappedInvoices);
         } else {
-          // Fallback to premium template
-          setInvoices([
-            {
-              id: 901,
-              item_name: "رسوم ماجستير الذكاء الاصطناعي - الفصل الأول",
-              original_amount: 22500,
-              discount_applied: 0,
-              net_amount: 22500,
-              status: "unpaid",
-              date: "2026-05-24"
-            },
-            {
-              id: 902,
-              item_name: "رسوم القبول والتسجيل الأكاديمي الإداري",
-              original_amount: 500,
-              discount_applied: 0,
-              net_amount: 500,
-              status: "paid",
-              date: "2026-05-24",
-              txn_ref: "TXN-LNOV-9328401"
-            }
-          ]);
+          setInvoices(defaultInvoices);
         }
-        setLoading(false);
       })
-      .catch(() => {
-        setInvoices([
-          {
-            id: 901,
-            item_name: "رسوم ماجستير الذكاء الاصطناعي - الفصل الأول",
-            original_amount: 22500,
-            discount_applied: 0,
-            net_amount: 22500,
-            status: "unpaid",
-            date: "2026-05-24"
-          },
-          {
-            id: 902,
-            item_name: "رسوم القبول والتسجيل الأكاديمي الإداري",
-            original_amount: 500,
-            discount_applied: 0,
-            net_amount: 500,
-            status: "paid",
-            date: "2026-05-24",
-            txn_ref: "TXN-LNOV-9328401"
-          }
-        ]);
-        setLoading(false);
-      });
+      .catch((err) => {
+        console.warn("API offline, using fallback invoices:", err);
+        setInvoices(defaultInvoices);
+      })
+      .finally(() => setLoading(false));
 
-    // Fetch active user subscription
-    fetch(`${apiUrl}/api/payments/subscriptions/my/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => res.json())
+    // Fetch active user subscription using centralized api client
+    api.get<any>('/api/payments/subscriptions/my/')
       .then(json => {
         if (json.status === 'active' || json.status === 'trialing') {
           setActiveSubscription(json);
@@ -177,9 +137,8 @@ export default function PaymentsPage() {
       })
       .catch(() => {});
 
-    // Fetch subscription plans
-    fetch(`${apiUrl}/api/payments/subscriptions/plans/`)
-      .then(res => res.json())
+    // Fetch subscription plans using centralized api client
+    api.get<any>('/api/payments/subscriptions/plans/')
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
@@ -194,7 +153,7 @@ export default function PaymentsPage() {
           { id: 2, name: 'الاشتراك السنوي الشامل', name_en: 'Premium Annual', slug: 'yearly', description: 'وصول شامل لجميع الكورسات والتخصصات والشهادات المهنية طوال العام ووفر 20%.', price: '2499.00', currency: 'SAR', billing_cycle: 'yearly' }
         ]);
       });
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn]);
 
   // Handle Apply Discount Code
   const handleApplyDiscount = async (e: React.FormEvent) => {
@@ -210,18 +169,7 @@ export default function PaymentsPage() {
     };
 
     try {
-      const token = accessToken;
-      const res = await fetch(`${apiUrl}/api/payments/discount/apply/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Invalid coupon");
-      const json = await res.json();
+      const json = await api.post<any>('/api/payments/discount/apply/', payload);
       
       setCouponSuccess(`تم تطبيق كوبون الخصم بنجاح! تم خصم ${json.discount_percent || 15}% من إجمالي الرسوم.`);
       
@@ -265,70 +213,51 @@ export default function PaymentsPage() {
     e.preventDefault();
     if (!activeCheckoutInvoice) return;
 
-    setIsPaying(true);
-    setPaySuccess(false);
-
     const payload = {
       invoice_id: activeCheckoutInvoice.id,
-      amount: activeCheckoutInvoice.net_amount
+      amount: activeCheckoutInvoice.net_amount,
+      coupon_code: couponCode
     };
 
+    let txnRef = `TXN-ST-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
     try {
-      const token = accessToken;
-      await fetch(`${apiUrl}/api/payments/stripe/create-intent/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const res = await api.post<any>('/api/payments/checkout', payload);
+      if (res.transaction_reference) {
+        txnRef = res.transaction_reference;
+      }
     } catch (err) {
-      console.warn("Could not call Stripe API, executing secure simulation checkout:", err);
+      console.warn("Executed secure simulation checkout fallback:", err);
     }
 
+    setInvoices(prev => prev.map(inv => {
+      if (inv.id === activeCheckoutInvoice.id) {
+        return {
+          ...inv,
+          status: 'paid',
+          txn_ref: txnRef
+        };
+      }
+      return inv;
+    }));
+
+    setIsPaying(false);
+    setPaySuccess(true);
+
     setTimeout(() => {
-      setInvoices(prev => prev.map(inv => {
-        if (inv.id === activeCheckoutInvoice.id) {
-          return {
-            ...inv,
-            status: 'paid',
-            txn_ref: `TXN-ST-${Math.floor(1000000 + Math.random() * 9000000)}`
-          };
-        }
-        return inv;
-      }));
-
-      setIsPaying(false);
-      setPaySuccess(true);
-
-      setTimeout(() => {
-        setActiveCheckoutInvoice(null);
-        setPaySuccess(false);
-        setCardNumber('');
-        setExpiry('');
-        setCvv('');
-        setCardName('');
-      }, 2000);
+      setActiveCheckoutInvoice(null);
+      setPaySuccess(false);
+      setCardNumber('');
+      setExpiry('');
+      setCvv('');
+      setCardName('');
     }, 2000);
   };
 
-  // Simulate subscription activation
   const handleSimulateSubscription = async (planId: number, action: 'activate' | 'deactivate' = 'activate') => {
     setSubSuccess(null);
-    const token = accessToken;
     try {
-      const res = await fetch(`${apiUrl}/api/payments/subscriptions/simulate/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ plan_id: planId, action: action })
-      });
-
-      if (!res.ok) throw new Error("Subscription simulation failed");
-      const json = await res.json();
+      const json = await api.post<any>('/api/payments/subscriptions/simulate/', { plan_id: planId, action: action });
 
       if (action === 'deactivate') {
         setActiveSubscription(null);
@@ -365,16 +294,10 @@ export default function PaymentsPage() {
 
   // Cancel renewal
   const handleCancelRenewal = async () => {
-    const token = accessToken;
     try {
-      const res = await fetch(`${apiUrl}/api/payments/subscriptions/cancel/`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setSubSuccess('تم إلغاء التجديد التلقائي للاشتراك بنجاح.');
-        setActiveSubscription(prev => prev ? { ...prev, cancel_at_period_end: true } : null);
-      }
+      const res = await api.post<any>('/api/payments/subscriptions/cancel/', {});
+      setSubSuccess('تم إلغاء التجديد التلقائي للاشتراك بنجاح.');
+      setActiveSubscription(prev => prev ? { ...prev, cancel_at_period_end: true } : null);
     } catch {
       setSubSuccess('تم إلغاء التجديد التلقائي (محاكاة سحابية محلية).');
       setActiveSubscription(prev => prev ? { ...prev, cancel_at_period_end: true } : null);

@@ -48,7 +48,15 @@ def validate_file_infection(file):
     """
     Scans the uploaded file for malware/viruses using ClamAV.
     Requires a running clamd service.
+    
+    سلوك الأمان:
+    - بيئة الإنتاج (DEBUG=False): رفض الملف إذا كان ClamAV غير متاح (Fail-Closed).
+    - بيئة التطوير (DEBUG=True): السماح مع تسجيل تحذير (Fail-Open للتطوير فقط).
     """
+    import logging
+    from django.conf import settings
+    logger = logging.getLogger(__name__)
+    
     clamav_host = os.getenv('CLAMAV_HOST', 'clamav')
     clamav_port = int(os.getenv('CLAMAV_PORT', 3310))
     try:
@@ -57,10 +65,11 @@ def validate_file_infection(file):
         
         # Test connection
         if not cd.ping() == 'PONG':
-            # If clamd is down, we might want to log this.
-            # In a strict environment, we fail the upload. For dev, we might pass.
-            # Here we enforce strict security (fail closed).
-            raise ValidationError(_('Antivirus scanner is currently unavailable.'))
+            if settings.DEBUG:
+                logger.warning('[SECURITY] ClamAV is unavailable — file scan skipped (DEV mode only). '
+                               'This MUST be fixed before going to production.')
+                return
+            raise ValidationError(_('خدمة فحص الأمان غير متاحة حالياً. يرجى المحاولة لاحقاً.'))
         
         # Perform scan on the stream
         # clamd.instream expects a file-like object with read()
@@ -71,19 +80,30 @@ def validate_file_infection(file):
         if scan_result and scan_result.get('stream', [None])[0] == 'FOUND':
             virus_name = scan_result['stream'][1]
             raise ValidationError(
-                _('Malware detected in file: %(virus)s'),
+                _('تم اكتشاف تهديد أمني في الملف: %(virus)s'),
                 params={'virus': virus_name},
             )
 
     except clamd.ConnectionError:
         file.seek(0)
-        # Log: ClamAV daemon not running!
-        # In a real system, you might notify admins.
-        # We will allow it for development if the connection fails, 
-        # but in prod you should raise ValidationError.
-        pass
+        if settings.DEBUG:
+            # في بيئة التطوير: السماح مع تحذير واضح
+            logger.warning(
+                '[SECURITY] ClamAV daemon is not running (ConnectionError). '
+                'File upload allowed in DEBUG mode only. '
+                'CRITICAL: Ensure ClamAV is running before deploying to production!'
+            )
+        else:
+            # في بيئة الإنتاج: رفض الملف (Fail-Closed) — لا مساومة على الأمان
+            logger.error('[SECURITY] ClamAV daemon is unreachable in PRODUCTION. File upload rejected.')
+            raise ValidationError(
+                _('خدمة فحص الأمان غير متاحة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم الفني.')
+            )
     except Exception as e:
         file.seek(0)
         if isinstance(e, ValidationError):
             raise
-        pass # Allow fallback if scanning fails unexpectedly, or raise if strict
+        logger.error(f'[SECURITY] Unexpected error during ClamAV scan: {e}')
+        if not settings.DEBUG:
+            # في الإنتاج: رفض أي خطأ غير متوقع بدلاً من السماح به
+            raise ValidationError(_('تعذّر إتمام فحص الأمان. يرجى المحاولة لاحقاً.'))

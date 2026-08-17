@@ -1,0 +1,96 @@
+# Arabic translations for LearnNov Platform.
+# Copyright (C) 2026 LearnNov Team
+msgid ""
+msgstr ""
+"Project-Id-Version: LearnNov 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-11 00:00+0300\n"
+"PO-Revision-Date: 2026-08-11 00:00+0300\n"
+"Last-Translator: LearnNov Team\n"
+"Language-Team: Arabic <ar@learnnov.org>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم الرئيسية"
+
+msgid "Authentication and Authorization"
+msgstr "إدارة المستخدمين والصلاحيات"
+
+msgid "Audit log"
+msgstr "سجل العمليات والتدقيق"
+
+msgid "Log entries"
+msgstr "سجلات العمليات"
+
+msgid "Sites"
+msgstr "إعدادات المواقع"
+
+msgid "Add"
+msgstr "إضافة"
+
+msgid "Change"
+msgstr "تعديل"
+
+msgid "View"
+msgstr "عرض"
+
+msgid "Go"
+msgstr "تنفيذ"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Recent actions"
+msgstr "آخر الأنشطة والعمليات"
+
+msgid "None available"
+msgstr "لا توجد أنشطة سابقة"
+
+msgid "See all"
+msgstr "عرض الكل"
+
+msgid "Action:"
+msgstr "الإجراء:"
+
+msgid "Action"
+msgstr "الإجراء"
+
+msgid "Users"
+msgstr "المستخدمون"
+
+msgid "Groups"
+msgstr "المجموعات"
+
+msgid "View site"
+msgstr "زيارة الموقع"
+
+msgid "Log out"
+msgstr "تسجيل الخروج"
+
+msgid "Change password"
+msgstr "تغيير كلمة المرور"
+
+msgid "Filter"
+msgstr "تصفية"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "By"
+msgstr "بواسطة"
+
+msgid "All"
+msgstr "الكل"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Unknown"
+msgstr "غير معروف"

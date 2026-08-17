@@ -2,7 +2,7 @@
 # File: security_scan_extended.ps1
 # Scans for a broader set of insecure patterns and hard‑coded secrets.
 
-$searchRoot = "b:/LEARNNOV PLATFORM/openedx-platform-master"
+$searchRoot = "b:/LEARNNOV PLATFORM/learnnov-lms"
 $patterns = @(
     "eval\\(",
     "exec\\(",

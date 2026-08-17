@@ -1,6 +1,8 @@
 import logging
 import threading
+import sys
 from django.db.models import F
+from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +15,9 @@ class DelayableTask:
         self.func = func
 
     def delay(self, *args, **kwargs):
+        if 'test' in sys.argv:
+            self._run_safe(*args, **kwargs)
+            return None
         thread = threading.Thread(target=self._run_safe, args=args, kwargs=kwargs)
         thread.daemon = True
         thread.start()
@@ -24,10 +29,35 @@ class DelayableTask:
         except Exception as e:
             logger.exception(f"Error in background task {self.func.__name__}: {e}")
 
-def task(func):
-    return DelayableTask(func)
+def hybrid_task(func):
+    # 1. Create a real Celery task
+    celery_task = shared_task(func)
+    
+    # 2. Create a fallback task
+    fallback_task = DelayableTask(func)
+    
+    class HybridTaskWrapper:
+        def __init__(self):
+            self.celery_task = celery_task
+            self.fallback_task = fallback_task
+            
+        def delay(self, *args, **kwargs):
+            if 'test' in sys.argv:
+                return self.fallback_task.delay(*args, **kwargs)
+            
+            try:
+                # Try sending task to Celery Broker
+                return self.celery_task.delay(*args, **kwargs)
+            except Exception as e:
+                logger.warning(f"Celery broker not available, falling back to background Thread: {e}")
+                return self.fallback_task.delay(*args, **kwargs)
+                
+        def __call__(self, *args, **kwargs):
+            return func(*args, **kwargs)
+            
+    return HybridTaskWrapper()
 
-@task
+@hybrid_task
 def increment_ad_impressions_task(ad_id):
     """تحديث عداد المشاهدات في الخلفية atomically."""
     from .models import UniversityAd
@@ -36,7 +66,7 @@ def increment_ad_impressions_task(ad_id):
     except Exception as e:
         logger.error(f"Error incrementing ad impressions in task: {e}")
 
-@task
+@hybrid_task
 def increment_ad_clicks_task(ad_id):
     """تحديث عداد النقرات في الخلفية atomically."""
     from .models import UniversityAd

@@ -25,36 +25,20 @@ class ServeAdsView(generics.ListAPIView):
             end_date__gte=timezone.now()
         ).order_by('priority', '-is_premium')
 
+from .tasks import increment_program_ad_impressions_task, increment_program_ad_clicks_task
+from rest_framework.response import Response
+from rest_framework import status
+
 class TrackAdImpressionView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, ad_id):
-        from apps.university_ads.tasks import task
-        
-        @task
-        def update_impression(ad_id):
-            from .models import Advertisement
-            from django.db.models import F
-            Advertisement.objects.filter(id=ad_id).update(total_impressions=F('total_impressions') + 1)
-            
-        update_impression.delay(ad_id)
-        from rest_framework.response import Response
-        from rest_framework import status
+        increment_program_ad_impressions_task.delay(ad_id)
         return Response(status=status.HTTP_200_OK)
 
 class TrackAdClickView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, ad_id):
-        from apps.university_ads.tasks import task
-        
-        @task
-        def update_click(ad_id):
-            from .models import Advertisement
-            from django.db.models import F
-            Advertisement.objects.filter(id=ad_id).update(total_clicks=F('total_clicks') + 1)
-            
-        update_click.delay(ad_id)
-        from rest_framework.response import Response
-        from rest_framework import status
+        increment_program_ad_clicks_task.delay(ad_id)
         return Response(status=status.HTTP_200_OK)

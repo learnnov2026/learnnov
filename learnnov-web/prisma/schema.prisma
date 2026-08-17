@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String?
+  role         String        @default("student")
+  roleId       String?
+  roleObj      Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  status       String        @default("active")
+  avatar       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  enrollments  Enrollment[]
+  certificates Certificate[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique // e.g., 'admin', 'instructor', 'student', 'support'
+  description String?
+  permissions RolePermission[]
+  users       User[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  action      String           // e.g., 'create', 'read', 'update', 'delete', 'manage'
+  resource    String           // e.g., 'users', 'courses', 'enrollments', 'discussions'
+  description String?
+  roles       RolePermission[]
+
+  @@unique([action, resource])
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model OTPRecord {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  otp       String
+  expiresAt DateTime
+  userData  String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model Course {
+  id             String       @id @default(uuid())
+  title          String
+  category       String
+  instructor     String
+  price          Float
+  capacity       Int
+  enrolled_count Int          @default(0)
+  image          String
+  description    String
+  startDate      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  enrollments    Enrollment[]
+  exams          Exam[]
+
+  @@index([category])
+  @@index([instructor])
+}
+
+model Enrollment {
+  id             String   @id @default(uuid())
+  userId         String
+  courseId       String
+  date           DateTime @default(now())
+  status         String   @default("pending") // pending, approved, rejected
+  payment_status String   @default("unpaid") // unpaid, paid, aid_requested
+  notes          String?
+  
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model Certificate {
+  id                String   @id @default(uuid())
+  userId            String
+  courseTitle       String
+  issueDate         DateTime @default(now())
+  verifyCode        String   @unique
+  grade             String
+  is_specialization Boolean  @default(false)
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([verifyCode])
+}
+
+model DiscussionPost {
+  id         String   @id @default(uuid())
+  author     String
+  authorRole String
+  avatar     String
+  title      String
+  content    String
+  category   String
+  likes      Int      @default(0)
+  replies    Int      @default(0)
+  timestamp  String
+  createdAt  DateTime @default(now())
+
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Exam {
+  id              String     @id @default(uuid())
+  title           String
+  courseId        String
+  durationMinutes Int
+  totalQuestions  Int
+  passingScore    Float
+  
+  course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions       Question[]
+
+  @@index([courseId])
+}
+
+model Question {
+  id           String @id @default(uuid())
+  examId       String
+  question     String
+  options      String // JSON string of options array
+  correctIndex Int
+  
+  exam         Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId])
+}
+
+model Coupon {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountPercent Float
+  maxUses         Int      @default(100)
+  usedCount       Int      @default(0)
+  active          Boolean  @default(true)
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([active])
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  ticketId  String   @unique
+  userName  String
+  email     String
+  type      String   @default("technical") // technical, academic, billing
+  subject   String
+  message   String
+  status    String   @default("open") // open, in_progress, resolved
+  priority  String   @default("high") // normal, high, urgent
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId])
+  @@index([status])
+  @@index([priority])
+}
+
+model InstructorApplication {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  specialization  String
+  experienceYears Int      @default(1)
+  bio             String?
+  status          String   @default("pending") // pending, approved, rejected
+  appliedAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  user      String
+  action    String
+  resource  String
+  ip        String
+  severity  String
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([severity])
+}
+
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}

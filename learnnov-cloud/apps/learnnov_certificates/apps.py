@@ -3,4 +3,4 @@ from django.apps import AppConfig
 class LearnNovCertificatesConfig(AppConfig):
     name = 'apps.learnnov_certificates'
     default_auto_field = 'django.db.models.BigAutoField'
-    verbose_name = 'الشهادات'
+    verbose_name = 'الشهادات المعتمدة'

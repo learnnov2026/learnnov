@@ -35,7 +35,7 @@ spec:
   # يطبق فقط على البودات التي تستقبل طلبات من Ingress/LoadBalancer
   podSelector:
     matchExpressions:
-      - {key: app.kubernetes.io/component, operator: In, values: [django, openedx]}
+      - {key: app.kubernetes.io/component, operator: In, values: [django, lms]}
   policyTypes:
   - Ingress
   ingress:

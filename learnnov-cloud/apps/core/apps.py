@@ -30,5 +30,18 @@ class CoreConfig(AppConfig):
             auditlog.register(StripePayment)
             auditlog.register(DiscountCode)
             auditlog.register(UniversityAd)
-        except ImportError:
+        except Exception:
+            pass
+
+        # Override built-in apps verbose_name to Arabic
+        try:
+            from django.contrib.auth.apps import AuthConfig
+            AuthConfig.verbose_name = 'المستخدمون والصلاحيات'
+        except Exception:
+            pass
+
+        try:
+            from auditlog.apps import AuditlogConfig
+            AuditlogConfig.verbose_name = 'سجل العمليات والتدقيق'
+        except Exception:
             pass

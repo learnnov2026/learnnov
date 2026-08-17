@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">تسجيل الطلاب في كورس محدد</h3>
+    </div>
+    <div class="card-body">
+        <p>لقد قمت بتحديد <strong>{{ users|length }}</strong> طالب. الرجاء اختيار الكورس الذي تود تسجيلهم فيه مجاناً واعتماد قبولهم.</p>
+        
+        <form action="" method="post">
+            {% csrf_token %}
+            {% for obj in users %}
+                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}" />
+            {% endfor %}
+            <input type="hidden" name="action" value="enroll_users_in_program" />
+            
+            <div class="form-group mb-3">
+                <label>الكورس الأكاديمي (البرنامج):</label>
+                <select name="program" class="form-control" required>
+                    <option value="">-- اختر الكورس --</option>
+                    {% for p in programs %}
+                        <option value="{{ p.id }}">{{ p.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <input type="hidden" name="apply" value="1" />
+                <button type="submit" class="btn btn-success">تسجيل واعتماد القبول للكل</button>
+                <a href="." class="btn btn-secondary">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

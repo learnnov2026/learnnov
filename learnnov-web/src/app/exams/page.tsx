@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/services/api';
 
 interface Exam {
   id: number;
@@ -31,7 +32,7 @@ export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
 
   // Live Exam Testing Engine States
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
@@ -43,7 +44,7 @@ export default function ExamsPage() {
   const [examScore, setExamScore] = useState(0);
   const [examPassed, setExamPassed] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -52,13 +53,10 @@ export default function ExamsPage() {
   }, [isLoggedIn, isLoading, router]);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) return;
+    if (!isLoggedIn) return;
 
-    // Fetch exams list from database
-    fetch(`${apiUrl}/api/exams/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => res.json())
+    // Fetch exams list from database using centralized api client
+    api.get<Exam[]>('/api/exams/')
       .then(json => {
         if (Array.isArray(json) && json.length > 0) {
           setExams(json);
@@ -75,11 +73,8 @@ export default function ExamsPage() {
         ]);
       });
 
-    // Fetch attempts
-    fetch(`${apiUrl}/api/exams/attempts/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => res.json())
+    // Fetch attempts using centralized api client
+    api.get<Attempt[]>('/api/exams/attempts/')
       .then(json => {
         if (Array.isArray(json)) {
           setAttempts(json);
@@ -94,7 +89,7 @@ export default function ExamsPage() {
         ]);
         setLoading(false);
       });
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn]);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -107,12 +102,18 @@ export default function ExamsPage() {
   }, [activeExam, timeLeft, examFinished]);
 
   // Start Exam Attempt
-  const startExamAttempt = async (exam: Exam) => {
+  const startExamAttempt = async (exam: any) => {
     setActiveExam(exam);
-    setTimeLeft(exam.duration_minutes * 60);
+    setTimeLeft((exam.duration_minutes || 5) * 60);
     setAnswers({});
     setCurrentQuestionIndex(0);
     setExamFinished(false);
+
+    // If API returned questions, use them directly
+    if (Array.isArray(exam.questions) && exam.questions.length > 0) {
+      setQuestions(exam.questions);
+      return;
+    }
 
     // Curated high fidelity test questions based on selected exam
     let examQuestions: Question[] = [];
@@ -228,12 +229,8 @@ export default function ExamsPage() {
 
     setQuestions(examQuestions);
 
-    // Call start API
-    const token = accessToken;
-    fetch(`${apiUrl}/api/exams/${exam.id}/start/`, { 
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).catch(() => {});
+    // Call start API using centralized api client
+    api.post(`/api/exams/${exam.id}/start/`, {}).catch(() => {});
   };
 
   // Evaluate responses and Submit
@@ -247,37 +244,32 @@ export default function ExamsPage() {
       }
     });
 
-    const score = Math.round((correctCount / questions.length) * 100);
-    const passed = score >= 60;
+    const calculatedScore = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+    const isPassed = calculatedScore >= 70;
 
-    setExamScore(score);
-    setExamPassed(passed);
+    setExamScore(calculatedScore);
+    setExamPassed(isPassed);
     setExamFinished(true);
 
     const newAttempt: Attempt = {
       id: Date.now(),
       exam_title: activeExam.title,
-      score: score,
-      is_passed: passed,
+      score: calculatedScore,
+      is_passed: isPassed,
       date: new Date().toISOString().split('T')[0]
     };
 
     setAttempts(prev => [newAttempt, ...prev]);
 
-    // Send attempt submit POST to API
-    const payload = {
-      score: score,
-      is_completed: true
-    };
-    const token = accessToken;
-    fetch(`${apiUrl}/api/exams/attempts/${activeExam.id}/submit/`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
+    // Send attempt submit to database API
+    try {
+      await api.post('/api/exams/submit', {
+        examId: activeExam.id,
+        answers
+      });
+    } catch (err) {
+      console.warn("Could not save exam attempt to DB:", err);
+    }
   };
 
   // Format Time Remaining (MM:SS)
@@ -289,7 +281,7 @@ export default function ExamsPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );

@@ -28,10 +28,14 @@ class Question(models.Model):
         ('mcq', _('اختيار من متعدد')),
         ('tf', _('صح أو خطأ')),
     ]
-    exam = models.ForeignKey(MockExam, related_name='questions', on_delete=models.CASCADE)
+    exam = models.ForeignKey(MockExam, related_name='questions', on_delete=models.CASCADE, verbose_name=_('الاختبار'))
     text = models.TextField(_('نص السؤال'))
     points = models.PositiveIntegerField(_('النقاط'), default=1)
-    question_type = models.CharField(max_length=10, choices=QUESTION_TYPES, default='mcq')
+    question_type = models.CharField(_('نوع السؤال'), max_length=10, choices=QUESTION_TYPES, default='mcq')
+
+    class Meta:
+        verbose_name = _('سؤال')
+        verbose_name_plural = _('الأسئلة')
 
     def __str__(self):
         return f"{self.exam.title} - {self.text[:50]}"
@@ -39,9 +43,13 @@ class Question(models.Model):
 
 class Choice(models.Model):
     """خيارات السؤال."""
-    question = models.ForeignKey(Question, related_name='choices', on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, related_name='choices', on_delete=models.CASCADE, verbose_name=_('السؤال'))
     text = models.CharField(_('نص الخيار'), max_length=255)
     is_correct = models.BooleanField(_('إجابة صحيحة'), default=False)
+
+    class Meta:
+        verbose_name = _('خيار إجابة')
+        verbose_name_plural = _('خيارات الإجابات')
 
     def __str__(self):
         return self.text
@@ -49,12 +57,16 @@ class Choice(models.Model):
 
 class ExamAttempt(models.Model):
     """محاولة الطالب في الاختبار."""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    exam = models.ForeignKey(MockExam, on_delete=models.CASCADE)
-    score = models.FloatField(default=0)
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True, blank=True)
-    is_completed = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_('المستخدم'))
+    exam = models.ForeignKey(MockExam, on_delete=models.CASCADE, verbose_name=_('الاختبار'))
+    score = models.FloatField(_('الدرجة'), default=0)
+    start_time = models.DateTimeField(_('وقت البدء'), auto_now_add=True)
+    end_time = models.DateTimeField(_('وقت الانتهاء'), null=True, blank=True)
+    is_completed = models.BooleanField(_('مكتمل'), default=False)
+
+    class Meta:
+        verbose_name = _('محاولة اختبار')
+        verbose_name_plural = _('محاولات الاختبارات')
 
     def __str__(self):
         return f"{self.user.username} - {self.exam.title}"

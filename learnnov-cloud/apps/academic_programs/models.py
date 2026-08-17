@@ -243,6 +243,10 @@ class UserReferral(models.Model):
     total_referred = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = _('كود إحالة مستخدم')
+        verbose_name_plural = _('أكواد إحالات المستخدمين')
+
     def __str__(self):
         return f"{self.user.username} ({self.code})"
 
@@ -312,6 +316,7 @@ class ProgramLesson(models.Model):
         ('pdf', _('ملف PDF')),
         ('text', _('مقال / نص')),
         ('quiz', _('اختبار قصير')),
+        ('peer_assignment', _('واجب تقييم الزملاء')),
     ]
 
     module = models.ForeignKey(ProgramModule, on_delete=models.CASCADE, related_name='lessons', verbose_name=_('الوحدة الدراسية'))
@@ -391,4 +396,69 @@ class SpecializationEnrollment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.specialization.title} ({self.status})"
+
+
+class FinancialAidApplication(models.Model):
+    """طلبات الدعم المالي للبرامج الأكاديمية."""
+    STATUS_CHOICES = [
+        ('pending', _('قيد المراجعة')),
+        ('approved', _('مقبول')),
+        ('rejected', _('مرفوض')),
+    ]
+
+    applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='financial_aid_applications')
+    program = models.ForeignKey(AcademicProgram, on_delete=models.CASCADE, related_name='financial_aid_applications')
+    reason_for_applying = models.TextField(_('لماذا تطلب الدعم المالي؟'))
+    career_goals = models.TextField(_('كيف سيساعدك هذا البرنامج في تحقيق أهدافك المهنية؟'))
+    financial_situation = models.TextField(_('يرجى شرح ظروفك المالية الحالية'))
+    status = models.CharField(_('الحالة'), max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+    reviewer_notes = models.TextField(_('ملاحظات المراجع'), blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_financial_aid')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('طلب دعم مالي')
+        verbose_name_plural = _('طلبات الدعم المالي')
+        ordering = ['-created_at']
+        unique_together = [['applicant', 'program']]
+
+    def __str__(self):
+        return f"{self.applicant.username} - {self.program.title} ({self.status})"
+
+
+class PeerAssignmentSubmission(models.Model):
+    """تسليم الواجب من قبل الطالب لتقييمه من زملائه."""
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='peer_submissions')
+    lesson = models.ForeignKey(ProgramLesson, on_delete=models.CASCADE, related_name='peer_submissions')
+    submission_text = models.TextField(_('نص تسليم الواجب'))
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('تسليم واجب زملاء')
+        verbose_name_plural = _('تسليمات واجبات الزملاء')
+        unique_together = [['student', 'lesson']]
+
+    def __str__(self):
+        return f"{self.student.username} - {self.lesson.title}"
+
+
+class PeerReviewAssessment(models.Model):
+    """تقييم واجب طالب من قبل زميله الطالب الآخر."""
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='peer_reviews_given')
+    submission = models.ForeignKey(PeerAssignmentSubmission, on_delete=models.CASCADE, related_name='reviews_received')
+    score = models.PositiveSmallIntegerField(_('الدرجة من 1 إلى 5'), choices=[(i, str(i)) for i in range(1, 6)])
+    feedback = models.TextField(_('ملاحظات وتغذية راجعة'))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('تقييم زميل')
+        verbose_name_plural = _('تقييمات الزملاء')
+        unique_together = [['reviewer', 'submission']]
+
+    def __str__(self):
+        return f"Reviewer {self.reviewer.username} -> Sub {self.submission.id} (Score: {self.score})"
+
+
 

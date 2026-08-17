@@ -2,7 +2,7 @@
 # File: security_scan.ps1
 # This script scans the openedx-platform codebase for insecure patterns and comments.
 
-$searchRoot = "b:/LEARNNOV PLATFORM/openedx-platform-master"
+$searchRoot = "b:/LEARNNOV PLATFORM/learnnov-lms"
 $patterns = @(
     "eval\\(",
     "exec\\(",

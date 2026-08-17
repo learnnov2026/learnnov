@@ -87,7 +87,7 @@ print('✓ SiteConfiguration محدَّث لـ:', site.domain)
 # ── نسخ ملف branding/api.py المعدَّل إلى الحاوية ───────────────────────────
 echo "▶ نسخ branding/api.py المعدَّل..."
 docker cp \
-  "/mnt/b/LEARNNOV PLATFORM/openedx-platform-master/lms/djangoapps/branding/api.py" \
+  "/mnt/b/LEARNNOV PLATFORM/learnnov-lms/lms/djangoapps/branding/api.py" \
   "$CONTAINER":/openedx/edx-platform/lms/djangoapps/branding/api.py
 
 # ── إعادة تشغيل LMS ─────────────────────────────────────────────────────────

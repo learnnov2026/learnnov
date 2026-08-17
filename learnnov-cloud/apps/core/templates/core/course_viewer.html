@@ -248,11 +248,12 @@
 
         <!-- Video Player -->
         <div class="player-container">
-            <video class="video-player" controls poster="{{ program.cover_image.url }}">
+            <video class="video-player" controls poster="{% if program.cover_image %}{{ program.cover_image.url }}{% endif %}">
                 <source src="" type="video/mp4">
                 متصفحك لا يدعم مشغل الفيديو.
             </video>
         </div>
+
 
         <!-- Details & Discussion -->
         <div class="lesson-details">

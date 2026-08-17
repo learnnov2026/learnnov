@@ -40,8 +40,8 @@ class DiscussionPost(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_('آخر تحديث'))
 
     class Meta:
-        verbose_name = _('رد')
-        verbose_name_plural = _('ردود')
+        verbose_name = _('رد نقاش')
+        verbose_name_plural = _('ردود النقاشات')
         ordering = ['created_at']
 
     def __str__(self):

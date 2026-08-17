@@ -5,7 +5,7 @@
 # =============================================================================
 set -e
 
-APP_SRC="/mnt/b/LEARNNOV PLATFORM/openedx-platform-master/lms/djangoapps/learnnov_certificates"
+APP_SRC="/mnt/b/LEARNNOV PLATFORM/learnnov-lms/lms/djangoapps/learnnov_certificates"
 
 echo "▶ التحقق من تشغيل الحاوية..."
 CONTAINER=$(docker ps --filter "name=lms" --format "{{.Names}}" 2>/dev/null | head -n 1)

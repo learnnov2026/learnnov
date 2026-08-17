@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/services/api';
 
 interface Specialization {
   id: number;
@@ -19,9 +20,9 @@ export default function SpecializationsCatalog() {
   const router = useRouter();
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -32,12 +33,8 @@ export default function SpecializationsCatalog() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    // Fetch specializations list
-    fetch(`${apiUrl}/api/programs/specializations/`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load specializations");
-        return res.json();
-      })
+    // Fetch specializations list using centralized api client
+    api.get<any>('/api/programs/specializations/')
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results)) {
@@ -62,11 +59,11 @@ export default function SpecializationsCatalog() {
         ]);
         setLoading(false);
       });
-  }, [apiUrl, router]);
+  }, [isLoggedIn]);
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
         <div className="loading-spinner"></div>
       </div>
     );

@@ -1,0 +1,16 @@
+# =============================================================================
+# Pod Disruption Budget (PDB) لـ Django في منصة ليرن نوف
+# =============================================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: learnnov-django-pdb
+  namespace: learnnov
+  labels:
+    app.kubernetes.io/name: learnnov
+    app.kubernetes.io/component: django
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: django

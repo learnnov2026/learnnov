@@ -3,7 +3,7 @@
 A **monorepo** that bundles two major components:
 
 1. **learnnov-cloud** – a custom Django backend that provides API services and integrates with Render.com for deployment.
-2. **openedx-platform-master** – the upstream Open edX LMS / Studio code‑base (Python + React) used for the learning experience.
+2. **learnnov-lms** – the LMS / Studio code‑base (Python + React) used for the learning experience.
 
 ---
 
@@ -18,7 +18,7 @@ flowchart TB
     subgraph BE[Backend Services]
         direction TB
         Django[LearnNov Cloud (Django)]
-        OpenEdX[Open edX (LMS & CMS)]
+        LMS[LearnNov LMS (LMS & CMS)]
     end
     subgraph DB[Data Stores]
         direction TB
@@ -30,13 +30,13 @@ flowchart TB
         GitHub[GitHub Actions]
     end
     FE -->|API calls| Django
-    FE -->|API calls| OpenEdX
+    FE -->|API calls| LMS
     Django -->|ORM| Postgres
-    OpenEdX -->|ORM| Postgres
+    LMS -->|ORM| Postgres
     Django -->|Cache| Redis
-    OpenEdX -->|Cache| Redis
+    LMS -->|Cache| Redis
     GitHub -->|Build & Test| Django
-    GitHub -->|Build & Test| OpenEdX
+    GitHub -->|Build & Test| LMS
     GitHub -->|Deploy| Render[Render.com]
 ```
 
@@ -71,8 +71,8 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
 
-# ---------- openedx-platform ----------
-cd ../openedx-platform-master
+# ---------- learnnov-lms ----------
+cd ../learnnov-lms
 npm ci               # install Node dependencies
 npm run webpack      # build assets
 python -m venv venv2

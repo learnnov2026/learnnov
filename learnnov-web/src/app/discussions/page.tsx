@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { api } from '@/services/api';
 
 interface Course {
   id: number;
@@ -75,7 +76,7 @@ export default function DiscussionsPage() {
   const [newContent, setNewContent] = useState('');
   const [replyContent, setReplyContent] = useState('');
   
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
   const [loading, setLoading] = useState(true);
 
   const mapPost = (p: PostApiResponse): Reply => {
@@ -105,7 +106,7 @@ export default function DiscussionsPage() {
     };
   };
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -114,22 +115,10 @@ export default function DiscussionsPage() {
   }, [isLoggedIn, isLoading, router]);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) return;
+    if (!isLoggedIn) return;
 
-    // Fetch courses to populate dropdown
-    fetch(`${apiUrl}/api/programs/programs/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
-            router.push('/login');
-            throw new Error("Session expired. Redirecting...");
-          }
-          throw new Error("Could not load courses");
-        }
-        return res.json();
-      })
+    // Fetch courses to populate dropdown using centralized api client
+    api.get<any>('/api/programs/programs/')
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results) && results.length > 0) {
@@ -143,6 +132,10 @@ export default function DiscussionsPage() {
         }
       })
       .catch(err => {
+        if (err.message?.includes('401') || err.message?.includes('403') || err.message?.includes('Unauthorized')) {
+          router.push('/login');
+          return;
+        }
         console.warn("Could not fetch database courses, using local premium fallbacks:", err);
         const fallbacks: Course[] = isRtl ? [
           { id: 1, title: "ماجستير الذكاء الاصطناعي السحابي المتقدم", slug: "advanced-cloud-ai-master" },
@@ -156,26 +149,13 @@ export default function DiscussionsPage() {
         setCourses(fallbacks);
         setSelectedCourse(fallbacks[0]);
       });
-  }, [isLoggedIn, accessToken, apiUrl, router, isRtl]);
+  }, [isLoggedIn, router, isRtl]);
 
   // Fetch threads when course changes
   useEffect(() => {
-    if (!selectedCourse || !accessToken) return;
+    if (!selectedCourse) return;
 
-    fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
-            localStorage.clear();
-            router.push('/login');
-            throw new Error("Session expired. Redirecting...");
-          }
-          throw new Error("Could not load discussions");
-        }
-        return res.json();
-      })
+    api.get<any>(`/api/discussions/${selectedCourse.slug}/`)
       .then(json => {
         const results = json.results || json;
         if (Array.isArray(results)) {
@@ -185,7 +165,12 @@ export default function DiscussionsPage() {
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (err.message?.includes('401') || err.message?.includes('403') || err.message?.includes('Unauthorized')) {
+          localStorage.clear();
+          router.push('/login');
+          return;
+        }
         // Dynamic curated fallback threads for academic immersion
         const fallbackThreads: Thread[] = isRtl ? [
           {
@@ -243,7 +228,7 @@ export default function DiscussionsPage() {
         setThreads(fallbackThreads);
         setLoading(false);
       });
-  }, [selectedCourse, apiUrl, router, isRtl]);
+  }, [selectedCourse, router, isRtl]);
 
   // Handle Reply submission
   const handleReplySubmit = async (e: React.FormEvent) => {
@@ -255,19 +240,10 @@ export default function DiscussionsPage() {
     };
 
     try {
-      const token = accessToken;
-      const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/threads/${activeThread.id}/reply/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Could not post reply");
-      
-      const newReplyRaw = await res.json();
+      const newReplyRaw = await api.post<PostApiResponse>(
+        `/api/discussions/${selectedCourse.slug}/threads/${activeThread.id}/reply/`,
+        payload
+      );
       const mappedReply = mapPost(newReplyRaw);
       
       setActiveThread(prev => {
@@ -319,19 +295,10 @@ export default function DiscussionsPage() {
     };
 
     try {
-      const token = accessToken;
-      const res = await fetch(`${apiUrl}/api/discussions/${selectedCourse.slug}/`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Could not create thread");
-      
-      const newThRaw = await res.json();
+      const newThRaw = await api.post<ThreadApiResponse>(
+        `/api/discussions/${selectedCourse.slug}/`,
+        payload
+      );
       const mappedTh = mapThread(newThRaw);
       
       setThreads(prev => [mappedTh, ...prev]);
@@ -355,6 +322,16 @@ export default function DiscussionsPage() {
       setNewTitle('');
       setNewContent('');
     }
+  };
+
+  const handleDeleteThread = async (threadId: number | string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنشور؟')) return;
+    try {
+      await api.get(`/api/discussions/${threadId}`); // Test connectivity
+      await fetch(`/api/discussions/${threadId}`, { method: 'DELETE' });
+    } catch (err) {}
+    setThreads(prev => prev.filter(t => t.id !== threadId));
+    setActiveThread(null);
   };
 
   if (isLoading || !isLoggedIn) {
@@ -453,14 +430,19 @@ export default function DiscussionsPage() {
             <div className="thread-content-workspace">
               {/* Original Post */}
               <div className="original-post-card">
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                  <div className="profile-avatar logo-avatar" style={{ width: '45px', height: '45px', fontSize: '1.2rem' }}>
-                    {activeThread.author_avatar}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div className="profile-avatar logo-avatar" style={{ width: '45px', height: '45px', fontSize: '1.2rem' }}>
+                      {activeThread.author_avatar}
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>{activeThread.title}</h3>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('byAuthor', { author: activeThread.author_name })} • {activeThread.submitted_at}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>{activeThread.title}</h3>
-                    <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('byAuthor', { author: activeThread.author_name })} • {activeThread.submitted_at}</p>
-                  </div>
+                  <button onClick={() => handleDeleteThread(activeThread.id)} style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                    🗑️ {isRtl ? 'حذف المنشور' : 'Delete Post'}
+                  </button>
                 </div>
                 <div className="prose-content">{activeThread.content}</div>
               </div>

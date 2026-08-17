@@ -7,7 +7,7 @@ import csv
 import os
 
 # Paths (relative to the repository root)
-search_root = r"b:/LEARNNOV PLATFORM/openedx-platform-master"
+search_root = r"b:/LEARNNOV PLATFORM/learnnov-lms"
 json_path = os.path.join(search_root, "scan_results.json")
 csv_path = os.path.join(search_root, "security_audit_report.csv")
 

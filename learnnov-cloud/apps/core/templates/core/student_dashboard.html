@@ -289,9 +289,10 @@
                     <h2 class="section-title">الشهادات</h2>
                     {% for cert in certificates %}
                     <div class="list-item">
-                        <h5>{{ cert.program.title|default:"شهادة مقرر" }}</h5>
+                        <h5>{{ cert.course_name|default:cert.course_id|default:"شهادة مقرر" }}</h5>
                         <span><a href="#" style="color: var(--primary);">تنزيل الـ PDF</a></span>
                     </div>
+
                     {% empty %}
                     <div class="empty-state">لم تحصل على شهادات بعد. استمر في التعلم!</div>
                     {% endfor %}

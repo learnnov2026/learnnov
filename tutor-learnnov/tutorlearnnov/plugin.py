@@ -646,7 +646,7 @@ hooks.Filters.ENV_PATCHES.add_item((
 ))
 
 # ── Mount our custom apps into the LMS container ────────────────────────────
-_APPS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "openedx-platform-master", "lms", "djangoapps")
+_APPS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "learnnov-lms", "lms", "djangoapps")
 
 for _app in ("university_ads", "learnnov_payments", "learnnov_certificates", "academic_programs", "program_ads", "learnnov_marketing", "learnnov_exams", "learnnov_mobile_api", "learnnov_ai_tutor", "learnnov_b2b", "learnnov_gamification"):
     _src = os.path.join(_APPS_DIR, _app)

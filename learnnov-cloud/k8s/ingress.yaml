@@ -110,18 +110,18 @@ spec:
                 port:
                   number: 80
 
-          # جميع الطلبات الأخرى تذهب إلى Open edX (المسار الافتراضي)
+          # جميع الطلبات الأخرى تذهب إلى LMS (المسار الافتراضي)
           - path: /*
             pathType: ImplementationSpecific
             backend:
               service:
-                name: learnnov-openedx-service
+                name: learnnov-lms-service
                 port:
                   number: 80
 
     # =====================
     # قواعد نطاق الاستوديو studio.learnnov.org
-    # جميع الطلبات تذهب إلى Open edX CMS
+    # جميع الطلبات تذهب إلى LMS CMS
     # =====================
     - host: studio.learnnov.org
       http:
@@ -130,6 +130,6 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: learnnov-openedx-service
+                name: learnnov-lms-service
                 port:
                   number: 80

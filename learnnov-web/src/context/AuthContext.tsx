@@ -1,16 +1,16 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  accessToken: string | null;
   userRole: string | null;
   userName: string | null;
   userAvatar: string | null;
+  userEmail: string | null;
   isLoading: boolean;
-  login: (accessToken: string, refreshToken: string, role: string, name: string, avatar: string) => void;
+  login: (role: string, name: string, avatar: string, email: string) => void;
   logout: () => void;
 }
 
@@ -18,72 +18,61 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initial load from localStorage on client-side mount
-    const token = localStorage.getItem('accessToken');
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const role = localStorage.getItem('userRole');
-    const name = localStorage.getItem('userName');
-    const avatar = localStorage.getItem('userAvatar');
+    let mounted = true;
 
-    if (token && loggedIn) {
-      setTimeout(() => {
-        setAccessToken(token);
-        setIsLoggedIn(true);
-        setUserRole(role);
-        setUserName(name);
-        setUserAvatar(avatar);
-        setIsLoading(false);
-      }, 0);
-    } else {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 0);
+    async function fetchSession() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted) {
+            setIsLoggedIn(true);
+            setUserRole(data.user.role);
+            setUserName(data.user.name);
+            setUserAvatar(data.user.avatar);
+            setUserEmail(data.user.email);
+          }
+        } else {
+          if (mounted) {
+            setIsLoggedIn(false);
+          }
+        }
+      } catch (err) {
+        if (mounted) setIsLoggedIn(false);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
     }
-  }, []);
 
-  const login = (
-    token: string,
-    refreshToken: string,
-    role: string,
-    name: string,
-    avatar: string
-  ) => {
-    localStorage.setItem('accessToken', token);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userName', name);
-    localStorage.setItem('userAvatar', avatar);
-    localStorage.setItem('isLoggedIn', 'true');
+    fetchSession();
 
-    setAccessToken(token);
+    return () => { mounted = false; };
+  }, [pathname]); // Re-check session occasionally, e.g. on navigation
+
+  const login = (role: string, name: string, avatar: string, email: string) => {
+    setIsLoggedIn(true);
     setUserRole(role);
     setUserName(name);
     setUserAvatar(avatar);
-    setIsLoggedIn(true);
+    setUserEmail(email);
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userAvatar');
-    localStorage.removeItem('isLoggedIn');
-
-    setAccessToken(null);
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setIsLoggedIn(false);
     setUserRole(null);
     setUserName(null);
     setUserAvatar(null);
-    setIsLoggedIn(false);
-
+    setUserEmail(null);
     router.push('/login');
   };
 
@@ -91,10 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         isLoggedIn,
-        accessToken,
         userRole,
         userName,
         userAvatar,
+        userEmail,
         isLoading,
         login,
         logout,

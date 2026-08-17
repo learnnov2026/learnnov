@@ -6,7 +6,7 @@
 # =============================================================================
 set -e
 
-APP_SRC="/mnt/b/LEARNNOV PLATFORM/openedx-platform-master/lms/djangoapps/university_ads"
+APP_SRC="/mnt/b/LEARNNOV PLATFORM/learnnov-lms/lms/djangoapps/university_ads"
 
 echo "▶ التحقق من تشغيل الحاوية..."
 CONTAINER=$(docker ps --filter "name=lms" --format "{{.Names}}" 2>/dev/null | head -n 1)
@@ -39,11 +39,11 @@ docker exec "$CONTAINER" bash -c "
 
 # تحديث dashboard.html و main.html في staticfiles
 echo "▶ تحديث dashboard.html في staticfiles..."
-docker cp "/mnt/b/LEARNNOV PLATFORM/openedx-platform-master/lms/templates/dashboard.html" \
+docker cp "/mnt/b/LEARNNOV PLATFORM/learnnov-lms/lms/templates/dashboard.html" \
   "$CONTAINER":/openedx/staticfiles/templates/dashboard.html
 
 echo "▶ تحديث main.html في staticfiles..."
-docker cp "/mnt/b/LEARNNOV PLATFORM/openedx-platform-master/lms/templates/main.html" \
+docker cp "/mnt/b/LEARNNOV PLATFORM/learnnov-lms/lms/templates/main.html" \
   "$CONTAINER":/openedx/staticfiles/templates/main.html
 
 echo ""

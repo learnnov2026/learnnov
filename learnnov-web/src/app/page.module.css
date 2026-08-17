@@ -1,6 +1,6 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
+  --background: #ffffff;
+  --foreground: #ffffff;
 
   --text-primary: #000;
   --text-secondary: #666;
@@ -85,8 +85,8 @@
 }
 
 a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+  background: #2563eb;
+  color: #ffffff;
   gap: 8px;
 }
 
@@ -97,7 +97,7 @@ a.secondary {
 /* Enable hover only on non-touch devices */
 @media (hover: hover) and (pointer: fine) {
   a.primary:hover {
-    background: var(--button-primary-hover);
+    background: #1d4ed8;
     border-color: transparent;
   }
 

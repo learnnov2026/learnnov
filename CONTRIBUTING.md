@@ -5,7 +5,7 @@
 Thank you for your interest in contributing to **LEARNNOV PLATFORM**! This repository contains two major components:
 
 1. **learnnov‑cloud** – a custom Django backend (payments, certificates, exams, etc.)
-2. **openedx‑platform‑master** – the upstream Open edX LMS/Studio code‑base.
+2. **learnnov‑lms** – the LMS/Studio code‑base.
 
 Both components share the same PostgreSQL database and Redis cache. The recommended local development workflow uses **Docker‑Compose** to spin up the whole stack with a single command.
 
@@ -33,7 +33,7 @@ docker compose up --build -d
 The services become available at:
 
 - **Django API (learnnov‑cloud)** – `http://localhost:8000`
-- **Open edX LMS** – `http://localhost:8001`
+- **LearnNov LMS** – `http://localhost:8001`
 - **PostgreSQL** – `localhost:5432` (credentials from the compose file)
 - **Redis** – `localhost:6379`
 
@@ -59,7 +59,7 @@ pytest --cov .
 ### JavaScript tests (Jest & Karma)
 
 ```bash
-docker compose exec openedx bash   # opens a shell inside the Open edX container
+docker compose exec learnnov-lms bash   # opens a shell inside the LearnNov LMS container
 npm ci
 npm run test      # runs Jest + Karma
 npm run coverage  # generates a coverage report in `coverage/`
@@ -81,7 +81,7 @@ docker compose exec backend flake8 .
 docker compose exec backend pylint .
 
 # JavaScript
-docker compose exec openedx npm run lint
+docker compose exec learnnov-lms npm run lint
 ```
 
 ---
@@ -120,7 +120,7 @@ If you maintain a Docker image registry (GitHub Packages, Docker Hub, etc.), the
 ## 📖 Documentation
 
 - Keep the **architecture diagram** (Mermaid) in the top of `README.md` up‑to‑date.
-- Document any new API endpoints in `learnnov-cloud/apps/*/docs/` and include them in the OpenAPI spec (`openedx/docs/lms-openapi.yaml`).
+- Document any new API endpoints in `learnnov-cloud/apps/*/docs/` and include them in the OpenAPI spec (`learnnov-lms/docs/lms-openapi.yaml`).
 
 ---
 

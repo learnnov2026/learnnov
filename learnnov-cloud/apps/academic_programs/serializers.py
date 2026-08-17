@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import ProgramProvider, FieldOfStudy, AcademicProgram, ProgramApplication
+from .models import (
+    ProgramProvider, FieldOfStudy, AcademicProgram, ProgramApplication, 
+    FinancialAidApplication, PeerAssignmentSubmission, PeerReviewAssessment
+)
 
 
 class FieldOfStudySerializer(serializers.ModelSerializer):
@@ -292,7 +295,7 @@ class SpecializationDetailSerializer(serializers.ModelSerializer):
             if has_exam:
                 completed_count += 1
                 
-        return int((completed_count / total_courses) * 100) if total_courses > 0 else 100
+        return int((completed_count / total_courses) * 100) if total_courses > 0 else 0
 
     def get_is_completed(self, obj):
         return self.get_progress_percentage(obj) == 100
@@ -307,4 +310,82 @@ class SpecializationDetailSerializer(serializers.ModelSerializer):
             return cert.verify_uuid
         except SpecializationCertificate.DoesNotExist:
             return None
+
+
+class FinancialAidApplicationSerializer(serializers.ModelSerializer):
+    applicant_username = serializers.CharField(source='applicant.username', read_only=True)
+    program_title = serializers.CharField(source='program.title', read_only=True)
+    program_slug = serializers.CharField(source='program.slug', read_only=True)
+
+    class Meta:
+        model = FinancialAidApplication
+        fields = [
+            'id', 'applicant', 'applicant_username', 'program', 'program_title', 'program_slug',
+            'reason_for_applying', 'career_goals', 'financial_situation',
+            'status', 'reviewer_notes', 'reviewed_by', 'reviewed_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['applicant', 'status', 'reviewer_notes', 'reviewed_by', 'reviewed_at', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        program = data.get('program')
+        
+        # Check if already applied
+        if FinancialAidApplication.objects.filter(applicant=user, program=program).exists():
+            raise serializers.ValidationError('لقد قمت بتقديم طلب دعم مالي لهذا البرنامج مسبقاً.')
+        return data
+
+
+class FinancialAidApplicationReviewSerializer(serializers.ModelSerializer):
+    applicant_username = serializers.CharField(source='applicant.username', read_only=True)
+    program_title = serializers.CharField(source='program.title', read_only=True)
+
+    class Meta:
+        model = FinancialAidApplication
+        fields = ['id', 'status', 'reviewer_notes', 'applicant_username', 'program_title']
+
+    def validate_status(self, value):
+        if value not in ['approved', 'rejected']:
+            raise serializers.ValidationError('الحالة غير صالحة. يجب أن تكون مقبول أو مرفوض.')
+        return value
+
+
+class PeerAssignmentSubmissionSerializer(serializers.ModelSerializer):
+    student_username = serializers.CharField(source='student.username', read_only=True)
+    lesson_title = serializers.CharField(source='lesson.title', read_only=True)
+
+    class Meta:
+        model = PeerAssignmentSubmission
+        fields = ['id', 'student', 'student_username', 'lesson', 'lesson_title', 'submission_text', 'submitted_at']
+        read_only_fields = ['student', 'submitted_at']
+
+    def validate(self, data):
+        student = self.context['request'].user
+        lesson = data.get('lesson')
+        if PeerAssignmentSubmission.objects.filter(student=student, lesson=lesson).exists():
+            raise serializers.ValidationError('لقد قمت بتسليم هذا الواجب مسبقاً.')
+        return data
+
+
+class PeerReviewAssessmentSerializer(serializers.ModelSerializer):
+    reviewer_username = serializers.CharField(source='reviewer.username', read_only=True)
+
+    class Meta:
+        model = PeerReviewAssessment
+        fields = ['id', 'reviewer', 'reviewer_username', 'submission', 'score', 'feedback', 'created_at']
+        read_only_fields = ['reviewer', 'created_at']
+
+    def validate(self, data):
+        reviewer = self.context['request'].user
+        submission = data.get('submission')
+
+        if submission.student == reviewer:
+            raise serializers.ValidationError('لا يمكنك تقييم الواجب الخاص بك.')
+
+        if PeerReviewAssessment.objects.filter(reviewer=reviewer, submission=submission).exists():
+            raise serializers.ValidationError('لقد قمت بتقييم هذا الواجب مسبقاً.')
+
+        return data
+
+
 

@@ -16,17 +16,17 @@ class GeneratedCertificate(models.Model):
         ('error', _('خطأ في الإصدار')),
     ]
     
-    verify_uuid = models.CharField(max_length=32, unique=True, db_index=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='certificates')
-    course_id = models.CharField(max_length=255, db_index=True)
-    course_name = models.CharField(max_length=255, blank=True)
-    grade = models.CharField(max_length=10, blank=True)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='downloadable')
-    created_date = models.DateTimeField(auto_now_add=True)
+    verify_uuid = models.CharField(_('معرف التحقق'), max_length=32, unique=True, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='certificates', verbose_name=_('المستخدم'))
+    course_id = models.CharField(_('معرف المساق'), max_length=255, db_index=True)
+    course_name = models.CharField(_('اسم المساق'), max_length=255, blank=True)
+    grade = models.CharField(_('الدرجة / التقدير'), max_length=10, blank=True)
+    status = models.CharField(_('الحالة'), max_length=30, choices=STATUS_CHOICES, default='downloadable')
+    created_date = models.DateTimeField(_('تاريخ الإصدار'), auto_now_add=True)
 
     class Meta:
-        verbose_name = _('Generated Certificate')
-        verbose_name_plural = _('Generated Certificates')
+        verbose_name = _('شهادة مصدرة')
+        verbose_name_plural = _('الشهادات المصدرة')
 
     def __str__(self):
         return f"{self.user.username} - {self.course_id} ({self.status})"
@@ -34,14 +34,14 @@ class GeneratedCertificate(models.Model):
 
 class CertificateQRCode(models.Model):
     """رمز الاستجابة السريعة (QR) للتحقق من مصداقية الشهادة."""
-    verify_uuid      = models.CharField(max_length=32, unique=True, db_index=True)
-    qr_image         = models.ImageField(upload_to='certificates/qr/', verbose_name=_('QR Code Image'))
-    verification_url = models.URLField(verbose_name=_('Verification URL'))
-    created_at       = models.DateTimeField(auto_now_add=True)
+    verify_uuid      = models.CharField(_('معرف التحقق'), max_length=32, unique=True, db_index=True)
+    qr_image         = models.ImageField(upload_to='certificates/qr/', verbose_name=_('صورة رمز QR'))
+    verification_url = models.URLField(verbose_name=_('رابط التحقق'))
+    created_at       = models.DateTimeField(_('تاريخ الإنشاء'), auto_now_add=True)
 
     class Meta:
-        verbose_name = _('Certificate QR Code')
-        verbose_name_plural = _('Certificate QR Codes')
+        verbose_name = _('رمز QR للشهادة')
+        verbose_name_plural = _('رموز QR للشهادات')
 
     def __str__(self):
         return f'QR — {self.verify_uuid}'
@@ -55,15 +55,15 @@ class SpecializationCertificate(models.Model):
         ('error', _('خطأ في الإصدار')),
     ]
     
-    verify_uuid = models.CharField(max_length=32, unique=True, db_index=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='specialization_certificates')
-    specialization = models.ForeignKey('academic_programs.Specialization', on_delete=models.CASCADE, related_name='certificates')
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='downloadable')
-    created_date = models.DateTimeField(auto_now_add=True)
+    verify_uuid = models.CharField(_('معرف التحقق'), max_length=32, unique=True, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='specialization_certificates', verbose_name=_('المستخدم'))
+    specialization = models.ForeignKey('academic_programs.Specialization', on_delete=models.CASCADE, related_name='certificates', verbose_name=_('التخصص المهني'))
+    status = models.CharField(_('الحالة'), max_length=30, choices=STATUS_CHOICES, default='downloadable')
+    created_date = models.DateTimeField(_('تاريخ الإصدار'), auto_now_add=True)
 
     class Meta:
-        verbose_name = _('Specialization Certificate')
-        verbose_name_plural = _('Specialization Certificates')
+        verbose_name = _('شهادة تخصص مهني')
+        verbose_name_plural = _('شهادات التخصصات المهنية')
 
     def __str__(self):
         return f"{self.user.username} - {self.specialization.title} ({self.status})"

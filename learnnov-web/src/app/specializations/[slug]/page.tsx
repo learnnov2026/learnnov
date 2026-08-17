@@ -3,6 +3,7 @@ import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/services/api';
 
 interface Course {
   id: number;
@@ -39,21 +40,14 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
   const [spec, setSpec] = useState<SpecializationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrollLoading, setEnrollLoading] = useState(false);
-  const { isLoggedIn, accessToken, userRole, isLoading } = useAuth();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://learnnov-api.onrender.com';
+
 
   const fetchDetails = useCallback(() => {
-    if (!accessToken) return;
-    fetch(`${apiUrl}/api/programs/specializations/${slug}/`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch details");
-        return res.json();
-      })
+    api.get<SpecializationDetail>(`/api/programs/specializations/${slug}/`)
       .then(json => {
         setSpec(json);
         setLoading(false);
@@ -82,7 +76,7 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
         });
         setLoading(false);
       });
-  }, [apiUrl, slug]);
+  }, [slug]);
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -101,18 +95,8 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!accessToken) return;
     try {
-      const res = await fetch(`${apiUrl}/api/programs/specializations/${slug}/enroll/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
-      if (!res.ok) throw new Error("Failed to enroll in specialization");
-      const json = await res.json();
+      const json = await api.post<any>(`/api/programs/specializations/${slug}/enroll/`, {});
 
       setSuccessMessage(json.message || "تم الالتحاق بالمسار التخصصي وجميع كورساته بنجاح!");
       fetchDetails(); // Reload dynamically
@@ -128,6 +112,14 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
     }
   };
 
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-color)' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="spinner-container" style={{ minHeight: '50vh' }}>
@@ -138,14 +130,6 @@ export default function SpecializationDetails({ params }: { params: Promise<{ sl
 
   if (!spec) {
     return <div style={{ textAlign: 'center', marginTop: '100px', fontSize: '1.5rem', color: 'white' }}>لم يتم العثور على المسار التخصصي المطلوب.</div>;
-  }
-
-  if (isLoading || !isLoggedIn) {
-    return (
-      <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0b0f19' }}>
-        <div className="loading-spinner"></div>
-      </div>
-    );
   }
 
   return (

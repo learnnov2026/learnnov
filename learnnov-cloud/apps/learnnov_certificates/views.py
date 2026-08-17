@@ -248,8 +248,7 @@ class GenerateCertificateView(APIView):
         # 1. التحقق من إتمام المقرر (Validation)
         is_completed = self.check_course_completion(user, course_id)
         if not is_completed:
-            # Fallback to true for ease of demo/development
-            is_completed = True
+            return Response({'error': 'You must complete the course or pass the final exam to generate a certificate.'}, status=status.HTTP_403_FORBIDDEN)
 
         # 2. إصدار الشهادة
         import uuid
@@ -318,14 +317,14 @@ class GenerateCertificateView(APIView):
         if passed_exam:
             return True
             
-        # Or check if they are officially enrolled/accepted
-        accepted_app = ProgramApplication.objects.filter(
+        # Or check if they are officially marked as 'completed'
+        completed_app = ProgramApplication.objects.filter(
             applicant=user,
             program__slug=course_id,
-            status__in=['accepted', 'enrolled', 'completed', 'approved']
+            status='completed'
         ).exists()
         
-        if accepted_app:
+        if completed_app:
             return True
 
         return False

@@ -1,19 +1,20 @@
 import logging
 import threading
+import sys
 from django.contrib.auth import get_user_model
+from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
 class DelayableTask:
     """
     فئة لمحاكاة سلوك Celery Task (.delay) باستخدام Threads خلفية خفيفة.
-    هذا يضمن كفاءة أداء سيرفر الويب دون الحاجة لتثبيت Redis/Celery.
+    يستخدم كـ fallback في حال غياب خادم Redis/Celery.
     """
     def __init__(self, func):
         self.func = func
 
     def delay(self, *args, **kwargs):
-        import sys
         if 'test' in sys.argv:
             self._run_safe(*args, **kwargs)
             return None
@@ -28,10 +29,35 @@ class DelayableTask:
         except Exception as e:
             logger.exception(f"Error in background task {self.func.__name__}: {e}")
 
-def task(func):
-    return DelayableTask(func)
+def hybrid_task(func):
+    # 1. Create a real Celery task
+    celery_task = shared_task(func)
+    
+    # 2. Create a fallback task
+    fallback_task = DelayableTask(func)
+    
+    class HybridTaskWrapper:
+        def __init__(self):
+            self.celery_task = celery_task
+            self.fallback_task = fallback_task
+            
+        def delay(self, *args, **kwargs):
+            if 'test' in sys.argv:
+                return self.fallback_task.delay(*args, **kwargs)
+            
+            try:
+                # Try sending task to Celery Broker
+                return self.celery_task.delay(*args, **kwargs)
+            except Exception as e:
+                logger.warning(f"Celery broker not available, falling back to background Thread: {e}")
+                return self.fallback_task.delay(*args, **kwargs)
+                
+        def __call__(self, *args, **kwargs):
+            return func(*args, **kwargs)
+            
+    return HybridTaskWrapper()
 
-@task
+@hybrid_task
 def send_application_status_notification_task(application_id):
     """خلفية معالجة إرسال إشعارات حالة الطلبات."""
     from .models import ProgramApplication
@@ -44,7 +70,7 @@ def send_application_status_notification_task(application_id):
     except Exception:
         logger.exception(f"Task Error sending notification for application {application_id}")
 
-@task
+@hybrid_task
 def send_referral_reward_notification_task(referrer_id, applicant_id, program_id):
     """خلفية معالجة إرسال إشعارات مكافآت الإحالة."""
     from .models import AcademicProgram
@@ -58,7 +84,7 @@ def send_referral_reward_notification_task(referrer_id, applicant_id, program_id
     except Exception:
         logger.exception("Task Error sending referral notification")
 
-@task
+@hybrid_task
 def update_program_applications_count_task(program_id):
     """إعادة حساب عدادات البرنامج بدقة في الخلفية لضمان سلامة البيانات."""
     from .models import AcademicProgram

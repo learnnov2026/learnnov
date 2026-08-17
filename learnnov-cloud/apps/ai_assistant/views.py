@@ -61,15 +61,40 @@ class ChatbotView(APIView):
 
     def post(self, request, *args, **kwargs):
         user_message = request.data.get('message')
+        lesson_id = request.data.get('lesson_id')
         if not user_message:
             return Response({"error": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
+        
+        # Load lesson context if provided
+        lesson_context = ""
+        lesson_obj = None
+        if lesson_id:
+            from apps.academic_programs.models import ProgramLesson
+            try:
+                lesson_obj = ProgramLesson.objects.select_related('module__program').get(id=lesson_id)
+                lesson_context = (
+                    f"معلومات الدرس الحالي الذي يتابعه الطالب الآن:\n"
+                    f"- المقرر: {lesson_obj.module.program.title}\n"
+                    f"- الوحدة الدراسية: {lesson_obj.module.title}\n"
+                    f"- عنوان الدرس: {lesson_obj.title}\n"
+                    f"- نوع الدرس: {lesson_obj.get_lesson_type_display()}\n"
+                )
+                if lesson_obj.content:
+                    lesson_context += f"- المحتوى الدراسي للدرس: {lesson_obj.content[:800]}\n"
+            except ProgramLesson.DoesNotExist:
+                pass
 
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
             msg_lower = user_message.lower()
-            if "شبك" in msg_lower or "rnn" in msg_lower or "deep" in msg_lower:
+            if lesson_obj:
+                reply = (
+                    f"أهلاً بك يا بطل! بخصوص استفسارك أثناء دراستك لدرس '**{lesson_obj.title}**' في مقرر '{lesson_obj.module.program.title}':\n\n"
+                    f"الدرس الحالي يركز على مفاهيم {lesson_obj.title}. يمكنني مساعدتك في توضيح هذه المفاهيم، تقديم أمثلة برمجية أو شرح إضافي لـ {lesson_obj.module.title} لمساعدتك على استيعاب المادة. يرجى توضيح سؤالك بالتحديد!"
+                )
+            elif "شبك" in msg_lower or "rnn" in msg_lower or "deep" in msg_lower:
                 reply = (
                   "أهلاً بك يا بطل! بخصوص تساؤلك حول الشبكات العصبية العميقة وتلاشي التدرج (Vanishing Gradient):\n\n"
                   "تعتبر مشكلة تلاشي التدرج شائعة في شبكات RNN البسيطة عند تدريبها على سلاسل طويلة. "
@@ -134,11 +159,14 @@ class ChatbotView(APIView):
                 context_text += f"Enrolled Courses: {', '.join(course_names)}\n"
             if exam_info:
                 context_text += f"Recent Exam Results: {', '.join(exam_info)}\n"
+            
+            if lesson_context:
+                context_text += f"\n{lesson_context}\n"
 
             system_prompt = (
                 "أنت مساعد تعليمي ذكي لمنصة LearnNov التعليمية. أجب بأدب وباختصار باللغة العربية.\n"
-                f"أنت تتحدث حالياً مع هذا الطالب المحدد. إليك بياناته الأكاديمية الحالية:\n{context_text}\n"
-                "استخدم هذه المعلومات لتقديم نصائح مخصصة، دعم، وإجابات دقيقة بناءً على مستواه والمقررات التي يدرسها. "
+                f"أنت تتحدث حالياً مع هذا الطالب المحدد. إليك بياناته الأكاديمية وسياق الدرس الحالي:\n{context_text}\n"
+                "استخدم هذه المعلومات لتقديم نصائح مخصصة، دعم، وإجابات دقيقة بناءً على مستواه والمقررات التي يدرسها والسياق الحالي للدرس الذي يشاهده الآن. "
                 "لا تقم بسرد هذه المعلومات للطالب إلا إذا دعت الحاجة أو سأل عنها."
             )
 
@@ -172,17 +200,13 @@ class SecurityAdvisorView(APIView):
     مستشار الأمان التفاعلي:
     يستقبل سيناريوهات أمنية من مدراء النظام ويحللها مقدماً الحلول المناسبة
     باستخدام نموذج GPT-4 المتقدم.
+    
+    الوصول مقيد بـ Staff/Superusers فقط عبر permission_classes.
     """
-    # Requires staff privileges to access the security advisor
-    permission_classes = [permissions.IsAuthenticated]
+    # يتطلب الوصول: is_staff=True أو is_superuser=True
+    permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, *args, **kwargs):
-        if not request.user.is_staff and not request.user.is_superuser:
-            return Response(
-                {"error": "غير مصرح. مستشار الأمان متاح فقط لمسؤولي النظام."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         scenario = request.data.get('scenario')
         if not scenario:
             return Response({"error": "Scenario is required."}, status=status.HTTP_400_BAD_REQUEST)

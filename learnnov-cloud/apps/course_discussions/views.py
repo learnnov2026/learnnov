@@ -49,7 +49,7 @@ class ThreadListCreateView(generics.ListCreateAPIView):
             program__slug=course_slug
         ).select_related('author').prefetch_related('posts__author').annotate(
             annotated_reply_count=Count('posts')
-        )
+        ).order_by('-is_pinned', '-created_at')
 
     def perform_create(self, serializer):
         course_slug = self.kwargs.get('course_slug')

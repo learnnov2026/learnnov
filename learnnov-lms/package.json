@@ -37,7 +37,7 @@
     "@babel/core": "^7",
     "@babel/plugin-proposal-object-rest-spread": "^7",
     "@babel/plugin-transform-object-assign": "^7",
-    "@babel/preset-env": "^7",
+    "@babel/preset-env": "^8",
     "@babel/preset-react": "^7",
     "@edx/brand": "npm:@openedx/brand-openedx@^1",
     "@edx/edx-bootstrap": "^1",

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -16,8 +17,15 @@ interface LabExercise {
 }
 
 export default function LabsPage() {
+  const router = useRouter();
   const { isLoggedIn, userName, isLoading } = useAuth();
   const { language, isRtl } = useLanguage();
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, isLoading, router]);
 
   const exercises: LabExercise[] = [
     {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { authorizeRequest } from '@/lib/rbac';
 
 export async function GET() {
   try {
@@ -19,15 +19,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
-    const token = cookies['learnnov_session'];
+    const auth = await authorizeRequest(request, {
+      requiredPermission: { action: 'create', resource: 'courses' }
+    });
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!auth.authorized) {
+      return auth.response!;
     }
 
     const body = await request.json();

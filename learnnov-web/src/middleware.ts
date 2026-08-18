@@ -2,16 +2,25 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-const PROTECTED_ROUTES = [
+const PROTECTED_UI_ROUTES = [
   '/admin', '/instructor', '/analytics', '/assignments', '/career',
   '/chat', '/discussions', '/exams', '/labs',
   '/notifications', '/payments', '/profile', '/workspace'
 ];
 
+// Public API endpoints that do not require authentication
+const PUBLIC_API_ROUTES = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/verify-otp',
+  '/api/auth/sso',
+  '/api/auth/logout'
+];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Function to apply security headers to response
+  // Security Headers Helper
   const applySecurityHeaders = (response: NextResponse) => {
     response.headers.set('X-Frame-Options', 'SAMEORIGIN');
     response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -20,49 +29,86 @@ export async function middleware(request: NextRequest) {
     return response;
   };
 
-  // Bypass public routes, API routes (handled by individual routes), and static files
+  // 1. Static and system assets
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname === '/login' ||
     pathname === '/favicon.ico' ||
     pathname === '/logo.png' ||
-    pathname.startsWith('/specializations') ||
-    pathname.startsWith('/certificates') ||
-    pathname.startsWith('/leaderboard') ||
-    pathname.startsWith('/live') ||
-    pathname.startsWith('/support')
+    pathname.startsWith('/images')
   ) {
     return applySecurityHeaders(NextResponse.next());
   }
 
-  // Check if trying to access protected UI routes
-  const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route)) || pathname === '/';
-  
-  if (isProtected) {
-    const token = request.cookies.get('learnnov_session')?.value;
+  // 2. Extract Token
+  const token = request.cookies.get('learnnov_session')?.value || 
+    (request.headers.get('authorization')?.startsWith('Bearer ') 
+      ? request.headers.get('authorization')?.substring(7).trim() 
+      : undefined);
 
-    if (!token) {
-      return applySecurityHeaders(NextResponse.redirect(new URL('/login', request.url)));
+  let payload = null;
+  if (token) {
+    payload = await verifyToken(token);
+  }
+
+  // 3. API Gateway RBAC Protection
+  if (pathname.startsWith('/api')) {
+    const isPublicApi = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route)) ||
+      (pathname === '/api/courses' && request.method === 'GET') ||
+      (pathname.startsWith('/api/programs/programs') && request.method === 'GET') ||
+      (pathname.startsWith('/api/programs/specializations') && request.method === 'GET') ||
+      (pathname.startsWith('/api/certificates/verify') && request.method === 'GET') ||
+      (pathname.startsWith('/api/discussions') && request.method === 'GET') ||
+      (pathname.startsWith('/api/exams') && request.method === 'GET') ||
+      (pathname === '/api/leaderboard' && request.method === 'GET');
+
+    if (!isPublicApi) {
+      // Require valid token for protected API routes
+      if (!payload || !payload.userId) {
+        return applySecurityHeaders(
+          NextResponse.json({ error: 'غير مصرح: يرجى تسجيل الدخول أولاً' }, { status: 401 })
+        );
+      }
+
+      // Admin API routes gateway check
+      if (pathname.startsWith('/api/admin') && payload.role !== 'admin') {
+        return applySecurityHeaders(
+          NextResponse.json({ error: 'ممنوع: الوصول محصور بمديري النظام فقط' }, { status: 403 })
+        );
+      }
+
+      // Instructor API routes gateway check
+      if (pathname.startsWith('/api/instructor') && payload.role !== 'instructor' && payload.role !== 'admin') {
+        return applySecurityHeaders(
+          NextResponse.json({ error: 'ممنوع: الوصول محصور بالمشرفين وهيئة التدريس' }, { status: 403 })
+        );
+      }
     }
 
-    const payload = await verifyToken(token);
-    
-    if (!payload) {
-      return applySecurityHeaders(NextResponse.redirect(new URL('/login', request.url)));
+    return applySecurityHeaders(NextResponse.next());
+  }
+
+  // 4. Protected UI Pages Protection
+  const isProtectedUI = PROTECTED_UI_ROUTES.some(route => pathname.startsWith(route));
+
+  if (isProtectedUI) {
+    if (!payload || !payload.userId) {
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL('/login', request.url))
+      );
     }
 
-    // Role Based Access Control (RBAC)
-    const role = payload.role;
-
-    // Instructor area protection
-    if (pathname.startsWith('/instructor') && role !== 'instructor' && role !== 'admin') {
-      return applySecurityHeaders(NextResponse.redirect(new URL('/', request.url)));
+    // Protect /admin UI
+    if (pathname.startsWith('/admin') && payload.role !== 'admin') {
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL('/', request.url))
+      );
     }
 
-    // Admin area protection
-    if (pathname.startsWith('/admin') && role !== 'admin') {
-      return applySecurityHeaders(NextResponse.redirect(new URL('/', request.url)));
+    // Protect /instructor UI
+    if (pathname.startsWith('/instructor') && payload.role !== 'instructor' && payload.role !== 'admin') {
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL('/', request.url))
+      );
     }
   }
 

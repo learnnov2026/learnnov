@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 const defaultDbState: any = {
   users: [
@@ -104,6 +106,9 @@ const defaultDbState: any = {
 };
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const { isLoggedIn, userRole, isLoading } = useAuth();
+
   const [db, setDb] = useState<any>(defaultDbState);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [activeUserId, setActiveUserId] = useState<string | number>('1');
@@ -125,10 +130,16 @@ export default function AdminDashboardPage() {
 
   // Form inputs for modals
   const [newCourse, setNewCourse] = useState({ title: '', category: 'الذكاء الاصطناعي', instructor: 'د. خالد بن محمد', price: 450, capacity: 30, image: '', description: '', startDate: '2026-09-01' });
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'student', role_id: '' as any, status: 'active' as const, mfa_enabled: false });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'instructor', role_id: '' as any, status: 'active' as const, mfa_enabled: false });
   const [newRole, setNewRole] = useState({ name: '', code: '', description: '', permissions: [] as number[] });
   const [newCert, setNewCert] = useState({ studentName: '', courseTitle: '', grade: 'امتياز مرتفع (98%)' });
   const [newCoupon, setNewCoupon] = useState({ code: '', discountPercent: 20, maxUses: 100, expiresAt: '2026-12-31' });
+
+  useEffect(() => {
+    if (!isLoading && (!isLoggedIn || userRole !== 'admin')) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, userRole, isLoading, router]);
 
   const refreshData = async () => {
     try {
@@ -318,32 +329,25 @@ export default function AdminDashboardPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('/api/users', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
       });
 
-      const created = {
-        id: String(Date.now()),
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        status: 'active',
-        mfa_enabled: false
-      };
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'حدث خطأ أثناء إنشاء المستخدم');
+      }
 
-      setDb((prev: any) => ({
-        ...prev,
-        users: [...prev.users, created]
-      }));
-
-      logAction('إضافة مستخدم جديد', newUser.name);
+      const roleLabel = newUser.role === 'admin' ? 'مدير نظام' : newUser.role === 'instructor' ? 'مشرف / محاضر' : newUser.role === 'support' ? 'مشرف دعم فني' : 'طالب';
+      logAction(`إضافة حساب جديد (${roleLabel})`, newUser.name, newUser.role === 'admin' ? 'warning' : 'info');
       setShowAddUserModal(false);
-      showToast(`تمت إضافة المستخدم: ${newUser.name}`);
+      setNewUser({ name: '', email: '', password: '', role: 'instructor', role_id: '', status: 'active', mfa_enabled: false });
+      showToast(`تم تسجيل ${roleLabel}: ${newUser.name} بنجاح!`);
       refreshData();
-    } catch (err) {
-      showToast('حدث خطأ أثناء إنشاء المستخدم');
+    } catch (err: any) {
+      showToast(err.message || 'حدث خطأ أثناء إنشاء المستخدم');
     }
   };
 
@@ -699,6 +703,18 @@ export default function AdminDashboardPage() {
   const totalPaidEnrollments = (db.courses || []).reduce((acc: number, c: any) => acc + (c.enrolled_count || 0), 0);
   const avgOrderValue = totalPaidEnrollments > 0 ? Math.round(totalRevenue / totalPaidEnrollments) : 0;
 
+  if (isLoading || !isLoggedIn || userRole !== 'admin') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem auto' }}></div>
+          <p style={{ color: '#64748b', fontWeight: 700 }}>جارٍ التحقق من الصلاحيات الإدارية...</p>
+        </div>
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: '#0f172a', fontFamily: 'Cairo, sans-serif', padding: '1.5rem', direction: 'rtl' }}>
       
@@ -755,22 +771,54 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* MODAL: ADD USER */}
+      {/* MODAL: ADD USER (ADMIN & SUPERVISOR PROVISIONING) */}
       {showAddUserModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', width: '100%', maxWidth: '480px', padding: '1.75rem', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>👤 إضافة مستخدم جديد</h3>
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', width: '100%', maxWidth: '520px', padding: '1.75rem', boxShadow: '0 20px 50px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem', color: '#0f172a' }}>👑 تسجيل مستخدم / مشرف / مدير جديد</h3>
+            
+            <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37, 99, 235, 0.2)', padding: '0.75rem', borderRadius: '10px', fontSize: '0.8rem', color: '#1e40af', marginBottom: '1rem', lineHeight: 1.5 }}>
+              🔒 <strong>تنبيه أمني:</strong> تسجيل المشرفين والمديرين محصور بالمدير فقط من داخل لوحة التحكم. لا يمكن لأي مشرف أو مدير التسجيل ذاتياً من خارج النظام.
+            </div>
+
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <input type="text" placeholder="الاسم الكامل" required value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }} />
-              <input type="email" placeholder="البريد الإلكتروني" required value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }} />
-              <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }}>
-                <option value="student">طالب (Student)</option>
-                <option value="instructor">محاضر (Instructor)</option>
-                <option value="admin">مدير (Admin)</option>
-              </select>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.3rem' }}>الاسم الكامل الثلاثي</label>
+                <input type="text" placeholder="مثال: د. عبد العزيز بن سلطان" required value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} style={{ width: '100%', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.3rem' }}>البريد الإلكتروني الرسمي</label>
+                <input type="email" placeholder="example@learnnov.com" required value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} style={{ width: '100%', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.3rem' }}>كلمة المرور الابتدائية (تُشفر تلقائياً بـ bcryptjs)</label>
+                <input type="password" placeholder="••••••••••••" required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} style={{ width: '100%', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.3rem' }}>الرتبة والصلاحيات</label>
+                  <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} style={{ width: '100%', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }}>
+                    <option value="instructor">👨‍🏫 مشرف / محاضر أكاديمي</option>
+                    <option value="admin">👑 مدير نظام (Full Admin)</option>
+                    <option value="support">🎧 مشرف دعم فني</option>
+                    <option value="student">👨‍🎓 طالب / متدرب</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.3rem' }}>حالة الحساب</label>
+                  <select value={newUser.status} onChange={e => setNewUser({...newUser, status: e.target.value as any})} style={{ width: '100%', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }}>
+                    <option value="active">نشط ومفعل</option>
+                    <option value="suspended">مجمد مؤقتاً</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.75rem' }}>
                 <button type="button" onClick={() => setShowAddUserModal(false)} style={{ background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>إلغاء</button>
-                <button type="submit" style={{ background: '#2563eb', color: '#FFF', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>إضافة المستخدم</button>
+                <button type="submit" style={{ background: '#2563eb', color: '#FFF', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>تسجيل الحساب</button>
               </div>
             </form>
           </div>
@@ -781,14 +829,15 @@ export default function AdminDashboardPage() {
       {showEditUserModal && editingUser && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', width: '100%', maxWidth: '480px', padding: '1.75rem', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>✏️ تعديل بيانات المستخدم</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>✏️ تعديل بيانات المستخدم والرتبة</h3>
             <form onSubmit={handleEditUserSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <input type="text" placeholder="الاسم الكامل" required value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }} />
-              <input type="email" placeholder="البريد الإلكتروني" required value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }} />
-              <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px' }}>
-                <option value="student">طالب (Student)</option>
-                <option value="instructor">محاضر (Instructor)</option>
-                <option value="admin">مدير (Admin)</option>
+              <input type="text" placeholder="الاسم الكامل" required value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }} />
+              <input type="email" placeholder="البريد الإلكتروني" required value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }} />
+              <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})} style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.65rem 0.85rem', borderRadius: '10px', fontFamily: 'inherit' }}>
+                <option value="student">👨‍🎓 طالب (Student)</option>
+                <option value="instructor">👨‍🏫 مشرف / محاضر (Instructor/Supervisor)</option>
+                <option value="support">🎧 مشرف دعم فني (Support)</option>
+                <option value="admin">👑 مدير نظام (Admin)</option>
               </select>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <button type="button" onClick={() => { setShowEditUserModal(false); setEditingUser(null); }} style={{ background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}>إلغاء</button>
@@ -869,14 +918,14 @@ export default function AdminDashboardPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ backgroundColor: '#f1f5f9', padding: '0.35rem 0.75rem', borderRadius: '10px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: '#64748b' }}>محاكي الحساب:</span>
-            <select value={activeUserId || activeUser.id} onChange={(e) => setActiveUserId(e.target.value)} style={{ background: '#fff', color: '#0f172a', border: '1px solid #e2e8f0', padding: '0.3rem 0.6rem', borderRadius: '6px', fontFamily: 'Cairo, sans-serif' }}>
-              {(db.users || []).map((u: any) => (
-                <option key={u.id} value={u.id}>{u.name} ({getRoleName(u)})</option>
-              ))}
-            </select>
+          <div style={{ backgroundColor: '#f1f5f9', padding: '0.45rem 0.85rem', borderRadius: '10px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #e2e8f0' }}>
+            <span style={{ color: '#10b981', fontSize: '1rem' }}>🛡️</span>
+            <span style={{ color: '#0f172a', fontWeight: 800 }}>{userName || 'مدير النظام'}</span>
           </div>
+
+          <Link href="/profile" style={{ padding: '0.55rem 1.1rem', backgroundColor: '#0f172a', border: 'none', borderRadius: '10px', color: '#FFF', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            🔐 إعدادات الأمان وكلمة المرور
+          </Link>
 
           <Link href="/" style={{ padding: '0.55rem 1.1rem', backgroundColor: '#2563eb', border: 'none', borderRadius: '10px', color: '#FFF', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
             🏠 العودة للموقع

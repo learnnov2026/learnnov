@@ -16,7 +16,7 @@ async function getHeaders(customHeaders: Record<string, string> = {}): Promise<R
     ...customHeaders,
   };
 
-  const token = getCookie('learnnov_session') || getCookie('django_access_token');
+  const token = getCookie('learnnov_session') || getCookie('django_access_token') || (typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null);
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

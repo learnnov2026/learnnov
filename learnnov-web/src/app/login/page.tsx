@@ -27,21 +27,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Auto-fill demo credentials for login mode
-  const handleQuickRoleSelect = (selectedRole: 'student' | 'instructor' | 'admin') => {
-    setRole(selectedRole);
-    if (selectedRole === 'student') {
-      setEmail('student.demo@learnnov.com');
-      setPassword('Password123!');
-    } else if (selectedRole === 'instructor') {
-      setEmail('dr.ali@learnnov.com');
-      setPassword('Password123!');
-    } else {
-      setEmail('sara.admin@learnnov.com');
-      setPassword('Password123!');
-    }
-  };
-
+  // Calculate password strength
   const calculatePasswordStrength = (pass: string) => {
     if (pass.length === 0) return 0;
     let score = 0;
@@ -64,7 +50,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: fullName, email, password, role })
+        body: JSON.stringify({ name: fullName, email, password, role: 'student' })
       });
       const data = await res.json();
       
@@ -133,19 +119,22 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const loginEmail = email || (role === 'student' ? 'student.demo@learnnov.com' : role === 'instructor' ? 'dr.ali@learnnov.com' : 'sara.admin@learnnov.com');
+      if (!email.trim() || !password) {
+        setError(language === 'ar' ? 'يرجى إدخال اسم المستخدم وكلمة المرور' : 'Please enter your username and password');
+        setLoading(false);
+        return;
+      }
       
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: password || 'Password123!' })
+        body: JSON.stringify({ email: email.trim(), password })
       });
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error || 'فشل تسجيل الدخول');
+        throw new Error(data.error || 'فشل تسجيل الدخول: يرجى التحقق من صحة البيانات');
       }
-
 
       login(data.user.role, data.user.name, data.user.avatar, data.user.email);
 
@@ -164,27 +153,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSso = async () => {
-    const ssoEmail = role === 'admin' ? 'admin.workspace@learnnov.com' : role === 'instructor' ? 'instructor.workspace@learnnov.com' : 'user.workspace@learnnov.com';
-    const ssoName = 'حساب Google Workspace المؤسسي';
-    
-    // Call our new SSO endpoint which bypasses OTP
-    const res = await fetch('/api/auth/sso', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: ssoName, email: ssoEmail, role: role })
-    });
-    const data = await res.json();
-    
-    if (res.ok) {
-      login(data.user.role, data.user.name, data.user.avatar, data.user.email);
-      if (data.user.role === 'admin') {
-        router.push('/admin');
-      } else if (data.user.role === 'instructor') {
-        router.push('/instructor');
-      } else {
-        router.push('/');
-      }
-    }
+    setError(language === 'ar' ? 'تسجيل الدخول عبر Google Workspace متاح عبر النطاق المؤسسي المعتمد' : 'Google Workspace SSO is available for verified organization accounts');
   };
 
   return (
@@ -242,46 +211,29 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Role Selector */}
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 700 }}>{t('chooseRole')}</label>
-          <div className="role-selector" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-            <div 
-              className={`role-option ${role === 'student' ? 'active' : ''}`}
-              onClick={() => handleQuickRoleSelect('student')}
-              style={{ padding: '0.6rem 0.4rem', textAlign: 'center' }}
-            >
-              <div className="role-icon">👨‍🎓</div>
-              <div className="role-label" style={{ fontSize: '0.8rem' }}>{t('studentAccount')}</div>
+        {mode === 'register' && (
+          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981', fontWeight: 800, fontSize: '0.9rem' }}>
+              <span>👨‍🎓</span>
+              <span>{language === 'ar' ? 'تسجيل حساب طالب جديد' : 'New Student Registration'}</span>
             </div>
-            <div 
-              className={`role-option ${role === 'instructor' ? 'active' : ''}`}
-              onClick={() => handleQuickRoleSelect('instructor')}
-              style={{ padding: '0.6rem 0.4rem', textAlign: 'center' }}
-            >
-              <div className="role-icon">👨‍🏫</div>
-              <div className="role-label" style={{ fontSize: '0.8rem' }}>{t('instructorAccount')}</div>
-            </div>
-            <div 
-              className={`role-option ${role === 'admin' ? 'active' : ''}`}
-              onClick={() => handleQuickRoleSelect('admin')}
-              style={{ padding: '0.6rem 0.4rem', textAlign: 'center' }}
-            >
-              <div className="role-icon">👑</div>
-              <div className="role-label" style={{ fontSize: '0.8rem' }}>{language === 'ar' ? 'حساب مدير' : 'Admin'}</div>
-            </div>
+            <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.5 }}>
+              {language === 'ar' 
+                ? '🔒 التسجيل المباشر مخصص للطلاب والمتدربين فقط. حسابات المشرفين والمديرين يتم إنشاؤها حصراً من قِبل إدارة المنصة داخل لوحة التحكم الإدارية.'
+                : '🔒 Public registration is for students only. Supervisor and Admin accounts are provisioned exclusively by the platform administrator from the Admin Dashboard.'}
+            </p>
           </div>
-        </div>
+        )}
 
         {/* MODE 1: LOGIN FORM */}
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="login-form">
             <div className="form-group">
-              <label htmlFor="email">{language === 'ar' ? 'البريد الإلكتروني الرسمي' : 'Official Email Address'}</label>
+              <label htmlFor="email">{language === 'ar' ? 'اسم المستخدم أو البريد الإلكتروني' : 'Username or Email Address'}</label>
               <input 
-                type="email" 
+                type="text" 
                 id="email"
-                placeholder="example@learnnov.com"
+                placeholder={language === 'ar' ? 'learnnov albra أو example@learnnov.com' : 'learnnov albra or example@learnnov.com'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

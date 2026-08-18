@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { authorizeRequest } from '@/lib/rbac';
 
 export async function PUT(
   request: Request,
@@ -8,16 +8,15 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const cookieHeader = request.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
-    const token = cookies['learnnov_session'];
+    const auth = await authorizeRequest(request, {
+      requiredPermission: { action: 'update', resource: 'courses' }
+    });
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await verifyToken(token);
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'instructor')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!auth.authorized) {
+      return auth.response!;
     }
+
+    const payload = auth.user!;
 
     const body = await request.json();
     const { title, category, instructor, price, capacity, image, description } = body;
@@ -69,16 +68,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const cookieHeader = request.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
-    const token = cookies['learnnov_session'];
+    const auth = await authorizeRequest(request, {
+      requiredPermission: { action: 'delete', resource: 'courses' }
+    });
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!auth.authorized) {
+      return auth.response!;
     }
+
+    const payload = auth.user!;
 
     // Cascade delete relations safely
     await prisma.enrollment.deleteMany({ where: { courseId: id } });

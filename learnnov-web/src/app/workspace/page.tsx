@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface YouTubeVideo {
@@ -15,7 +17,15 @@ interface YouTubeVideo {
 }
 
 export default function GoogleWorkspaceAndYouTubePage() {
+  const router = useRouter();
+  const { isLoggedIn, isLoading } = useAuth();
   const { language, isRtl } = useLanguage();
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, isLoading, router]);
 
   const [activeVideo, setActiveVideo] = useState<YouTubeVideo>({
     id: '1',
@@ -98,6 +108,15 @@ export default function GoogleWorkspaceAndYouTubePage() {
     const endTime = new Date(Date.now() + 90000000).toISOString().replace(/-|:|\.\d\d\d/g, '');
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTime}/${endTime}&details=${encodeURIComponent(details)}&location=LearnNov+Cloud+Platform`;
   };
+
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ width: '36px', height: '36px', border: '3px solid #e2e8f0', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <main className="dashboard-container" dir={isRtl ? 'rtl' : 'ltr'} style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Cairo, sans-serif' }}>

@@ -1,21 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const { isLoggedIn, userName, userRole, isLoading } = useAuth();
   const { language, isRtl } = useLanguage();
   const [profileData, setProfileData] = useState<any>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'week' | 'month' | 'year'>('month');
 
   useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
     fetch('/api/users/me/profile')
       .then(res => res.json())
       .then(data => setProfileData(data.user))
       .catch(err => console.error(err));
-  }, []);
+  }, [isLoggedIn]);
 
   if (isLoading || !isLoggedIn || !profileData) {
     return (

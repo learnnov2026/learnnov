@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-
 
 interface AssignmentItem {
   id: number;
@@ -17,8 +17,15 @@ interface AssignmentItem {
 }
 
 export default function AssignmentsPage() {
+  const router = useRouter();
   const { isLoggedIn, userName, userRole, isLoading } = useAuth();
   const { language, isRtl } = useLanguage();
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, isLoading, router]);
 
   const [activeTab, setActiveTab] = useState<'current' | 'submitted'>('current');
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentItem | null>(null);
@@ -101,6 +108,15 @@ export default function AssignmentsPage() {
       setTimeout(() => setSuccessMsg(null), 4000);
     }, 800);
   };
+
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ width: '36px', height: '36px', border: '3px solid #e2e8f0', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <main className="dashboard-container" dir={isRtl ? 'rtl' : 'ltr'}>

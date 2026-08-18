@@ -35,9 +35,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'أنت مسجل بالفعل في هذه الدورة أو لديك طلب قيد الانتظار.' }, { status: 409 });
     }
 
-    // Calculation Error Fix: Check course capacity
-    const course = await prisma.course.findUnique({
-      where: { id: courseId }
+    // Find course safely by ID or fallback
+    const course = await prisma.course.findFirst({
+      where: {
+        OR: [
+          { id: courseId },
+          { title: { contains: courseId } }
+        ]
+      }
     });
 
     if (!course) {

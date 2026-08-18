@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
@@ -237,6 +238,24 @@ export default function InstructorDashboard() {
           >
             🛡️ مستشار الأمان الذكي
           </a>
+          <Link
+            href="/profile"
+            className="action-btn"
+            style={{ 
+              padding: '0.9rem 1.4rem', 
+              fontSize: '1.05rem', 
+              borderRadius: '12px', 
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: 'white',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            🔐 إعدادات الأمان وكلمة المرور
+          </Link>
           <button 
             className="action-btn approve" 
             onClick={() => {

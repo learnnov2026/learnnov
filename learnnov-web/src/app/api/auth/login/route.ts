@@ -12,9 +12,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
     }
 
-    // Authenticate natively via Cloud Database (Prisma)
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+    const identifier = email.trim();
+
+    // Authenticate natively via Cloud Database (Prisma) by email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier.toLowerCase() },
+          { name: { equals: identifier, mode: 'insensitive' } }
+        ]
+      }
     });
 
     if (!user) {

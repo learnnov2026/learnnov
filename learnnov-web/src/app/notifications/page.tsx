@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface NotificationItem {
@@ -14,19 +16,37 @@ interface NotificationItem {
 }
 
 export default function NotificationsPage() {
+  const router = useRouter();
+  const { isLoggedIn, isLoading } = useAuth();
   const { language, isRtl } = useLanguage();
   const [filter, setFilter] = useState<'all' | 'unread' | 'academic' | 'certificate'>('all');
 
   const [items, setItems] = useState<NotificationItem[]>([]);
 
   useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
     fetch('/api/notifications')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setItems(data);
       })
       .catch(() => {});
-  }, []);
+  }, [isLoggedIn]);
+
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ width: '36px', height: '36px', border: '3px solid #e2e8f0', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   const markAllRead = () => {
     setItems(items.map(item => ({ ...item, read: true })));

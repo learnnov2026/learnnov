@@ -2,10 +2,38 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  const { isLoggedIn } = useAuth();
   const { language, isRtl } = useLanguage();
+
+  // If inside admin or instructor dashboards, hide global footer (they have their own layout)
+  if (pathname.startsWith('/admin') || pathname.startsWith('/instructor')) {
+    return null;
+  }
+
+  // If on login page, display only a clean, minimal copyright footer without internal links
+  if (pathname === '/login') {
+    return (
+      <footer 
+        dir={isRtl ? 'rtl' : 'ltr'} 
+        style={{
+          borderTop: '1px solid rgba(226, 232, 240, 0.6)',
+          padding: '1.5rem',
+          textAlign: 'center',
+          color: '#64748b',
+          fontSize: '0.85rem',
+          fontFamily: 'Cairo, sans-serif'
+        }}
+      >
+        © 2026 LearnNov Academic Cloud Platform. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+      </footer>
+    );
+  }
 
   return (
     <footer 
@@ -39,31 +67,44 @@ export const Footer: React.FC = () => {
           </p>
         </div>
 
-        {/* Col 2: Quick Links */}
+        {/* Col 2: Quick Links (Contextual based on auth) */}
         <div>
           <h4 style={{ color: '#0f172a', fontWeight: 800, fontSize: '1rem', marginBottom: '1.25rem' }}>
             {language === 'ar' ? 'الروابط السريعة' : 'Quick Navigation'}
           </h4>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem' }}>
-            <li><Link href="/" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '🏠 الرئيسية والدورات' : '🏠 Dashboard'}</Link></li>
+            <li><Link href="/" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '🏠 الرئيسية' : '🏠 Home'}</Link></li>
             <li><Link href="/specializations" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '🎓 المسارات والتخصصات' : '🎓 Specializations'}</Link></li>
-            <li><Link href="/exams" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '📝 الاختبارات والتقييم' : '📝 Exams'}</Link></li>
-            <li><Link href="/discussions" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '💬 منتدى النقاشات' : '💬 Discussions'}</Link></li>
+            <li><Link href="/certificates" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '📜 توثيق الشهادات' : '📜 Certificate Verification'}</Link></li>
             <li><Link href="/leaderboard" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '🏆 لوحة المتصدرين' : '🏆 Leaderboard'}</Link></li>
+            {isLoggedIn && (
+              <>
+                <li><Link href="/exams" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '📝 الاختبارات والتقييم' : '📝 Exams'}</Link></li>
+                <li><Link href="/discussions" style={{ color: '#475569', textDecoration: 'none', fontWeight: 600 }}>{language === 'ar' ? '💬 منتدى النقاشات' : '💬 Discussions'}</Link></li>
+              </>
+            )}
           </ul>
         </div>
 
-        {/* Col 3: Integrations & Tools */}
+        {/* Col 3: Services & Integrations */}
         <div>
           <h4 style={{ color: '#0f172a', fontWeight: 800, fontSize: '1rem', marginBottom: '1.25rem' }}>
-            {language === 'ar' ? 'الخدمات والتكاملات' : 'Tools & Services'}
+            {language === 'ar' ? 'الخدمات والدعم' : 'Services & Support'}
           </h4>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem' }}>
-            <li><Link href="/workspace" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '📺 YouTube و Google Workspace' : '📺 YouTube & Google'}</Link></li>
-            <li><Link href="/certificates" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '📜 توثيق الشهادات الرقمية' : '📜 Certificate Verification'}</Link></li>
-            <li><Link href="/career" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '💼 المرشد المهني وسوق العمل' : '💼 Career Pathfinder'}</Link></li>
-            <li><Link href="/payments" style={{ color: '#059669', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '💳 الفواتير والاشتراكات' : '💳 Invoices & Payments'}</Link></li>
             <li><Link href="/support" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '🛟 مركز الدعم والمساعدة' : '🛟 Help Center'}</Link></li>
+            {isLoggedIn ? (
+              <>
+                <li><Link href="/workspace" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '📺 YouTube و Google Workspace' : '📺 YouTube & Google'}</Link></li>
+                <li><Link href="/career" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '💼 المرشد المهني وسوق العمل' : '💼 Career Pathfinder'}</Link></li>
+                <li><Link href="/payments" style={{ color: '#059669', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '💳 الفواتير والاشتراكات' : '💳 Invoices & Payments'}</Link></li>
+              </>
+            ) : (
+              <>
+                <li><Link href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '🔑 تسجيل الدخول' : '🔑 Sign In'}</Link></li>
+                <li><Link href="/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 700 }}>{language === 'ar' ? '📝 تقديم والتحاق طالب جديد' : '📝 Apply as Student'}</Link></li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -93,38 +134,49 @@ export const Footer: React.FC = () => {
           © 2026 LearnNov Academic Cloud Platform. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
         </div>
         <div style={{ display: 'flex', gap: '1.5rem' }}>
-          <Link href="/profile" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</Link>
-          <Link href="/chat" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'المساعد الذكي' : 'AI Assistant'}</Link>
+          {isLoggedIn ? (
+            <>
+              <Link href="/profile" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</Link>
+              <Link href="/chat" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'المساعد الذكي' : 'AI Assistant'}</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/specializations" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'التخصصات' : 'Specializations'}</Link>
+              <Link href="/certificates" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'الشهادات' : 'Certificates'}</Link>
+            </>
+          )}
           <Link href="/support" style={{ color: '#64748b', textDecoration: 'none' }}>{language === 'ar' ? 'الدعم الفني' : 'Support'}</Link>
         </div>
       </div>
 
-      {/* Floating AI Academic Assistant Widget Button */}
-      <Link 
-        href="/chat" 
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: isRtl ? 'auto' : '24px',
-          left: isRtl ? '24px' : 'auto',
-          background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)',
-          color: '#FFF',
-          padding: '0.85rem 1.35rem',
-          borderRadius: '99px',
-          boxShadow: '0 10px 30px rgba(37, 99, 235, 0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.65rem',
-          textDecoration: 'none',
-          fontWeight: 800,
-          fontSize: '0.9rem',
-          zIndex: 1000,
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-        }}
-      >
-        <span style={{ fontSize: '1.2rem' }}>🤖</span>
-        <span>{language === 'ar' ? 'المساعد الأكاديمي الذكي' : 'AI Academic Tutor'}</span>
-      </Link>
+      {/* Floating AI Academic Assistant Widget Button - ONLY visible when authenticated */}
+      {isLoggedIn && (
+        <Link 
+          href="/chat" 
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: isRtl ? 'auto' : '24px',
+            left: isRtl ? '24px' : 'auto',
+            background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)',
+            color: '#FFF',
+            padding: '0.85rem 1.35rem',
+            borderRadius: '99px',
+            boxShadow: '0 10px 30px rgba(37, 99, 235, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+            textDecoration: 'none',
+            fontWeight: 800,
+            fontSize: '0.9rem',
+            zIndex: 1000,
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>🤖</span>
+          <span>{language === 'ar' ? 'المساعد الأكاديمي الذكي' : 'AI Academic Tutor'}</span>
+        </Link>
+      )}
 
     </footer>
   );

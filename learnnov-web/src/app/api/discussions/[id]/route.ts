@@ -49,6 +49,70 @@ export async function GET(
   }
 }
 
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const cookieHeader = request.headers.get('cookie') || '';
+    const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
+    const token = cookies['learnnov_session'];
+
+    let authorName = 'طالب ليرنوف';
+    let authorRole = 'طالب';
+    let avatar = '🎓';
+
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload) {
+        authorName = payload.name;
+        authorRole = payload.role === 'admin' ? 'مدير النظام' : payload.role === 'instructor' ? 'محاضر خبير' : 'طالب';
+        avatar = payload.role === 'instructor' ? '👨‍🏫' : payload.role === 'admin' ? '👑' : '🎓';
+      }
+    }
+
+    const body = await request.json();
+    const { title, body: contentText, content } = body;
+
+    const finalContent = contentText || content || '';
+    const finalTitle = title || 'مناقشة جديدة';
+
+    const post = await prisma.discussionPost.create({
+      data: {
+        author: authorName,
+        authorRole,
+        avatar,
+        title: finalTitle,
+        content: finalContent,
+        category: id || 'عام',
+        likes: 0,
+        replies: 0,
+        timestamp: 'الآن'
+      }
+    });
+
+    const thread = {
+      id: post.id,
+      title: post.title,
+      author: {
+        username: post.author,
+        first_name: post.author,
+        last_name: ''
+      },
+      body: post.content,
+      reply_count: 0,
+      created_at: post.createdAt.toISOString(),
+      posts: []
+    };
+
+    return NextResponse.json(thread, { status: 201 });
+  } catch (error) {
+    console.error('Error creating thread in category:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

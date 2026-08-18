@@ -4,7 +4,7 @@ import { signToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const { email, name, role = 'student' } = await request.json();
+    const { email, name } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
@@ -18,12 +18,18 @@ export async function POST(request: Request) {
     let userId = '';
     
     if (!user) {
-      // Create user immediately (SSO bypasses OTP)
+      // SECURITY: Public SSO auto-registration is strictly restricted to 'student' role.
+      // Admin and Instructor/Supervisor accounts can only be provisioned inside the Admin Dashboard.
+      const rbacRole = await prisma.role.findUnique({
+        where: { name: 'student' }
+      });
+
       user = await prisma.user.create({
         data: {
-          name: name || 'مستخدم SSO',
+          name: name || 'طالب جديد (SSO)',
           email: email.toLowerCase(),
-          role,
+          role: 'student',
+          roleId: rbacRole?.id,
           status: 'active'
         }
       });

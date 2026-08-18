@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { authorizeRequest } from '@/lib/rbac';
 
 export async function PATCH(
   request: Request,
@@ -8,15 +8,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const cookieHeader = request.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
-    const token = cookies['learnnov_session'];
+    const auth = await authorizeRequest(request, {
+      requiredPermission: { action: 'manage', resource: 'enrollments' }
+    });
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await verifyToken(token);
-    if (!payload || (payload.role !== 'instructor' && payload.role !== 'admin')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!auth.authorized) {
+      return auth.response!;
     }
 
     const body = await request.json();

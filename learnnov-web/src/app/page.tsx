@@ -299,27 +299,26 @@ export default function StudentDashboard() {
 
     api.get<any>('/api/programs/programs/')
       .then((json) => {
-        if (Array.isArray(json)) {
-          // Map Prisma Course to AcademicProgram format
+        if (Array.isArray(json) && json.length > 0) {
           const mappedCourses = json.map(c => ({
             id: c.id,
             title: c.title,
-            title_en: c.title,
-            slug: c.id,
-            provider_name: c.instructor,
+            title_en: c.title_en || c.title,
+            slug: c.slug || c.id,
+            provider_name: c.provider_name || c.instructor || 'جامعة ليرنوف السحابية للذكاء الاصطناعي',
             provider_logo: null,
-            field_name: c.category,
-            degree_level: 'diploma',
-            degree_level_display: 'دبلوم',
-            study_mode: 'online',
-            study_mode_display: 'عن بُعد بالكامل',
-            language: 'ar',
-            duration_months: 3,
-            tuition_fee: c.price,
-            currency: 'ر.س',
-            scholarship_available: true,
-            is_open: true,
-            description: c.description
+            field_name: c.field_name || c.category || 'هندسة البرمجيات والذكاء الاصطناعي',
+            degree_level: c.degree_level || 'diploma',
+            degree_level_display: c.degree_level_display || 'دبلوم تخصصي معتمد',
+            study_mode: c.study_mode || 'online',
+            study_mode_display: c.study_mode_display || 'عن بُعد بالكامل',
+            language: c.language || 'ar',
+            duration_months: c.duration_months || 4,
+            tuition_fee: c.tuition_fee || c.price || 450,
+            currency: c.currency || 'ر.س',
+            scholarship_available: c.scholarship_available ?? true,
+            is_open: c.is_open ?? true,
+            description: c.description || 'برنامج تدريبي متقدم متصل مباشرة بقاعدة البيانات السحابية الحية.'
           }));
           setCourses(mappedCourses);
         } else {
